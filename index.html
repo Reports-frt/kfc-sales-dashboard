@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<title>KFC Greece — Sales Command Centre</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg-0: #0a0e14;
+  --bg-1: #11161e;
+  --bg-2: #1a212c;
+  --bg-3: #232b38;
+  --border: #2d3748;
+  --border-soft: #1f2733;
+  --text-0: #e8edf5;
+  --text-1: #aab4c5;
+  --text-2: #6b7689;
+  --accent: #ef4444;
+  --accent-2: #f97316;
+  --good: #22c55e;
+  --good-soft: rgba(34,197,94,0.12);
+  --bad: #ef4444;
+  --bad-soft: rgba(239,68,68,0.12);
+  --warn: #f59e0b;
+  --warn-soft: rgba(245,158,11,0.12);
+  --neutral: #64748b;
+  --kfc: #e4002b;
+  --mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  --sans: 'Inter Tight', -apple-system, system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--sans);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body {
+  background:
+    radial-gradient(ellipse at top right, rgba(228,0,43,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(249,115,22,0.04) 0%, transparent 50%),
+    var(--bg-0);
+}
+.app { padding: 16px 20px; max-width: 1800px; margin: 0 auto; }
+
+#loadingOverlay {
+  position: fixed; inset: 0; background: var(--bg-0); z-index: 9999;
+  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  transition: opacity 0.3s ease;
+}
+#loadingOverlay .mark {
+  width: 42px; height: 42px; background: var(--kfc); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; color: white; margin-bottom: 18px;
+  box-shadow: 0 4px 16px rgba(228,0,43,0.4);
+}
+#loadingOverlay .msg { font-size: 13px; color: var(--text-1); letter-spacing: 0.5px; }
+#loadingOverlay .progress {
+  margin-top: 14px; width: 200px; height: 3px; background: var(--bg-2);
+  border-radius: 2px; overflow: hidden;
+}
+#loadingOverlay .bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--kfc), var(--accent-2));
+  transition: width 0.25s ease;
+}
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(228,0,43,0.08) 0%, var(--bg-1) 100%);
+  border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 16px; position: relative; overflow: hidden;
+}
+.header::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--kfc) 0%, var(--accent-2) 50%, transparent 100%);
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-mark {
+  width: 38px; height: 38px; background: var(--kfc);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(228,0,43,0.3);
+}
+.brand-text h1 { font-size: 18px; font-weight: 700; }
+.brand-text .subtitle {
+  font-family: var(--mono); font-size: 10px; color: var(--text-2);
+  letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;
+}
+.header-meta { display: flex; gap: 24px; align-items: center; }
+.header-meta .item { text-align: right; }
+.header-meta .label {
+  font-family: var(--mono); font-size: 9px; color: var(--text-2);
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.header-meta .value {
+  font-size: 14px; font-weight: 600;
+  font-family: var(--mono); margin-top: 2px;
+}
+.live-dot {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--good); margin-right: 6px; animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+}
+
+.controls {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
+}
+.control-group { display: flex; align-items: center; gap: 8px; }
+.control-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text-2);
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.btn-group { display: flex; background: var(--bg-2); border-radius: 6px; padding: 2px; gap: 1px; }
+.btn-group button {
+  background: transparent; color: var(--text-1); border: none;
+  padding: 6px 12px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border-radius: 4px; font-family: var(--sans);
+  transition: all 0.15s ease;
+}
+.btn-group button:hover { background: var(--bg-3); color: var(--text-0); }
+.btn-group button.active {
+  background: var(--accent); color: white; font-weight: 600;
+  box-shadow: 0 2px 6px rgba(239,68,68,0.3);
+}
+select, input[type="date"] {
+  background: var(--bg-2); color: var(--text-0); border: 1px solid var(--border);
+  padding: 6px 10px; border-radius: 6px; font-size: 11px; font-family: var(--sans);
+  cursor: pointer;
+}
+select:focus, input:focus { outline: none; border-color: var(--accent); }
+
+.kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-card {
+  background: var(--bg-1); border: 1px solid var(--border-soft);
+  border-radius: 8px; padding: 14px 16px;
+  position: relative; overflow: hidden;
+  transition: all 0.2s ease;
+}
+.kpi-card:hover { border-color: var(--border); transform: translateY(-1px); }
+.kpi-card .kpi-label {
+  font-family: var(--mono); font-size: 9px; color: var(--text-2);
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;
+}
+.kpi-card .kpi-value {
+  font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
+  font-variant-numeric: tabular-nums;
+}
+.kpi-card .kpi-sub {
+  display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap;
+  margin-top: 4px; font-size: 10px;
+}
+.kpi-card .kpi-sub .delta {
+  font-family: var(--mono); font-weight: 600;
+  padding: 2px 6px; border-radius: 4px;
+}
+.kpi-card .kpi-sub .delta.pos { color: var(--good); background: var(--good-soft); }
+.kpi-card .kpi-sub .delta.neg { color: var(--bad); background: var(--bad-soft); }
+.kpi-card .kpi-sub .delta.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
+.kpi-card .kpi-sub .versus { color: var(--text-2); font-family: var(--mono); font-size: 9px; }
+.kpi-card .accent-line { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; }
+.kpi-card.primary .accent-line { background: var(--accent); }
+.kpi-card.secondary .accent-line { background: var(--accent-2); }
+.kpi-card.tertiary .accent-line { background: var(--good); }
+
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
+.tab {
+  padding: 10px 20px; cursor: pointer; font-size: 12px; font-weight: 500;
+  color: var(--text-1); border: none; background: transparent;
+  border-bottom: 2px solid transparent; transition: all 0.15s ease;
+  font-family: var(--sans);
+}
+.tab:hover { color: var(--text-0); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+.panel {
+  background: var(--bg-1); border: 1px solid var(--border);
+  border-top: none; border-radius: 0 0 8px 8px; padding: 16px;
+  min-height: 200px;
+}
+.panel-section { margin-bottom: 24px; }
+.panel-section:last-child { margin-bottom: 0; }
+.section-title {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--text-1);
+  margin-bottom: 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.section-title .meta { font-family: var(--mono); font-size: 9px; color: var(--text-2); font-weight: 400; letter-spacing: 1px; }
+
+table {
+  width: 100%; border-collapse: collapse;
+  font-variant-numeric: tabular-nums; font-size: 11px;
+}
+th {
+  background: var(--bg-2); color: var(--text-2);
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 8px 8px; text-align: right;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 10;
+}
+th:first-child, td:first-child { text-align: left; }
+th.center, td.center { text-align: center; }
+td {
+  padding: 6px 8px; border-bottom: 1px solid var(--border-soft);
+  text-align: right; color: var(--text-0);
+}
+tr:hover td { background: rgba(255,255,255,0.02); }
+.row-total td {
+  background: var(--bg-2); font-weight: 700;
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.row-store td { font-weight: 600; }
+.row-type td { color: var(--text-1); padding-left: 16px; font-size: 10.5px; }
+.row-type td:first-child { padding-left: 24px; color: var(--text-2); font-size: 10px; }
+.row-grand td {
+  background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.06) 100%);
+  font-weight: 800; border-top: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent); padding-top: 8px; padding-bottom: 8px;
+}
+td .pct { font-family: var(--mono); font-weight: 600; padding: 1px 6px; border-radius: 3px; font-size: 10px; }
+td .pct.pos { color: var(--good); background: var(--good-soft); }
+td .pct.neg { color: var(--bad); background: var(--bad-soft); }
+td .pct.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
+
+.mini-bar {
+  display: inline-block; height: 4px; background: var(--bg-3); border-radius: 2px;
+  position: relative; overflow: hidden; vertical-align: middle; min-width: 40px;
+}
+.mini-bar > div { height: 100%; background: var(--text-1); transition: width 0.3s; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.scroll-x { overflow-x: auto; }
+
+.heatmap { display: grid; gap: 2px; }
+.heat-cell {
+  font-family: var(--mono); font-size: 9px; padding: 4px 6px;
+  text-align: right; border-radius: 2px;
+}
+.heat-label { padding: 4px 8px; font-size: 10px; color: var(--text-1); text-align: left; font-weight: 500; }
+.heat-header {
+  font-family: var(--mono); font-size: 9px; color: var(--text-2);
+  letter-spacing: 1px; padding: 4px 6px; text-align: right;
+}
+
+.chart-wrap { background: var(--bg-2); border-radius: 6px; padding: 12px; border: 1px solid var(--border-soft); }
+.chart-title { font-size: 10px; font-weight: 600; color: var(--text-1); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+svg { display: block; max-width: 100%; }
+
+.footer {
+  font-family: var(--mono); font-size: 9px; color: var(--text-2);
+  letter-spacing: 1px; text-align: center; margin-top: 20px;
+  padding: 12px; border-top: 1px solid var(--border-soft);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+.error-box {
+  background: var(--bad-soft); border: 1px solid var(--bad);
+  color: var(--text-0); padding: 16px; border-radius: 8px;
+  font-family: var(--mono); font-size: 12px; max-width: 600px;
+  margin: 40px auto;
+}
+.error-box .title { font-weight: 700; color: var(--bad); margin-bottom: 8px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">
+  <div class="mark">KFC</div>
+  <div class="msg" id="loadingMsg">Φόρτωση…</div>
+  <div class="progress"><div class="bar" id="loadingBar"></div></div>
+</div>
+
+<div class="app" id="appRoot" style="display:none">
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-mark">KFC</div>
+      <div class="brand-text">
+        <h1>Sales Command Centre — Greece</h1>
+        <div class="subtitle">Daily · Sales vs Budget vs LY · Day-of-Week Adjusted</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="item">
+        <div class="label">Reporting As Of</div>
+        <div class="value" id="reportDate">—</div>
+      </div>
+      <div class="item">
+        <div class="label"><span class="live-dot"></span>Coverage</div>
+        <div class="value" id="reportCoverage">—</div>
+      </div>
+      <div class="item">
+        <div class="label">Stores</div>
+        <div class="value" id="reportStores">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">View</span>
+      <div class="btn-group" id="viewBtns">
+        <button data-view="MTD" class="active">MTD</button>
+        <button data-view="QTD">QTD</button>
+        <button data-view="YTD">YTD</button>
+        <button data-view="LAST7">Last 7d</button>
+        <button data-view="LAST30">Last 30d</button>
+        <button data-view="DAY">Single Day</button>
+        <button data-view="CUSTOM">Custom</button>
+      </div>
+    </div>
+    <div class="control-group" id="dateAsOfWrap">
+      <span class="control-label">As Of</span>
+      <input type="date" id="asOfDate">
+    </div>
+    <div class="control-group" id="customWrap" style="display:none">
+      <span class="control-label">From</span>
+      <input type="date" id="customFrom">
+      <span class="control-label">To</span>
+      <input type="date" id="customTo">
+    </div>
+    <div class="control-group">
+      <span class="control-label">LY Match</span>
+      <div class="btn-group" id="lyBtns">
+        <button data-ly="364" class="active">364-Day Shift</button>
+        <button data-ly="cal">Calendar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="bystore">By Store</button>
+    <button class="tab" data-tab="salestype">By Sales Type</button>
+    <button class="tab" data-tab="channels">By Channel</button>
+    <button class="tab" data-tab="rankings">Rankings</button>
+    <button class="tab" data-tab="dow">Day-of-Week</button>
+    <button class="tab" data-tab="trend">Trend</button>
+    <button class="tab" data-tab="storedeep">Store Deep-Dive</button>
+  </div>
+
+  <div class="panel">
+    <div class="tab-content active" id="tab-overview"></div>
+    <div class="tab-content" id="tab-bystore"></div>
+    <div class="tab-content" id="tab-salestype"></div>
+    <div class="tab-content" id="tab-channels"></div>
+    <div class="tab-content" id="tab-rankings"></div>
+    <div class="tab-content" id="tab-dow"></div>
+    <div class="tab-content" id="tab-trend"></div>
+    <div class="tab-content" id="tab-storedeep"></div>
+  </div>
+
+  <div class="footer">KFC GREECE · Sales Command Centre · Day-of-week adjusted comparisons via 364-day shift</div>
+
+</div>
+
+<script>
+function setProgress(pct, msg) {
+  const bar = document.getElementById('loadingBar');
+  const m = document.getElementById('loadingMsg');
+  if (bar) bar.style.width = pct + '%';
+  if (m && msg) m.textContent = msg;
+}
+function hideLoader() {
+  const o = document.getElementById('loadingOverlay');
+  const a = document.getElementById('appRoot');
+  if (a) a.style.display = '';
+  if (o) { o.style.opacity = '0'; setTimeout(() => o.remove(), 300); }
+}
+function showError(msg, detail) {
+  const o = document.getElementById('loadingOverlay');
+  if (o) {
+    o.innerHTML = `
+      <div class="error-box">
+        <div class="title">Σφάλμα φόρτωσης</div>
+        <div>${msg}</div>
+        ${detail ? `<div style="margin-top:10px;color:var(--text-2);font-size:10px">${detail}</div>` : ''}
+      </div>
+    `;
+  }
+}
+
+(async function init() {
+  let RAW;
+  try {
+    setProgress(10, 'Σύνδεση με δεδομένα…');
+    const resp = await fetch('data.json', { cache: 'no-cache' });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' — ' + resp.statusText);
+    setProgress(30, 'Λήψη δεδομένων…');
+    const text = await resp.text();
+    setProgress(60, 'Επεξεργασία (' + (text.length/1024/1024).toFixed(1) + ' MB)…');
+    await new Promise(r => setTimeout(r, 30));
+    RAW = JSON.parse(text);
+    setProgress(80, 'Υπολογισμός metrics…');
+    await new Promise(r => setTimeout(r, 30));
+  } catch (err) {
+    showError('Αδυναμία φόρτωσης data.json',
+      err.message + '<br><br>Βεβαιώσου ότι το αρχείο data.json βρίσκεται στον ίδιο φάκελο και ότι σερβίρεται από web server (όχι file://).');
+    return;
+  }
+  try {
+    bootstrap(RAW);
+    setProgress(100, 'Έτοιμο');
+    setTimeout(hideLoader, 200);
+  } catch (err) {
+    showError('Σφάλμα κατά τον υπολογισμό', err.message + '<br><br>' + (err.stack || '').replace(/\n/g, '<br>'));
+    console.error(err);
+  }
+})();
+
+function bootstrap(RAW) {
+
+const META = RAW.meta;
+const STORES = META.stores;
+const SALESTYPES = META.salestypes;
+const CHANNELGROUPS = META.channelgroups;
+const STORE_META = META.store_meta;
+const BUDGET = RAW.budget;
+
+// Build per-(date, store) aggregates for FAST lookup. Avoids re-scanning per call.
+// dailyStoreST[date][storeIdx][stIdx] = {sales, tcs}
+// dailyStore[date][storeIdx] = {sales, tcs}
+const dailyStoreST = new Map();   // dateStr -> Array(stores) of Array(salestypes) of {sales,tcs}
+const dailyStoreCH = new Map();
+const dailyStore = new Map();     // dateStr -> Array(stores) of {sales,tcs}
+const dailyTotal = new Map();     // dateStr -> {sales,tcs}
+
+// Initialize empty buckets only for dates that have records
+function ensureDate(d) {
+  if (!dailyStore.has(d)) {
+    dailyStore.set(d, new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0})));
+    dailyTotal.set(d, {sales:0, tcs:0});
+    const stArr = new Array(STORES.length);
+    for (let i = 0; i < STORES.length; i++) stArr[i] = new Array(SALESTYPES.length).fill(null).map(() => ({sales:0, tcs:0}));
+    dailyStoreST.set(d, stArr);
+    const chArr = new Array(STORES.length);
+    for (let i = 0; i < STORES.length; i++) chArr[i] = new Array(CHANNELGROUPS.length).fill(null).map(() => ({sales:0, tcs:0}));
+    dailyStoreCH.set(d, chArr);
+  }
+}
+
+RAW.records_st.forEach(r => {
+  const [d, si, sti, s, t] = r;
+  ensureDate(d);
+  dailyStore.get(d)[si].sales += s;
+  dailyStore.get(d)[si].tcs += t;
+  dailyTotal.get(d).sales += s;
+  dailyTotal.get(d).tcs += t;
+  dailyStoreST.get(d)[si][sti].sales += s;
+  dailyStoreST.get(d)[si][sti].tcs += t;
+});
+RAW.records_ch.forEach(r => {
+  const [d, si, ci, s, t] = r;
+  ensureDate(d);
+  dailyStoreCH.get(d)[si][ci].sales += s;
+  dailyStoreCH.get(d)[si][ci].tcs += t;
+});
+
+// Pre-compute per-store monthly totals (for budget weight calc)
+// monthStoreTotal[YYYY-MM][storeIdx] = {sales, tcs}
+const monthStoreTotal = new Map();
+for (const [d, perStore] of dailyStore.entries()) {
+  const ym = d.slice(0,7);
+  if (!monthStoreTotal.has(ym)) {
+    monthStoreTotal.set(ym, new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0})));
+  }
+  const m = monthStoreTotal.get(ym);
+  for (let si = 0; si < STORES.length; si++) {
+    m[si].sales += perStore[si].sales;
+    m[si].tcs += perStore[si].tcs;
+  }
+}
+
+const LATEST = META.latest_date;
+const FIRST = META.first_date;
+
+// ============ DATE HELPERS — UTC-SAFE ============
+function dateStrAdd(dStr, days) {
+  const [y, m, d] = dStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  dt.setUTCDate(dt.getUTCDate() + days);
+  return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth()+1).padStart(2,'0') + '-' + String(dt.getUTCDate()).padStart(2,'0');
+}
+function dowName(i) { return ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'][i]; }
+function shortMonth(m) { return ['','Ιαν','Φεβ','Μαρ','Απρ','Μαι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'][m]; }
+function dateGreek(dStr) {
+  const [y, m, d] = dStr.split('-').map(Number);
+  return d + ' ' + shortMonth(m) + ' ' + y;
+}
+function getDOW(dStr) {
+  const [y, m, d] = dStr.split('-').map(Number);
+  return (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;
+}
+function lyDate(dStr, mode) {
+  if (mode === 'cal') {
+    const [y,m,d] = dStr.split('-').map(Number);
+    return (y-1) + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  }
+  return dateStrAdd(dStr, -364);
+}
+function dateRange(from, to) {
+  const out = [];
+  if (!from || !to || from > to) return out;
+  let cur = from, guard = 0;
+  while (cur <= to && guard < 1000) {
+    out.push(cur);
+    cur = dateStrAdd(cur, 1);
+    guard++;
+  }
+  return out;
+}
+
+// ============ FORMATTERS ============
+function fmtEur(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const sign = v < 0 ? '-' : '';
+  v = Math.abs(v);
+  return sign + Math.round(v).toLocaleString('en-US').replace(/,/g, '.') + ' €';
+}
+function fmtEurK(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  if (Math.abs(v) >= 1000000) return (v/1000000).toFixed(2).replace('.', ',') + ' M€';
+  if (Math.abs(v) >= 1000) return Math.round(v/1000).toLocaleString('en-US').replace(/,/g, '.') + 'K €';
+  return Math.round(v).toLocaleString('en-US').replace(/,/g, '.') + ' €';
+}
+function fmtNum(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return Math.round(v).toLocaleString('en-US').replace(/,/g, '.');
+}
+function fmtPct(v, decimals=1) {
+  if (v === null || v === undefined || isNaN(v) || !isFinite(v)) return '—';
+  const sign = v > 0 ? '+' : '';
+  return sign + (v*100).toFixed(decimals).replace('.', ',') + '%';
+}
+function fmtAvg(v) {
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return v.toFixed(2).replace('.', ',') + ' €';
+}
+function pctClass(v, threshold=0.005) {
+  if (v === null || v === undefined || isNaN(v) || !isFinite(v)) return 'flat';
+  if (v > threshold) return 'pos';
+  if (v < -threshold) return 'neg';
+  return 'flat';
+}
+
+// ============ PERIOD ============
+function resolvePeriod(view, asOf, customFrom, customTo) {
+  const [y, m, d] = asOf.split('-').map(Number);
+  let from, to;
+  if (view === 'MTD') { from = asOf.slice(0,7) + '-01'; to = asOf; }
+  else if (view === 'QTD') {
+    const qStart = m - ((m-1)%3);
+    from = y + '-' + String(qStart).padStart(2,'0') + '-01'; to = asOf;
+  }
+  else if (view === 'YTD') { from = y + '-01-01'; to = asOf; }
+  else if (view === 'LAST7') { from = dateStrAdd(asOf, -6); to = asOf; }
+  else if (view === 'LAST30') { from = dateStrAdd(asOf, -29); to = asOf; }
+  else if (view === 'DAY') { from = asOf; to = asOf; }
+  else if (view === 'CUSTOM') { from = customFrom; to = customTo; }
+  return [from, to];
+}
+
+// ============ AGGREGATION (FAST — uses pre-built indices) ============
+function aggregate(fromDate, toDate) {
+  const dates = dateRange(fromDate, toDate);
+  const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
+  const byST = new Array(STORES.length).fill(null).map(() => new Array(SALESTYPES.length).fill(null).map(() => ({sales:0, tcs:0})));
+  const byCH = new Array(STORES.length).fill(null).map(() => new Array(CHANNELGROUPS.length).fill(null).map(() => ({sales:0, tcs:0})));
+  let totalSales = 0, totalTCs = 0;
+  for (const d of dates) {
+    const ds = dailyStore.get(d);
+    if (!ds) continue;
+    const dt = dailyTotal.get(d);
+    totalSales += dt.sales; totalTCs += dt.tcs;
+    for (let si = 0; si < STORES.length; si++) {
+      byStore[si].sales += ds[si].sales;
+      byStore[si].tcs += ds[si].tcs;
+    }
+    const st = dailyStoreST.get(d);
+    for (let si = 0; si < STORES.length; si++) {
+      for (let sti = 0; sti < SALESTYPES.length; sti++) {
+        byST[si][sti].sales += st[si][sti].sales;
+        byST[si][sti].tcs += st[si][sti].tcs;
+      }
+    }
+    const ch = dailyStoreCH.get(d);
+    for (let si = 0; si < STORES.length; si++) {
+      for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
+        byCH[si][ci].sales += ch[si][ci].sales;
+        byCH[si][ci].tcs += ch[si][ci].tcs;
+      }
+    }
+  }
+  return { byStore, byST, byCH, total: {sales: totalSales, tcs: totalTCs}, dates };
+}
+
+// ============ BUDGET (DAY-OF-WEEK WEIGHTED, FAST) ============
+const _budgetDayCache = new Map();
+function getDayBudget(dateStr, storeIdx, ly_mode) {
+  const cacheKey = dateStr + '|' + storeIdx + '|' + ly_mode;
+  if (_budgetDayCache.has(cacheKey)) return _budgetDayCache.get(cacheKey);
+  const month = parseInt(dateStr.split('-')[1]);
+  const storeName = STORES[storeIdx];
+  const monthBudget = BUDGET[storeName] && BUDGET[storeName][String(month)];
+  if (!monthBudget) {
+    const r = {sales:0, tcs:0};
+    _budgetDayCache.set(cacheKey, r); return r;
+  }
+  const lyD = lyDate(dateStr, ly_mode);
+  const lyYM = lyD.slice(0,7);
+  const [lyY, lyM] = lyD.split('-').map(Number);
+  const lyDaysInMonth = new Date(Date.UTC(lyY, lyM, 0)).getUTCDate();
+
+  // O(1) lookups now
+  const lyMonthAgg = monthStoreTotal.get(lyYM);
+  const lyMonthSales = lyMonthAgg ? lyMonthAgg[storeIdx].sales : 0;
+  const lyMonthTCs = lyMonthAgg ? lyMonthAgg[storeIdx].tcs : 0;
+  const lyDayAgg = dailyStore.get(lyD);
+  const lyDaySales = lyDayAgg ? lyDayAgg[storeIdx].sales : 0;
+  const lyDayTCs = lyDayAgg ? lyDayAgg[storeIdx].tcs : 0;
+
+  const dayBudgetSales = lyMonthSales > 0
+    ? monthBudget.Sales * (lyDaySales / lyMonthSales)
+    : monthBudget.Sales / lyDaysInMonth;
+  const dayBudgetTCs = lyMonthTCs > 0
+    ? monthBudget.TCs * (lyDayTCs / lyMonthTCs)
+    : monthBudget.TCs / lyDaysInMonth;
+  const r = {sales: dayBudgetSales, tcs: dayBudgetTCs};
+  _budgetDayCache.set(cacheKey, r);
+  return r;
+}
+
+function periodBudget(fromDate, toDate, ly_mode) {
+  const dates = dateRange(fromDate, toDate);
+  const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
+  let totalSales = 0, totalTCs = 0;
+  for (let si = 0; si < STORES.length; si++) {
+    let s = 0, t = 0;
+    for (const d of dates) {
+      const b = getDayBudget(d, si, ly_mode);
+      s += b.sales; t += b.tcs;
+    }
+    byStore[si] = {sales: s, tcs: t};
+    totalSales += s; totalTCs += t;
+  }
+  return { byStore, total: {sales: totalSales, tcs: totalTCs} };
+}
+
+function fullMonthBudget(monthStr) {
+  const month = parseInt(monthStr.split('-')[1]);
+  const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
+  let totalSales = 0, totalTCs = 0;
+  for (let si = 0; si < STORES.length; si++) {
+    const sn = STORES[si];
+    const mb = BUDGET[sn] && BUDGET[sn][String(month)];
+    if (mb) {
+      byStore[si] = {sales: mb.Sales, tcs: mb.TCs};
+      totalSales += mb.Sales; totalTCs += mb.TCs;
+    }
+  }
+  return { byStore, total: {sales: totalSales, tcs: totalTCs} };
+}
+
+const STATE = {
+  view: 'MTD', asOf: LATEST,
+  customFrom: LATEST.slice(0,7) + '-01', customTo: LATEST,
+  ly_mode: '364', activeTab: 'overview', selectedStore: 0,
+};
+
+function compute() {
+  const [from, to] = resolvePeriod(STATE.view, STATE.asOf, STATE.customFrom, STATE.customTo);
+  const cy = aggregate(from, to);
+  const lyFrom = lyDate(from, STATE.ly_mode);
+  const lyTo = lyDate(to, STATE.ly_mode);
+  const ly = aggregate(lyFrom, lyTo);
+  const budget = periodBudget(from, to, STATE.ly_mode);
+  const periodDays = dateRange(from, to).length;
+  const month = to.slice(0,7);
+  const [yE, mE] = to.split('-').map(Number);
+  const monthDays = new Date(Date.UTC(yE, mE, 0)).getUTCDate();
+  const fullMonth = fullMonthBudget(month);
+  return { from, to, periodDays, monthDays, month, cy, ly, budget, fullMonth };
+}
+
+function renderHeader(R) {
+  document.getElementById('reportDate').textContent = dateGreek(R.to);
+  document.getElementById('reportCoverage').textContent = R.periodDays + ' / ' + R.monthDays + ' ημ.';
+  let active = 0;
+  for (let si = 0; si < STORES.length; si++) if (R.cy.byStore[si].sales > 0) active++;
+  document.getElementById('reportStores').textContent = active + ' / ' + STORES.length;
+}
+
+function renderKPI(R) {
+  const root = document.getElementById('kpiRow');
+  const cyS = R.cy.total.sales, cyT = R.cy.total.tcs;
+  const lyS = R.ly.total.sales, lyT = R.ly.total.tcs;
+  const bS = R.budget.total.sales, bT = R.budget.total.tcs;
+  const cyAvg = cyT > 0 ? cyS/cyT : 0;
+  const lyAvg = lyT > 0 ? lyS/lyT : 0;
+  const bAvg = bT > 0 ? bS/bT : 0;
+  const dSL = lyS > 0 ? (cyS - lyS) / lyS : null;
+  const dTL = lyT > 0 ? (cyT - lyT) / lyT : null;
+  const dAL = lyAvg > 0 ? (cyAvg - lyAvg) / lyAvg : null;
+  const dSB = bS > 0 ? (cyS - bS) / bS : null;
+  const dTB = bT > 0 ? (cyT - bT) / bT : null;
+  const dAB = bAvg > 0 ? (cyAvg - bAvg) / bAvg : null;
+  const monthlyBudget = R.fullMonth.total.sales;
+  const forecast = bS > 0 ? cyS * (monthlyBudget / bS) : null;
+  const forecastVsBudget = forecast && monthlyBudget > 0 ? (forecast - monthlyBudget) / monthlyBudget : null;
+  const cards = [
+    { cls:'primary', label:'Net Sales', value:fmtEurK(cyS), sub:[['vs Budget', dSB], ['vs LY', dSL]] },
+    { cls:'secondary', label:'Transactions', value:fmtNum(cyT), sub:[['vs Budget', dTB], ['vs LY', dTL]] },
+    { cls:'tertiary', label:'Avg Ticket', value:fmtAvg(cyAvg), sub:[['vs Budget', dAB], ['vs LY', dAL]] },
+    { cls:'primary', label:'Period Budget', value:fmtEurK(bS), sub:[['Coverage', null, (R.periodDays / R.monthDays).toFixed(2).replace('.',',')]] },
+    { cls:'secondary', label:'Monthly Budget', value:fmtEurK(monthlyBudget), sub:[['Days', null, R.monthDays + ' days']] },
+    { cls:'tertiary', label:'Month Forecast', value:fmtEurK(forecast), sub:[['vs Monthly Budget', forecastVsBudget]] }
+  ];
+  root.innerHTML = cards.map(c => `
+    <div class="kpi-card ${c.cls}">
+      <div class="accent-line"></div>
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+      <div class="kpi-sub">
+        ${c.sub.map(s => {
+          if (s[1] === null) return `<span class="versus">${s[0]}</span><span class="delta flat">${s[2]||'—'}</span>`;
+          return `<span class="versus">${s[0]}</span><span class="delta ${pctClass(s[1])}">${fmtPct(s[1])}</span>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOverview(R) {
+  const root = document.getElementById('tab-overview');
+  let typeRows = '';
+  const typeTotals = new Array(SALESTYPES.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
+  for (let si = 0; si < STORES.length; si++) {
+    for (let sti = 0; sti < SALESTYPES.length; sti++) {
+      typeTotals[sti].cyS += R.cy.byST[si][sti].sales;
+      typeTotals[sti].cyT += R.cy.byST[si][sti].tcs;
+      typeTotals[sti].lyS += R.ly.byST[si][sti].sales;
+      typeTotals[sti].lyT += R.ly.byST[si][sti].tcs;
+    }
+  }
+  for (let sti = 0; sti < SALESTYPES.length; sti++) {
+    const t = typeTotals[sti];
+    if (t.cyS === 0 && t.lyS === 0) continue;
+    const cyAvg = t.cyT > 0 ? t.cyS/t.cyT : 0;
+    const lyAvg = t.lyT > 0 ? t.lyS/t.lyT : 0;
+    const dS = t.lyS > 0 ? (t.cyS - t.lyS)/t.lyS : null;
+    const dT = t.lyT > 0 ? (t.cyT - t.lyT)/t.lyT : null;
+    const dA = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
+    const mix = R.cy.total.sales > 0 ? t.cyS / R.cy.total.sales : 0;
+    typeRows += `<tr>
+      <td>${SALESTYPES[sti]}</td>
+      <td>${fmtEur(t.cyS)}</td><td>${fmtNum(t.cyT)}</td><td>${fmtAvg(cyAvg)}</td>
+      <td>${fmtEur(t.lyS)}</td><td>${fmtNum(t.lyT)}</td><td>${fmtAvg(lyAvg)}</td>
+      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
+      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
+      <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
+      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
+    </tr>`;
+  }
+  const cyAvg = R.cy.total.tcs > 0 ? R.cy.total.sales/R.cy.total.tcs : 0;
+  const lyAvg = R.ly.total.tcs > 0 ? R.ly.total.sales/R.ly.total.tcs : 0;
+  const dS = R.ly.total.sales > 0 ? (R.cy.total.sales - R.ly.total.sales)/R.ly.total.sales : null;
+  const dT = R.ly.total.tcs > 0 ? (R.cy.total.tcs - R.ly.total.tcs)/R.ly.total.tcs : null;
+  const dA = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
+  typeRows += `<tr class="row-grand">
+    <td>TOTAL KFC</td>
+    <td>${fmtEur(R.cy.total.sales)}</td><td>${fmtNum(R.cy.total.tcs)}</td><td>${fmtAvg(cyAvg)}</td>
+    <td>${fmtEur(R.ly.total.sales)}</td><td>${fmtNum(R.ly.total.tcs)}</td><td>${fmtAvg(lyAvg)}</td>
+    <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
+    <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
+    <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
+    <td>100,0%</td></tr>`;
+
+  const chTotals = new Array(CHANNELGROUPS.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
+  for (let si = 0; si < STORES.length; si++) {
+    for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
+      chTotals[ci].cyS += R.cy.byCH[si][ci].sales;
+      chTotals[ci].cyT += R.cy.byCH[si][ci].tcs;
+      chTotals[ci].lyS += R.ly.byCH[si][ci].sales;
+      chTotals[ci].lyT += R.ly.byCH[si][ci].tcs;
+    }
+  }
+  let chRows = '';
+  for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
+    const t = chTotals[ci];
+    if (t.cyS === 0 && t.lyS === 0) continue;
+    const cAvg = t.cyT > 0 ? t.cyS/t.cyT : 0;
+    const lAvg = t.lyT > 0 ? t.lyS/t.lyT : 0;
+    const dS2 = t.lyS > 0 ? (t.cyS - t.lyS)/t.lyS : null;
+    const dT2 = t.lyT > 0 ? (t.cyT - t.lyT)/t.lyT : null;
+    const dA2 = lAvg > 0 ? (cAvg - lAvg)/lAvg : null;
+    const mix = R.cy.total.sales > 0 ? t.cyS / R.cy.total.sales : 0;
+    chRows += `<tr>
+      <td>${CHANNELGROUPS[ci]}</td>
+      <td>${fmtEur(t.cyS)}</td><td>${fmtNum(t.cyT)}</td><td>${fmtAvg(cAvg)}</td>
+      <td>${fmtEur(t.lyS)}</td><td>${fmtNum(t.lyT)}</td><td>${fmtAvg(lAvg)}</td>
+      <td><span class="pct ${pctClass(dS2)}">${fmtPct(dS2)}</span></td>
+      <td><span class="pct ${pctClass(dT2)}">${fmtPct(dT2)}</span></td>
+      <td><span class="pct ${pctClass(dA2)}">${fmtPct(dA2)}</span></td>
+      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
+    </tr>`;
+  }
+
+  const moverRows = [];
+  for (let si = 0; si < STORES.length; si++) {
+    const cy = R.cy.byStore[si];
+    const ly = R.ly.byStore[si];
+    if (cy.sales === 0 && ly.sales === 0) continue;
+    const dS3 = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+    const b = R.budget.byStore[si];
+    const dB = b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
+    moverRows.push({short: STORE_META[STORES[si]].short, cy: cy.sales, ly: ly.sales, dS: dS3, dB});
+  }
+  const best = [...moverRows].filter(m => m.dS !== null).sort((a,b) => b.dS - a.dS).slice(0, 5);
+  const worst = [...moverRows].filter(m => m.dS !== null).sort((a,b) => a.dS - b.dS).slice(0, 5);
+  const renderMovers = arr => arr.map(m => `<tr>
+    <td>${m.short}</td><td>${fmtEurK(m.cy)}</td><td>${fmtEurK(m.ly)}</td>
+    <td><span class="pct ${pctClass(m.dS)}">${fmtPct(m.dS)}</span></td>
+    <td><span class="pct ${pctClass(m.dB)}">${fmtPct(m.dB)}</span></td>
+  </tr>`).join('');
+
+  root.innerHTML = `
+    <div class="panel-section">
+      <div class="section-title"><span>Top-Line Performance · By Sales Type</span><span class="meta">${R.from} → ${R.to} · ${R.periodDays} ημέρες</span></div>
+      <div class="scroll-x"><table>
+        <thead><tr><th>Sales Type</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
+        <tbody>${typeRows}</tbody></table></div>
+    </div>
+    <div class="panel-section">
+      <div class="section-title"><span>Channel Mix</span></div>
+      <div class="scroll-x"><table>
+        <thead><tr><th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
+        <tbody>${chRows}</tbody></table></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel-section">
+        <div class="section-title"><span>Top Performers · vs LY</span></div>
+        <table><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(best)}</tbody></table>
+      </div>
+      <div class="panel-section">
+        <div class="section-title"><span>Underperformers · vs LY</span></div>
+        <table><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(worst)}</tbody></table>
+      </div>
+    </div>
+  `;
+}
+
+function renderByStore(R) {
+  const root = document.getElementById('tab-bystore');
+  let rows = '';
+  let totS=0, totT=0, totLS=0, totLT=0, totBS=0, totBT=0;
+  const arr = [];
+  for (let si = 0; si < STORES.length; si++) {
+    const cy = R.cy.byStore[si];
+    const ly = R.ly.byStore[si];
+    const b = R.budget.byStore[si];
+    if (cy.sales === 0 && ly.sales === 0 && b.sales === 0) continue;
+    arr.push({si, cy, ly, b});
+  }
+  arr.sort((a, b_) => b_.cy.sales - a.cy.sales);
+  arr.forEach((r, idx) => {
+    const cyAvg = r.cy.tcs > 0 ? r.cy.sales/r.cy.tcs : 0;
+    const lyAvg = r.ly.tcs > 0 ? r.ly.sales/r.ly.tcs : 0;
+    const bAvg = r.b.tcs > 0 ? r.b.sales/r.b.tcs : 0;
+    const dSL = r.ly.sales > 0 ? (r.cy.sales - r.ly.sales)/r.ly.sales : null;
+    const dTL = r.ly.tcs > 0 ? (r.cy.tcs - r.ly.tcs)/r.ly.tcs : null;
+    const dAL = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
+    const dSB = r.b.sales > 0 ? (r.cy.sales - r.b.sales)/r.b.sales : null;
+    const dTB = r.b.tcs > 0 ? (r.cy.tcs - r.b.tcs)/r.b.tcs : null;
+    const dAB = bAvg > 0 ? (cyAvg - bAvg)/bAvg : null;
+    rows += `<tr class="row-store">
+      <td>${idx+1}. ${STORE_META[STORES[r.si]].short}</td>
+      <td>${fmtEur(r.cy.sales)}</td><td>${fmtNum(r.cy.tcs)}</td><td>${fmtAvg(cyAvg)}</td>
+      <td>${fmtEur(r.b.sales)}</td>
+      <td><span class="pct ${pctClass(dSB)}">${fmtPct(dSB)}</span></td>
+      <td><span class="pct ${pctClass(dTB)}">${fmtPct(dTB)}</span></td>
+      <td><span class="pct ${pctClass(dAB)}">${fmtPct(dAB)}</span></td>
+      <td>${fmtEur(r.ly.sales)}</td>
+      <td><span class="pct ${pctClass(dSL)}">${fmtPct(dSL)}</span></td>
+      <td><span class="pct ${pctClass(dTL)}">${fmtPct(dTL)}</span></td>
+      <td><span class="pct ${pctClass(dAL)}">${fmtPct(dAL)}</span></td>
+    </tr>`;
+    totS += r.cy.sales; totT += r.cy.tcs;
+    totLS += r.ly.sales; totLT += r.ly.tcs;
+    totBS += r.b.sales; totBT += r.b.tcs;
+  });
+  const cyAvg = totT > 0 ? totS/totT : 0;
+  const lyAvg = totLT > 0 ? totLS/totLT : 0;
+  const bAvg = totBT > 0 ? totBS/totBT : 0;
+  const dSL = totLS > 0 ? (totS - totLS)/totLS : null;
+  const dTL = totLT > 0 ? (totT - totLT)/totLT : null;
+  const dAL = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
+  const dSB = totBS > 0 ? (totS - totBS)/totBS : null;
+  const dTB = totBT > 0 ? (totT - totBT)/totBT : null;
+  const dAB = bAvg > 0 ? (cyAvg - bAvg)/bAvg : null;
+  rows += `<tr class="row-grand">
+    <td>TOTAL KFC</td>
+    <td>${fmtEur(totS)}</td><td>${fmtNum(totT)}</td><td>${fmtAvg(cyAvg)}</td>
+    <td>${fmtEur(totBS)}</td>
+    <td><span class="pct ${pctClass(dSB)}">${fmtPct(dSB)}</span></td>
+    <td><span class="pct ${pctClass(dTB)}">${fmtPct(dTB)}</span></td>
+    <td><span class="pct ${pctClass(dAB)}">${fmtPct(dAB)}</span></td>
+    <td>${fmtEur(totLS)}</td>
+    <td><span class="pct ${pctClass(dSL)}">${fmtPct(dSL)}</span></td>
+    <td><span class="pct ${pctClass(dTL)}">${fmtPct(dTL)}</span></td>
+    <td><span class="pct ${pctClass(dAL)}">${fmtPct(dAL)}</span></td>
+  </tr>`;
+  root.innerHTML = `<div class="panel-section">
+    <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to}</span></div>
+    <div class="scroll-x"><table>
+      <thead><tr><th>Store</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>Budget</th><th>Δ S</th><th>Δ T</th><th>Δ A</th><th>LY Sales</th><th>Δ S</th><th>Δ T</th><th>Δ A</th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+}
+
+function renderSalesType(R) {
+  const root = document.getElementById('tab-salestype');
+  let rows = '';
+  const arr = [];
+  for (let si = 0; si < STORES.length; si++) {
+    const cy = R.cy.byStore[si];
+    if (cy.sales === 0 && R.ly.byStore[si].sales === 0) continue;
+    arr.push({si, cy: cy.sales});
+  }
+  arr.sort((a, b_) => b_.cy - a.cy);
+  for (const {si} of arr) {
+    const short = STORE_META[STORES[si]].short;
+    const cyTotal = R.cy.byStore[si];
+    const lyTotal = R.ly.byStore[si];
+    const bTotal = R.budget.byStore[si];
+    rows += `<tr class="row-store"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px 8px;border-top:1px solid var(--border)">${short}</td></tr>`;
+    for (let sti = 0; sti < SALESTYPES.length; sti++) {
+      const cy = R.cy.byST[si][sti];
+      const ly = R.ly.byST[si][sti];
+      if (cy.sales === 0 && ly.sales === 0) continue;
+      const cyA = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+      const lyA = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+      const dS = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+      const dT = ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
+      const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
+      const mix = cyTotal.sales > 0 ? cy.sales/cyTotal.sales : 0;
+      rows += `<tr class="row-type">
+        <td>${SALESTYPES[sti]}</td>
+        <td>${fmtEur(cy.sales)}</td><td>${fmtNum(cy.tcs)}</td><td>${fmtAvg(cyA)}</td>
+        <td>${fmtEur(ly.sales)}</td><td>${fmtNum(ly.tcs)}</td><td>${fmtAvg(lyA)}</td>
+        <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
+        <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
+        <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
+        <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
+      </tr>`;
+    }
+    const cyA = cyTotal.tcs > 0 ? cyTotal.sales/cyTotal.tcs : 0;
+    const lyA = lyTotal.tcs > 0 ? lyTotal.sales/lyTotal.tcs : 0;
+    const dS = lyTotal.sales > 0 ? (cyTotal.sales - lyTotal.sales)/lyTotal.sales : null;
+    const dT = lyTotal.tcs > 0 ? (cyTotal.tcs - lyTotal.tcs)/lyTotal.tcs : null;
+    const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
+    const dSB = bTotal.sales > 0 ? (cyTotal.sales - bTotal.sales)/bTotal.sales : null;
+    rows += `<tr class="row-total">
+      <td style="padding-left:16px">Total · ${short}</td>
+      <td>${fmtEur(cyTotal.sales)}</td><td>${fmtNum(cyTotal.tcs)}</td><td>${fmtAvg(cyA)}</td>
+      <td>${fmtEur(lyTotal.sales)}</td><td>${fmtNum(lyTotal.tcs)}</td><td>${fmtAvg(lyA)}</td>
+      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
+      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
+      <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
+      <td><span class="pct ${pctClass(dSB)}">B: ${fmtPct(dSB)}</span></td>
+    </tr>`;
+  }
+  root.innerHTML = `<div class="panel-section">
+    <div class="section-title"><span>Per-Store · Sales Type Breakdown</span><span class="meta">${R.from} → ${R.to}</span></div>
+    <div class="scroll-x"><table>
+      <thead><tr><th>Sales Type</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+}
+
+function renderChannels(R) {
+  const root = document.getElementById('tab-channels');
+  let rows = '';
+  const arr = [];
+  for (let si = 0; si < STORES.length; si++) {
+    const cy = R.cy.byStore[si];
+    if (cy.sales === 0 && R.ly.byStore[si].sales === 0) continue;
+    arr.push({si, cy: cy.sales});
+  }
+  arr.sort((a, b_) => b_.cy - a.cy);
+  for (const {si} of arr) {
+    const short = STORE_META[STORES[si]].short;
+    const cyTotal = R.cy.byStore[si];
+    rows += `<tr class="row-store"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px;border-top:1px solid var(--border)">${short}</td></tr>`;
+    for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
+      const cy = R.cy.byCH[si][ci];
+      const ly = R.ly.byCH[si][ci];
+      if (cy.sales === 0 && ly.sales === 0) continue;
+      const cyA = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+      const lyA = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+      const dS = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+      const dT = ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
+      const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
+      const mix = cyTotal.sales > 0 ? cy.sales/cyTotal.sales : 0;
+      rows += `<tr class="row-type">
+        <td>${CHANNELGROUPS[ci]}</td>
+        <td>${fmtEur(cy.sales)}</td><td>${fmtNum(cy.tcs)}</td><td>${fmtAvg(cyA)}</td>
+        <td>${fmtEur(ly.sales)}</td><td>${fmtNum(ly.tcs)}</td><td>${fmtAvg(lyA)}</td>
+        <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
+        <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
+        <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
+        <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
+      </tr>`;
+    }
+  }
+  root.innerHTML = `<div class="panel-section">
+    <div class="section-title"><span>Per-Store · Channel Breakdown</span><span class="meta">${R.from} → ${R.to}</span></div>
+    <div class="scroll-x"><table>
+      <thead><tr><th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
+      <tbody>${rows}</tbody></table></div></div>`;
+}
+
+function renderRankings(R) {
+  const root = document.getElementById('tab-rankings');
+  const arr = [];
+  for (let si = 0; si < STORES.length; si++) {
+    const cy = R.cy.byStore[si];
+    const ly = R.ly.byStore[si];
+    const b = R.budget.byStore[si];
+    if (cy.sales === 0 && ly.sales === 0 && b.sales === 0) continue;
+    arr.push({
+      si, short: STORE_META[STORES[si]].short,
+      cyS: cy.sales, cyT: cy.tcs, cyA: cy.tcs > 0 ? cy.sales/cy.tcs : 0,
+      lyS: ly.sales, lyT: ly.tcs, lyA: ly.tcs > 0 ? ly.sales/ly.tcs : 0,
+      bS: b.sales, bT: b.tcs, bA: b.tcs > 0 ? b.sales/b.tcs : 0,
+    });
+  }
+  function rankTable(metric, label, fmt) {
+    const sorted = [...arr].sort((a,b_) => b_[metric] - a[metric]);
+    const max = sorted[0] && sorted[0][metric] || 1;
+    return `<div class="panel-section">
+      <div class="section-title"><span>${label}</span></div>
+      <table>
+        <thead><tr><th style="width:30px;text-align:center">#</th><th>Store</th><th>${label.split(' ')[0]}</th><th style="width:80px"></th><th>vs LY</th><th>vs Budget</th></tr></thead>
+        <tbody>
+        ${sorted.map((r, idx) => {
+          const dL = metric==='cyS' ? (r.lyS > 0 ? (r.cyS - r.lyS)/r.lyS : null) :
+                    metric==='cyT' ? (r.lyT > 0 ? (r.cyT - r.lyT)/r.lyT : null) :
+                                     (r.lyA > 0 ? (r.cyA - r.lyA)/r.lyA : null);
+          const dB = metric==='cyS' ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
+                    metric==='cyT' ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
+                                     (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
+          const w = (r[metric]/max*100).toFixed(0);
+          return `<tr>
+            <td class="center" style="color:var(--text-2);font-family:var(--mono)">${String(idx+1).padStart(2,'0')}</td>
+            <td>${r.short}</td><td>${fmt(r[metric])}</td>
+            <td><div class="mini-bar"><div style="width:${w}%"></div></div></td>
+            <td><span class="pct ${pctClass(dL)}">${fmtPct(dL)}</span></td>
+            <td><span class="pct ${pctClass(dB)}">${fmtPct(dB)}</span></td>
+          </tr>`;
+        }).join('')}</tbody></table></div>`;
+  }
+  root.innerHTML = `<div class="grid-3">
+    ${rankTable('cyS', 'Net Sales', fmtEurK)}
+    ${rankTable('cyT', 'Transactions', fmtNum)}
+    ${rankTable('cyA', 'Avg Ticket', fmtAvg)}</div>`;
+}
+
+function renderDOW(R) {
+  const root = document.getElementById('tab-dow');
+  const cyByDOW = [0,1,2,3,4,5,6].map(()=>({sales:0, tcs:0, count:0}));
+  const lyByDOW = [0,1,2,3,4,5,6].map(()=>({sales:0, tcs:0, count:0}));
+  const dates = dateRange(R.from, R.to);
+  for (const d of dates) {
+    const dow = getDOW(d);
+    const dt = dailyTotal.get(d);
+    if (dt) { cyByDOW[dow].sales += dt.sales; cyByDOW[dow].tcs += dt.tcs; cyByDOW[dow].count++; }
+    const ld = lyDate(d, STATE.ly_mode);
+    const dow2 = getDOW(ld);
+    const lt = dailyTotal.get(ld);
+    if (lt) { lyByDOW[dow2].sales += lt.sales; lyByDOW[dow2].tcs += lt.tcs; lyByDOW[dow2].count++; }
+  }
+  let rows = '';
+  for (let i = 0; i < 7; i++) {
+    const cy = cyByDOW[i], ly = lyByDOW[i];
+    if (cy.count === 0 && ly.count === 0) continue;
+    const cyAvg_per_day = cy.count > 0 ? cy.sales / cy.count : 0;
+    const lyAvg_per_day = ly.count > 0 ? ly.sales / ly.count : 0;
+    const dD = lyAvg_per_day > 0 ? (cyAvg_per_day - lyAvg_per_day)/lyAvg_per_day : null;
+    const cyTicket = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+    const lyTicket = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+    rows += `<tr>
+      <td>${dowName(i)}</td>
+      <td>${cy.count}</td><td>${fmtEur(cy.sales)}</td><td>${fmtEur(cyAvg_per_day)}</td><td>${fmtNum(cy.tcs)}</td><td>${fmtAvg(cyTicket)}</td>
+      <td>${ly.count}</td><td>${fmtEur(ly.sales)}</td><td>${fmtEur(lyAvg_per_day)}</td><td>${fmtNum(ly.tcs)}</td><td>${fmtAvg(lyTicket)}</td>
+      <td><span class="pct ${pctClass(dD)}">${fmtPct(dD)}</span></td>
+    </tr>`;
+  }
+
+  const heatDates = dates.slice(-30);
+  const stores = [];
+  for (let si = 0; si < STORES.length; si++) {
+    let any = false;
+    for (const d of heatDates) {
+      const ds = dailyStore.get(d);
+      if (ds && ds[si].sales > 0) { any = true; break; }
+    }
+    if (any) stores.push(si);
+  }
+  const storeSales = {};
+  for (const si of stores) {
+    let s = 0;
+    for (const d of heatDates) {
+      const ds = dailyStore.get(d);
+      if (ds) s += ds[si].sales;
+    }
+    storeSales[si] = s;
+  }
+  stores.sort((a, b) => storeSales[b] - storeSales[a]);
+  let heatHTML = '';
+  heatHTML += `<div class="heatmap" style="grid-template-columns: 110px repeat(${heatDates.length}, minmax(38px,1fr))">`;
+  heatHTML += `<div class="heat-header">DAY</div>`;
+  for (const d of heatDates) {
+    const [yh, mh, dh] = d.split('-').map(Number);
+    heatHTML += `<div class="heat-header">${dh}<br><span style="opacity:0.5">${dowName(getDOW(d)).slice(0,2)}</span></div>`;
+  }
+  for (const si of stores) {
+    heatHTML += `<div class="heat-label">${STORE_META[STORES[si]].short}</div>`;
+    for (const d of heatDates) {
+      const ld = lyDate(d, STATE.ly_mode);
+      const ds = dailyStore.get(d);
+      const ls = dailyStore.get(ld);
+      const cyS = ds ? ds[si].sales : 0;
+      const lyS = ls ? ls[si].sales : 0;
+      const dlt = lyS > 0 ? (cyS - lyS)/lyS : null;
+      let bg = 'transparent', col = 'var(--text-2)';
+      if (dlt !== null) {
+        const v = Math.max(-0.5, Math.min(0.5, dlt));
+        if (v > 0) { const o = Math.min(0.6, v*1.2); bg = `rgba(34,197,94,${o.toFixed(2)})`; col = 'var(--text-0)'; }
+        else { const o = Math.min(0.6, -v*1.2); bg = `rgba(239,68,68,${o.toFixed(2)})`; col = 'var(--text-0)'; }
+      } else if (cyS > 0) bg = 'rgba(100,116,139,0.1)';
+      const txt = (dlt === null && cyS === 0) ? '·' : (dlt === null ? '?' : (dlt*100).toFixed(0));
+      heatHTML += `<div class="heat-cell" style="background:${bg};color:${col}" title="${d} vs ${ld}: CY ${fmtEur(cyS)} / LY ${fmtEur(lyS)}">${txt}</div>`;
+    }
+  }
+  heatHTML += `</div>`;
+  root.innerHTML = `
+    <div class="panel-section">
+      <div class="section-title"><span>Day-of-Week Profile · Period Aggregation</span><span class="meta">${R.from} → ${R.to}</span></div>
+      <table>
+        <thead><tr><th>DOW</th><th>CY Days</th><th>CY Sales</th><th>CY Avg/Day</th><th>CY TCs</th><th>CY Avg€</th><th>LY Days</th><th>LY Sales</th><th>LY Avg/Day</th><th>LY TCs</th><th>LY Avg€</th><th>Δ Avg/Day</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+    </div>
+    <div class="panel-section">
+      <div class="section-title"><span>Heatmap · vs LY % per Day per Store</span><span class="meta">last ${heatDates.length} days</span></div>
+      ${heatHTML}
+    </div>`;
+}
+
+function renderTrend(R) {
+  const root = document.getElementById('tab-trend');
+  const dates = dateRange(R.from, R.to);
+  const series = dates.map(d => {
+    const ld = lyDate(d, STATE.ly_mode);
+    const dt = dailyTotal.get(d) || {sales:0, tcs:0};
+    const lt = dailyTotal.get(ld) || {sales:0, tcs:0};
+    let bS = 0;
+    for (let si = 0; si < STORES.length; si++) bS += getDayBudget(d, si, STATE.ly_mode).sales;
+    return {date:d, cyS:dt.sales, lyS:lt.sales, bS};
+  });
+  let cumCY = 0, cumLY = 0, cumB = 0;
+  const cumSeries = series.map(p => { cumCY += p.cyS; cumLY += p.lyS; cumB += p.bS; return {date:p.date, cumCY, cumLY, cumB}; });
+  const W = 1500, H = 320, PAD = {l:60, r:20, t:20, b:30};
+  const innerW = W - PAD.l - PAD.r, innerH = H - PAD.t - PAD.b;
+  function chart(data, accessors, title, fmt) {
+    const allVals = [];
+    accessors.forEach(a => data.forEach(p => allVals.push(a.fn(p))));
+    const minV = Math.min(...allVals.filter(v => v !== null && !isNaN(v)));
+    const maxV = Math.max(...allVals.filter(v => v !== null && !isNaN(v)));
+    const range = maxV - minV || 1;
+    const yMin = minV - range*0.1, yMax = maxV + range*0.1;
+    const xScale = i => PAD.l + (i / (data.length - 1 || 1)) * innerW;
+    const yScale = v => PAD.t + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%">`;
+    for (let i = 0; i <= 4; i++) {
+      const y = PAD.t + innerH * i / 4;
+      const v = yMax - (yMax - yMin) * i / 4;
+      svg += `<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
+      svg += `<text x="${PAD.l-8}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${fmt(v)}</text>`;
+    }
+    const step = Math.max(1, Math.ceil(data.length/12));
+    for (let i = 0; i < data.length; i += step) {
+      const x = xScale(i);
+      const [yc, mc, dc] = data[i].date.split('-').map(Number);
+      svg += `<text x="${x}" y="${H-8}" text-anchor="middle" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${dc}/${mc}</text>`;
+    }
+    accessors.forEach(a => {
+      const pts = data.map((p, i) => `${xScale(i)},${yScale(a.fn(p))}`).join(' ');
+      svg += `<polyline fill="none" stroke="${a.color}" stroke-width="${a.width||2}" stroke-dasharray="${a.dash||''}" points="${pts}" />`;
+    });
+    let lx = PAD.l + 20;
+    accessors.forEach(a => {
+      svg += `<rect x="${lx}" y="${PAD.t+8}" width="14" height="3" fill="${a.color}" stroke-dasharray="${a.dash||''}"/>`;
+      svg += `<text x="${lx+18}" y="${PAD.t+12}" fill="var(--text-1)" font-size="11">${a.label}</text>`;
+      lx += 20 + a.label.length * 7 + 20;
+    });
+    svg += `</svg>`;
+    return `<div class="chart-wrap"><div class="chart-title">${title}</div>${svg}</div>`;
+  }
+  const acc1 = [
+    {label:'Actual', fn:p=>p.cyS, color:'#ef4444', width:2.2},
+    {label:'Last Year', fn:p=>p.lyS, color:'#f59e0b', width:1.8, dash:'4 3'},
+    {label:'Budget', fn:p=>p.bS, color:'#22c55e', width:1.8, dash:'2 3'},
+  ];
+  const acc2 = [
+    {label:'Actual (cum)', fn:p=>p.cumCY, color:'#ef4444', width:2.2},
+    {label:'LY (cum)', fn:p=>p.cumLY, color:'#f59e0b', width:1.8, dash:'4 3'},
+    {label:'Budget (cum)', fn:p=>p.cumB, color:'#22c55e', width:1.8, dash:'2 3'},
+  ];
+  root.innerHTML = `
+    <div class="panel-section">
+      <div class="section-title"><span>Daily Trend · CY vs LY vs Budget (KFC ALL)</span><span class="meta">${R.from} → ${R.to}</span></div>
+      ${chart(series, acc1, 'Daily Net Sales (€)', fmtEurK)}
+    </div>
+    <div class="panel-section">
+      <div class="section-title"><span>Cumulative Trend</span></div>
+      ${chart(cumSeries, acc2, 'Cumulative Net Sales (€)', fmtEurK)}
+    </div>`;
+}
+
+function renderStoreDeep(R) {
+  const root = document.getElementById('tab-storedeep');
+  const opts = STORES.map((s,i) => `<option value="${i}" ${i===STATE.selectedStore?'selected':''}>${STORE_META[s].short}</option>`).join('');
+  const si = STATE.selectedStore;
+  const storeName = STORES[si];
+  const short = STORE_META[storeName].short;
+  const cy = R.cy.byStore[si];
+  const ly = R.ly.byStore[si];
+  const b = R.budget.byStore[si];
+  const fb = R.fullMonth.byStore[si];
+  const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+  const lyAvg = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+  const bAvg = b.tcs > 0 ? b.sales/b.tcs : 0;
+  const dSL = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+  const dTL = ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
+  const dAL = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
+  const dSB = b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
+  const dTB = b.tcs > 0 ? (cy.tcs - b.tcs)/b.tcs : null;
+  const dAB = bAvg > 0 ? (cyAvg - bAvg)/bAvg : null;
+  const forecast = b.sales > 0 ? cy.sales * (fb.sales / b.sales) : null;
+  const forecastVsBudget = forecast && fb.sales > 0 ? (forecast - fb.sales)/fb.sales : null;
+
+  const dates = dateRange(R.from, R.to);
+  const series = dates.map(d => {
+    const ld = lyDate(d, STATE.ly_mode);
+    const ds = dailyStore.get(d);
+    const ls = dailyStore.get(ld);
+    const cyS = ds ? ds[si].sales : 0;
+    const lyS = ls ? ls[si].sales : 0;
+    const bd = getDayBudget(d, si, STATE.ly_mode).sales;
+    return {date:d, cyS, lyS, bS:bd};
+  });
+
+  let typeRows = '';
+  for (let sti = 0; sti < SALESTYPES.length; sti++) {
+    const cyV = R.cy.byST[si][sti];
+    const lyV = R.ly.byST[si][sti];
+    if (cyV.sales === 0 && lyV.sales === 0) continue;
+    const cyA = cyV.tcs > 0 ? cyV.sales/cyV.tcs : 0;
+    const lyA = lyV.tcs > 0 ? lyV.sales/lyV.tcs : 0;
+    const dS = lyV.sales > 0 ? (cyV.sales - lyV.sales)/lyV.sales : null;
+    const dT = lyV.tcs > 0 ? (cyV.tcs - lyV.tcs)/lyV.tcs : null;
+    const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
+    const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
+    typeRows += `<tr>
+      <td>${SALESTYPES[sti]}</td>
+      <td>${fmtEur(cyV.sales)}</td><td>${fmtNum(cyV.tcs)}</td><td>${fmtAvg(cyA)}</td>
+      <td>${fmtEur(lyV.sales)}</td><td>${fmtNum(lyV.tcs)}</td><td>${fmtAvg(lyA)}</td>
+      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
+      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
+      <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
+      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
+    </tr>`;
+  }
+  let chRows = '';
+  for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
+    const cyV = R.cy.byCH[si][ci];
+    const lyV = R.ly.byCH[si][ci];
+    if (cyV.sales === 0 && lyV.sales === 0) continue;
+    const cyA = cyV.tcs > 0 ? cyV.sales/cyV.tcs : 0;
+    const lyA = lyV.tcs > 0 ? lyV.sales/lyV.tcs : 0;
+    const dS = lyV.sales > 0 ? (cyV.sales - lyV.sales)/lyV.sales : null;
+    const dT = lyV.tcs > 0 ? (cyV.tcs - lyV.tcs)/lyV.tcs : null;
+    const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
+    chRows += `<tr>
+      <td>${CHANNELGROUPS[ci]}</td>
+      <td>${fmtEur(cyV.sales)}</td><td>${fmtNum(cyV.tcs)}</td><td>${fmtAvg(cyA)}</td>
+      <td>${fmtEur(lyV.sales)}</td><td>${fmtNum(lyV.tcs)}</td><td>${fmtAvg(lyA)}</td>
+      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
+      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
+      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
+    </tr>`;
+  }
+
+  const W = 1500, H = 280, PAD = {l:60, r:20, t:20, b:30};
+  const innerW = W - PAD.l - PAD.r, innerH = H - PAD.t - PAD.b;
+  const allVals = [];
+  series.forEach(p => { allVals.push(p.cyS, p.lyS, p.bS); });
+  const minV = Math.min(...allVals.filter(v => !isNaN(v)));
+  const maxV = Math.max(...allVals.filter(v => !isNaN(v)));
+  const range = maxV - minV || 1;
+  const yMin = minV - range*0.1, yMax = maxV + range*0.1;
+  const xScale = i => PAD.l + (i / (series.length - 1 || 1)) * innerW;
+  const yScale = v => PAD.t + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%">`;
+  for (let i = 0; i <= 4; i++) {
+    const y = PAD.t + innerH * i / 4;
+    const v = yMax - (yMax - yMin) * i / 4;
+    svg += `<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
+    svg += `<text x="${PAD.l-8}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${fmtEurK(v)}</text>`;
+  }
+  const step = Math.max(1, Math.ceil(series.length/12));
+  for (let i = 0; i < series.length; i += step) {
+    const x = xScale(i);
+    const [yc, mc, dc] = series[i].date.split('-').map(Number);
+    svg += `<text x="${x}" y="${H-8}" text-anchor="middle" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${dc}/${mc}</text>`;
+  }
+  const colors = [['Actual','#ef4444','cyS','2.2',''],['LY','#f59e0b','lyS','1.8','4 3'],['Budget','#22c55e','bS','1.8','2 3']];
+  for (const [lbl,col,k,w,d] of colors) {
+    const pts = series.map((p, i) => `${xScale(i)},${yScale(p[k])}`).join(' ');
+    svg += `<polyline fill="none" stroke="${col}" stroke-width="${w}" stroke-dasharray="${d}" points="${pts}" />`;
+  }
+  let lx = PAD.l + 20;
+  for (const [lbl,col,k,w,d] of colors) {
+    svg += `<rect x="${lx}" y="${PAD.t+8}" width="14" height="3" fill="${col}" stroke-dasharray="${d}"/>`;
+    svg += `<text x="${lx+18}" y="${PAD.t+12}" fill="var(--text-1)" font-size="11">${lbl}</text>`;
+    lx += 20 + lbl.length * 7 + 20;
+  }
+  svg += `</svg>`;
+
+  root.innerHTML = `
+    <div class="panel-section">
+      <div class="section-title"><span>Store Deep-Dive</span><span><select id="storeSelect" style="font-size:11px">${opts}</select></span></div>
+      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-top:12px;margin-bottom:0">
+        <div class="kpi-card primary"><div class="accent-line"></div>
+          <div class="kpi-label">Net Sales</div><div class="kpi-value">${fmtEurK(cy.sales)}</div>
+          <div class="kpi-sub">
+            <span class="versus">vs Budget</span><span class="delta ${pctClass(dSB)}">${fmtPct(dSB)}</span>
+            <span class="versus">vs LY</span><span class="delta ${pctClass(dSL)}">${fmtPct(dSL)}</span>
+          </div></div>
+        <div class="kpi-card secondary"><div class="accent-line"></div>
+          <div class="kpi-label">TCs</div><div class="kpi-value">${fmtNum(cy.tcs)}</div>
+          <div class="kpi-sub">
+            <span class="versus">vs Budget</span><span class="delta ${pctClass(dTB)}">${fmtPct(dTB)}</span>
+            <span class="versus">vs LY</span><span class="delta ${pctClass(dTL)}">${fmtPct(dTL)}</span>
+          </div></div>
+        <div class="kpi-card tertiary"><div class="accent-line"></div>
+          <div class="kpi-label">Avg Ticket</div><div class="kpi-value">${fmtAvg(cyAvg)}</div>
+          <div class="kpi-sub">
+            <span class="versus">vs Budget</span><span class="delta ${pctClass(dAB)}">${fmtPct(dAB)}</span>
+            <span class="versus">vs LY</span><span class="delta ${pctClass(dAL)}">${fmtPct(dAL)}</span>
+          </div></div>
+        <div class="kpi-card primary"><div class="accent-line"></div>
+          <div class="kpi-label">Month Forecast</div><div class="kpi-value">${fmtEurK(forecast)}</div>
+          <div class="kpi-sub"><span class="versus">vs Monthly Budget</span><span class="delta ${pctClass(forecastVsBudget)}">${fmtPct(forecastVsBudget)}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="section-title"><span>Daily Trend · ${short}</span></div>
+      <div class="chart-wrap"><div class="chart-title">CY vs LY vs Budget (€)</div>${svg}</div>
+    </div>
+    <div class="grid-2">
+      <div class="panel-section">
+        <div class="section-title"><span>Sales Type Breakdown</span></div>
+        <div class="scroll-x"><table>
+          <thead><tr><th>Type</th><th>CY S</th><th>CY T</th><th>CY Avg</th><th>LY S</th><th>LY T</th><th>LY Avg</th><th>ΔS</th><th>ΔT</th><th>ΔA</th><th>Mix</th></tr></thead>
+          <tbody>${typeRows}</tbody></table></div>
+      </div>
+      <div class="panel-section">
+        <div class="section-title"><span>Channel Breakdown</span></div>
+        <div class="scroll-x"><table>
+          <thead><tr><th>Channel</th><th>CY S</th><th>CY T</th><th>CY Avg</th><th>LY S</th><th>LY T</th><th>LY Avg</th><th>ΔS</th><th>ΔT</th><th>Mix</th></tr></thead>
+          <tbody>${chRows}</tbody></table></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('storeSelect').addEventListener('change', e => {
+    STATE.selectedStore = parseInt(e.target.value);
+    renderActive();
+  });
+}
+
+let _cachedR = null;
+function renderActive() {
+  if (!_cachedR) _cachedR = compute();
+  const R = _cachedR;
+  renderHeader(R);
+  renderKPI(R);
+  const map = {
+    overview: renderOverview, bystore: renderByStore, salestype: renderSalesType,
+    channels: renderChannels, rankings: renderRankings, dow: renderDOW,
+    trend: renderTrend, storedeep: renderStoreDeep,
+  };
+  map[STATE.activeTab](R);
+}
+function refresh() { _cachedR = null; renderActive(); }
+
+document.querySelectorAll('#viewBtns button').forEach(b => b.addEventListener('click', e => {
+  document.querySelectorAll('#viewBtns button').forEach(x => x.classList.remove('active'));
+  e.target.classList.add('active');
+  STATE.view = e.target.dataset.view;
+  document.getElementById('customWrap').style.display = (STATE.view === 'CUSTOM') ? 'flex' : 'none';
+  document.getElementById('dateAsOfWrap').style.display = (STATE.view === 'CUSTOM') ? 'none' : 'flex';
+  refresh();
+}));
+document.querySelectorAll('#lyBtns button').forEach(b => b.addEventListener('click', e => {
+  document.querySelectorAll('#lyBtns button').forEach(x => x.classList.remove('active'));
+  e.target.classList.add('active');
+  STATE.ly_mode = e.target.dataset.ly;
+  refresh();
+}));
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+  e.target.classList.add('active');
+  const tab = e.target.dataset.tab;
+  document.getElementById('tab-' + tab).classList.add('active');
+  STATE.activeTab = tab;
+  renderActive();
+}));
+document.getElementById('asOfDate').addEventListener('change', e => { STATE.asOf = e.target.value; refresh(); });
+document.getElementById('customFrom').addEventListener('change', e => { STATE.customFrom = e.target.value; refresh(); });
+document.getElementById('customTo').addEventListener('change', e => { STATE.customTo = e.target.value; refresh(); });
+
+document.getElementById('asOfDate').value = LATEST;
+document.getElementById('asOfDate').min = FIRST;
+document.getElementById('asOfDate').max = LATEST;
+document.getElementById('customFrom').value = LATEST.slice(0,7) + '-01';
+document.getElementById('customTo').value = LATEST;
+
+renderActive();
+}
+</script>
+</body>
+</html>
