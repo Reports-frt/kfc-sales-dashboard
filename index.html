@@ -387,52 +387,89 @@ svg { display: block; max-width: 100%; }
 
   /* TABLES → CARD-BASED LAYOUT on phone
      Each row becomes a stacked card with label:value pairs */
+  .panel table.responsive-table { border-collapse: separate; }
   .panel table.responsive-table thead { display: none; }
   .panel table.responsive-table,
-  .panel table.responsive-table tbody,
-  .panel table.responsive-table tr,
-  .panel table.responsive-table td {
+  .panel table.responsive-table tbody {
     display: block;
     width: 100%;
-    text-align: left !important;
-    border: none;
   }
   .panel table.responsive-table tr {
+    display: block;
+    width: 100%;
     background: var(--bg-2);
     border-radius: 6px;
     margin-bottom: 8px;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-left: 3px solid var(--accent);
+    box-sizing: border-box;
   }
   .panel table.responsive-table tr.row-grand {
     border-left: 3px solid var(--kfc);
     background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.06) 100%);
   }
-  .panel table.responsive-table tr.row-store > td:first-child {
-    font-weight: 700; font-size: 13px; color: var(--text-0);
-    margin-bottom: 6px; padding-bottom: 6px;
-    border-bottom: 1px solid var(--border-soft);
+  .panel table.responsive-table tr.row-type {
+    border-left: 3px solid var(--accent-2);
+    margin-left: 10px;
   }
+  /* Header row (e.g. store name with colspan) — show as full-width title */
+  .panel table.responsive-table tr.row-store-header {
+    background: var(--kfc) !important;
+    border-left: none;
+    padding: 8px 14px;
+    margin-top: 10px;
+    margin-bottom: 6px;
+  }
+  .panel table.responsive-table tr.row-store-header td {
+    background: transparent !important;
+    color: white !important;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: left !important;
+    padding: 0 !important;
+    border: none !important;
+    display: block !important;
+  }
+  .panel table.responsive-table tr.row-store-header td:before { content: none !important; }
   .panel table.responsive-table td {
-    padding: 3px 0;
-    display: flex;
+    display: flex !important;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    padding: 4px 0;
+    width: 100%;
+    text-align: right !important;
+    border: none;
+    box-sizing: border-box;
+    min-height: 22px;
   }
+  /* First cell is the row label (sales type name, store name, etc.) */
   .panel table.responsive-table td:first-child {
     border-bottom: 1px solid var(--border-soft);
-    padding-bottom: 6px;
-    margin-bottom: 4px;
+    padding-bottom: 8px;
+    margin-bottom: 6px;
     font-weight: 700;
+    color: var(--text-0);
+    font-size: 13px;
+    display: block !important;
+    text-align: left !important;
   }
-  .panel table.responsive-table td:before {
+  /* For all cells AFTER the first, inject the column label from data-label */
+  .panel table.responsive-table td:not(:first-child):before {
     content: attr(data-label);
-    font-family: var(--mono); font-size: 9px; color: var(--text-2);
-    letter-spacing: 1px; text-transform: uppercase;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-2);
+    letter-spacing: 1px;
+    text-transform: uppercase;
     flex-shrink: 0;
+    font-weight: 500;
   }
-  .panel table.responsive-table td:first-child:before { content: none; }
+  /* If data-label is empty, hide the entire cell */
+  .panel table.responsive-table td:not(:first-child):not([data-label]),
+  .panel table.responsive-table td:not(:first-child)[data-label=""] {
+    display: none !important;
+  }
 
   /* Tables that we can't easily card-ify: scroll horizontal with hint */
   .scroll-x {
@@ -1257,7 +1294,7 @@ function renderSalesType(R) {
     const cyTotal = R.cy.byStore[si];
     const lyTotal = R.ly.byStore[si];
     const bTotal = R.budget.byStore[si];
-    rows += `<tr class="row-store"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px 8px;border-top:1px solid var(--border)">${short}</td></tr>`;
+    rows += `<tr class="row-store row-store-header"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px 8px;border-top:1px solid var(--border)">${short}</td></tr>`;
     for (let sti = 0; sti < SALESTYPES.length; sti++) {
       const cy = R.cy.byST[si][sti];
       const ly = R.ly.byST[si][sti];
@@ -1314,7 +1351,7 @@ function renderChannels(R) {
   for (const {si} of arr) {
     const short = STORE_META[STORES[si]].short;
     const cyTotal = R.cy.byStore[si];
-    rows += `<tr class="row-store"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px;border-top:1px solid var(--border)">${short}</td></tr>`;
+    rows += `<tr class="row-store row-store-header"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px;border-top:1px solid var(--border)">${short}</td></tr>`;
     for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
       const cy = R.cy.byCH[si][ci];
       const ly = R.ly.byCH[si][ci];
