@@ -546,6 +546,43 @@ svg { display: block; max-width: 100%; }
 
   /* Password screen on mobile */
   #pwScreen > div { width: calc(100vw - 32px) !important; padding: 28px 20px !important; }
+
+  /* ===== HARD VIEWPORT CAP — nothing escapes the screen ===== */
+  html, body { max-width: 100vw; overflow-x: hidden; }
+  .app { max-width: 100vw; overflow-x: hidden; box-sizing: border-box; }
+  .panel, .panel * { max-width: 100%; box-sizing: border-box; }
+  .panel { overflow-x: hidden !important; }
+
+  /* Force panel sections to clip overflow */
+  .panel-section { max-width: 100%; overflow-x: hidden; }
+
+  /* Charts: must fit inside viewport, cap SVG width */
+  .chart-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .chart-wrap svg { max-width: none; min-width: 600px; }
+
+  /* Heatmap: scroll only inside its own container */
+  .heatmap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  /* Make sure data-label cells don't overflow horizontally */
+  .panel table.responsive-table td {
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .panel table.responsive-table td > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  /* Tabs strip: confine its overflow to itself */
+  .tabs { max-width: 100vw; }
+
+  /* Header: confine */
+  .header, .controls, .kpi-row { max-width: 100%; box-sizing: border-box; }
 }
 
 /* Very small (≤380px, e.g. iPhone SE) */
