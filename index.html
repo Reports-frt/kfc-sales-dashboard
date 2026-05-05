@@ -392,6 +392,8 @@ svg { display: block; max-width: 100%; }
     overflow-x: visible !important;
     border: none !important;
     border-radius: 0 !important;
+    width: 100%;
+    max-width: 100%;
   }
   .panel table.responsive-table {
     border-collapse: separate;
@@ -413,8 +415,8 @@ svg { display: block; max-width: 100%; }
     max-width: 100%;
     background: var(--bg-2);
     border-radius: 6px;
-    margin-bottom: 8px;
-    padding: 12px 14px;
+    margin-bottom: 6px;
+    padding: 10px 10px 10px 12px;
     border-left: 3px solid var(--accent);
     box-sizing: border-box;
     overflow: hidden;
@@ -453,15 +455,16 @@ svg { display: block; max-width: 100%; }
     display: flex !important;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    padding: 4px 0;
+    gap: 8px;
+    padding: 3px 0;
     width: 100%;
     max-width: 100%;
     text-align: right !important;
     border: none;
     box-sizing: border-box;
-    min-height: 22px;
+    min-height: 20px;
     overflow: hidden;
+    font-size: 11px;
   }
   /* The value (right-side content) — let it shrink and wrap if needed */
   .panel table.responsive-table td > * {
@@ -488,16 +491,22 @@ svg { display: block; max-width: 100%; }
   .panel table.responsive-table td:not(:first-child):before {
     content: attr(data-label);
     font-family: var(--mono);
-    font-size: 9px;
+    font-size: 8.5px;
     color: var(--text-2);
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
-    flex-shrink: 0;
+    flex-shrink: 1;
     font-weight: 500;
-    max-width: 50%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    min-width: 0;
+  }
+  /* The value in the right side */
+  .panel table.responsive-table td:not(:first-child) {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--mono);
+    font-size: 11px;
   }
   /* If data-label is empty, hide the entire cell */
   .panel table.responsive-table td:not(:first-child):not([data-label]),
@@ -508,6 +517,8 @@ svg { display: block; max-width: 100%; }
   .panel table.responsive-table td .pct {
     flex-shrink: 0;
     white-space: nowrap;
+    font-size: 10px;
+    padding: 1px 5px;
   }
   /* Force panel itself not to scroll horizontally on mobile */
   .panel { overflow-x: hidden; }
