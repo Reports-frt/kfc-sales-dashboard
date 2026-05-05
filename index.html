@@ -142,6 +142,7 @@ select, input[type="date"] {
 select:focus, input:focus { outline: none; border-color: var(--accent); }
 
 .kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-row-deepdive { grid-template-columns: repeat(4, 1fr); }
 .kpi-card {
   background: var(--bg-1); border: 1px solid var(--border-soft);
   border-radius: 8px; padding: 14px 16px;
@@ -278,6 +279,204 @@ svg { display: block; max-width: 100%; }
   margin: 40px auto;
 }
 .error-box .title { font-weight: 700; color: var(--bad); margin-bottom: 8px; font-size: 13px; }
+
+/* ===========================================================
+   RESPONSIVE — Tablet (≤1024px) and Mobile (≤640px)
+   =========================================================== */
+
+/* Tablet adjustments */
+@media (max-width: 1024px) {
+  .app { padding: 12px 14px; }
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .grid-2 { grid-template-columns: 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .header-meta { gap: 14px; }
+  .header-meta .label { font-size: 8px; }
+  .header-meta .value { font-size: 12px; }
+  .brand-text h1 { font-size: 16px; }
+  .brand-text .subtitle { font-size: 9px; }
+}
+
+/* Mobile (phones) */
+@media (max-width: 640px) {
+  body { font-size: 12px; }
+  .app { padding: 10px 10px; }
+
+  /* Header — stack vertically */
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px 14px;
+  }
+  .brand { gap: 10px; }
+  .brand-mark { width: 32px; height: 32px; font-size: 12px; }
+  .brand-text h1 { font-size: 15px; line-height: 1.2; }
+  .brand-text .subtitle { font-size: 8px; letter-spacing: 0.5px; }
+  .header-meta {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-soft);
+  }
+  .header-meta .item { text-align: left; }
+  .header-meta .label { font-size: 8px; letter-spacing: 0.5px; }
+  .header-meta .value { font-size: 11px; }
+
+  /* Controls — stack & wrap */
+  .controls {
+    padding: 10px 12px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .control-group { flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
+  .control-label { width: 100%; margin-bottom: 2px; font-size: 8px; }
+  .btn-group { flex-wrap: wrap; }
+  .btn-group button { padding: 8px 10px; font-size: 11px; }
+  input[type="date"], select { font-size: 12px; padding: 7px 8px; }
+
+  /* KPI cards — 2 columns on phone */
+  .kpi-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .kpi-row-deepdive { grid-template-columns: repeat(2, 1fr) !important; }
+  .kpi-card {
+    padding: 10px 12px;
+    min-width: 0;
+  }
+  .kpi-card .kpi-label { font-size: 8px; margin-bottom: 6px; }
+  .kpi-card .kpi-value { font-size: 17px; letter-spacing: -0.3px; }
+  .kpi-card .kpi-sub {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    font-size: 9px;
+  }
+  .kpi-card .kpi-sub .versus { font-size: 8px; }
+
+  /* Tabs — horizontally scrollable strip */
+  .tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 10px 14px;
+    font-size: 11px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Panel */
+  .panel { padding: 12px 10px; }
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 10px;
+  }
+  .section-title .meta { font-size: 8px; }
+
+  /* TABLES → CARD-BASED LAYOUT on phone
+     Each row becomes a stacked card with label:value pairs */
+  .panel table.responsive-table thead { display: none; }
+  .panel table.responsive-table,
+  .panel table.responsive-table tbody,
+  .panel table.responsive-table tr,
+  .panel table.responsive-table td {
+    display: block;
+    width: 100%;
+    text-align: left !important;
+    border: none;
+  }
+  .panel table.responsive-table tr {
+    background: var(--bg-2);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    padding: 10px 12px;
+    border-left: 3px solid var(--accent);
+  }
+  .panel table.responsive-table tr.row-grand {
+    border-left: 3px solid var(--kfc);
+    background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.06) 100%);
+  }
+  .panel table.responsive-table tr.row-store > td:first-child {
+    font-weight: 700; font-size: 13px; color: var(--text-0);
+    margin-bottom: 6px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .panel table.responsive-table td {
+    padding: 3px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .panel table.responsive-table td:first-child {
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+    font-weight: 700;
+  }
+  .panel table.responsive-table td:before {
+    content: attr(data-label);
+    font-family: var(--mono); font-size: 9px; color: var(--text-2);
+    letter-spacing: 1px; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .panel table.responsive-table td:first-child:before { content: none; }
+
+  /* Tables that we can't easily card-ify: scroll horizontal with hint */
+  .scroll-x {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    position: relative;
+  }
+  .scroll-x table { font-size: 10px; min-width: 600px; }
+  .scroll-x th, .scroll-x td { padding: 5px 6px; }
+
+  /* Heatmap — keep readable, scroll horizontally */
+  .heatmap {
+    grid-template-columns: 80px repeat(auto-fit, minmax(28px, 1fr)) !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .heat-label { font-size: 9px; padding: 3px 6px; }
+  .heat-header { font-size: 8px; padding: 3px 4px; }
+  .heat-cell { font-size: 8px; padding: 3px 4px; }
+
+  /* Charts — keep aspect, scroll if needed */
+  .chart-wrap { padding: 8px; }
+  .chart-title { font-size: 9px; }
+  svg { min-width: 100%; }
+
+  /* Mini bar in rankings stays */
+  .mini-bar { min-width: 30px; }
+
+  /* Footer */
+  .footer { font-size: 8px; padding: 10px; }
+
+  /* Password screen on mobile */
+  #pwScreen > div { width: calc(100vw - 32px) !important; padding: 28px 20px !important; }
+}
+
+/* Very small (≤380px, e.g. iPhone SE) */
+@media (max-width: 380px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .header-meta { grid-template-columns: 1fr 1fr; }
+  .header-meta .item:nth-child(3) { grid-column: span 2; }
+}
+
 </style>
 </head>
 <body>
@@ -953,24 +1152,24 @@ function renderOverview(R) {
   root.innerHTML = `
     <div class="panel-section">
       <div class="section-title"><span>Top-Line Performance · By Sales Type</span><span class="meta">${R.from} → ${R.to} · ${R.periodDays} ημέρες</span></div>
-      <div class="scroll-x"><table>
+      <div class="scroll-x"><table class="responsive-table">
         <thead><tr><th>Sales Type</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
         <tbody>${typeRows}</tbody></table></div>
     </div>
     <div class="panel-section">
       <div class="section-title"><span>Channel Mix</span></div>
-      <div class="scroll-x"><table>
+      <div class="scroll-x"><table class="responsive-table">
         <thead><tr><th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
         <tbody>${chRows}</tbody></table></div>
     </div>
     <div class="grid-2">
       <div class="panel-section">
         <div class="section-title"><span>Top Performers · vs LY</span></div>
-        <table><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(best)}</tbody></table>
+        <table class="responsive-table"><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(best)}</tbody></table>
       </div>
       <div class="panel-section">
         <div class="section-title"><span>Underperformers · vs LY</span></div>
-        <table><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(worst)}</tbody></table>
+        <table class="responsive-table"><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(worst)}</tbody></table>
       </div>
     </div>
   `;
@@ -1038,7 +1237,7 @@ function renderByStore(R) {
   </tr>`;
   root.innerHTML = `<div class="panel-section">
     <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="scroll-x"><table>
+    <div class="scroll-x"><table class="responsive-table">
       <thead><tr><th>Store</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>Budget</th><th>Δ S</th><th>Δ T</th><th>Δ A</th><th>LY Sales</th><th>Δ S</th><th>Δ T</th><th>Δ A</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
 }
@@ -1097,7 +1296,7 @@ function renderSalesType(R) {
   }
   root.innerHTML = `<div class="panel-section">
     <div class="section-title"><span>Per-Store · Sales Type Breakdown</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="scroll-x"><table>
+    <div class="scroll-x"><table class="responsive-table">
       <thead><tr><th>Sales Type</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
 }
@@ -1139,7 +1338,7 @@ function renderChannels(R) {
   }
   root.innerHTML = `<div class="panel-section">
     <div class="section-title"><span>Per-Store · Channel Breakdown</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="scroll-x"><table>
+    <div class="scroll-x"><table class="responsive-table">
       <thead><tr><th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
       <tbody>${rows}</tbody></table></div></div>`;
 }
@@ -1164,7 +1363,7 @@ function renderRankings(R) {
     const max = sorted[0] && sorted[0][metric] || 1;
     return `<div class="panel-section">
       <div class="section-title"><span>${label}</span></div>
-      <table>
+      <table class="responsive-table">
         <thead><tr><th style="width:30px;text-align:center">#</th><th>Store</th><th>${label.split(' ')[0]}</th><th style="width:80px"></th><th>vs LY</th><th>vs Budget</th></tr></thead>
         <tbody>
         ${sorted.map((r, idx) => {
@@ -1271,7 +1470,7 @@ function renderDOW(R) {
   root.innerHTML = `
     <div class="panel-section">
       <div class="section-title"><span>Day-of-Week Profile · Period Aggregation</span><span class="meta">${R.from} → ${R.to}</span></div>
-      <table>
+      <table class="responsive-table">
         <thead><tr><th>DOW</th><th>CY Days</th><th>CY Sales</th><th>CY Avg/Day</th><th>CY TCs</th><th>CY Avg€</th><th>LY Days</th><th>LY Sales</th><th>LY Avg/Day</th><th>LY TCs</th><th>LY Avg€</th><th>Δ Avg/Day</th></tr></thead>
         <tbody>${rows}</tbody></table>
     </div>
@@ -1465,7 +1664,7 @@ function renderStoreDeep(R) {
   root.innerHTML = `
     <div class="panel-section">
       <div class="section-title"><span>Store Deep-Dive</span><span><select id="storeSelect" style="font-size:11px">${opts}</select></span></div>
-      <div class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-top:12px;margin-bottom:0">
+      <div class="kpi-row kpi-row-deepdive" style="margin-top:12px;margin-bottom:0">
         <div class="kpi-card primary"><div class="accent-line"></div>
           <div class="kpi-label">Net Sales</div><div class="kpi-value">${fmtEurK(cy.sales)}</div>
           <div class="kpi-sub">
@@ -1497,13 +1696,13 @@ function renderStoreDeep(R) {
     <div class="grid-2">
       <div class="panel-section">
         <div class="section-title"><span>Sales Type Breakdown</span></div>
-        <div class="scroll-x"><table>
+        <div class="scroll-x"><table class="responsive-table">
           <thead><tr><th>Type</th><th>CY S</th><th>CY T</th><th>CY Avg</th><th>LY S</th><th>LY T</th><th>LY Avg</th><th>ΔS</th><th>ΔT</th><th>ΔA</th><th>Mix</th></tr></thead>
           <tbody>${typeRows}</tbody></table></div>
       </div>
       <div class="panel-section">
         <div class="section-title"><span>Channel Breakdown</span></div>
-        <div class="scroll-x"><table>
+        <div class="scroll-x"><table class="responsive-table">
           <thead><tr><th>Channel</th><th>CY S</th><th>CY T</th><th>CY Avg</th><th>LY S</th><th>LY T</th><th>LY Avg</th><th>ΔS</th><th>ΔT</th><th>Mix</th></tr></thead>
           <tbody>${chRows}</tbody></table></div>
       </div>
@@ -1566,5 +1765,55 @@ document.getElementById('customTo').value = LATEST;
 renderActive();
 }
 </script>
+
+<script>
+// Auto-add data-label to td cells based on thead, for mobile card layout.
+// Runs on a MutationObserver so it works after every table re-render.
+(function() {
+  function applyDataLabels(table) {
+    if (!table || !table.classList.contains('responsive-table')) return;
+    const headers = [];
+    const ths = table.querySelectorAll('thead th');
+    ths.forEach(th => headers.push((th.textContent || '').trim()));
+    if (headers.length === 0) return;
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(tr => {
+      // Skip rows that are full-width (colspan >= number of columns)
+      const tds = tr.children;
+      if (tds.length === 1 && tds[0].hasAttribute('colspan')) return;
+      for (let i = 0; i < tds.length; i++) {
+        const lbl = headers[i] || '';
+        if (lbl) tds[i].setAttribute('data-label', lbl);
+      }
+    });
+  }
+
+  function applyAll() {
+    document.querySelectorAll('table.responsive-table').forEach(applyDataLabels);
+  }
+
+  // Initial apply (after DOMContentLoaded if not already)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAll);
+  } else {
+    applyAll();
+  }
+
+  // Re-apply whenever a tab content changes (we re-render on user interaction)
+  const target = document.querySelector('.panel') || document.body;
+  if (target && typeof MutationObserver !== 'undefined') {
+    const observer = new MutationObserver((mutations) => {
+      // Throttle: only run once per batch
+      let needsRun = false;
+      for (const m of mutations) {
+        if (m.addedNodes && m.addedNodes.length) { needsRun = true; break; }
+      }
+      if (needsRun) applyAll();
+    });
+    observer.observe(target, { childList: true, subtree: true });
+  }
+})();
+</script>
+
 </body>
 </html>
