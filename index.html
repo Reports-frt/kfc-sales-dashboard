@@ -387,22 +387,37 @@ svg { display: block; max-width: 100%; }
 
   /* TABLES → CARD-BASED LAYOUT on phone
      Each row becomes a stacked card with label:value pairs */
-  .panel table.responsive-table { border-collapse: separate; }
+  /* CRITICAL: prevent any container from forcing table to be wider than viewport */
+  .panel .scroll-x {
+    overflow-x: visible !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+  .panel table.responsive-table {
+    border-collapse: separate;
+    table-layout: fixed;
+    max-width: 100%;
+    width: 100%;
+  }
   .panel table.responsive-table thead { display: none; }
   .panel table.responsive-table,
   .panel table.responsive-table tbody {
     display: block;
     width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   .panel table.responsive-table tr {
     display: block;
     width: 100%;
+    max-width: 100%;
     background: var(--bg-2);
     border-radius: 6px;
     margin-bottom: 8px;
     padding: 12px 14px;
     border-left: 3px solid var(--accent);
     box-sizing: border-box;
+    overflow: hidden;
   }
   .panel table.responsive-table tr.row-grand {
     border-left: 3px solid var(--kfc);
@@ -411,6 +426,7 @@ svg { display: block; max-width: 100%; }
   .panel table.responsive-table tr.row-type {
     border-left: 3px solid var(--accent-2);
     margin-left: 10px;
+    max-width: calc(100% - 10px);
   }
   /* Header row (e.g. store name with colspan) — show as full-width title */
   .panel table.responsive-table tr.row-store-header {
@@ -429,6 +445,8 @@ svg { display: block; max-width: 100%; }
     padding: 0 !important;
     border: none !important;
     display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   .panel table.responsive-table tr.row-store-header td:before { content: none !important; }
   .panel table.responsive-table td {
@@ -438,10 +456,18 @@ svg { display: block; max-width: 100%; }
     gap: 12px;
     padding: 4px 0;
     width: 100%;
+    max-width: 100%;
     text-align: right !important;
     border: none;
     box-sizing: border-box;
     min-height: 22px;
+    overflow: hidden;
+  }
+  /* The value (right-side content) — let it shrink and wrap if needed */
+  .panel table.responsive-table td > * {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   /* First cell is the row label (sales type name, store name, etc.) */
   .panel table.responsive-table td:first-child {
@@ -453,6 +479,10 @@ svg { display: block; max-width: 100%; }
     font-size: 13px;
     display: block !important;
     text-align: left !important;
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   /* For all cells AFTER the first, inject the column label from data-label */
   .panel table.responsive-table td:not(:first-child):before {
@@ -464,12 +494,23 @@ svg { display: block; max-width: 100%; }
     text-transform: uppercase;
     flex-shrink: 0;
     font-weight: 500;
+    max-width: 50%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   /* If data-label is empty, hide the entire cell */
   .panel table.responsive-table td:not(:first-child):not([data-label]),
   .panel table.responsive-table td:not(:first-child)[data-label=""] {
     display: none !important;
   }
+  /* Make sure pct badges don't overflow */
+  .panel table.responsive-table td .pct {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  /* Force panel itself not to scroll horizontally on mobile */
+  .panel { overflow-x: hidden; }
 
   /* Tables that we can't easily card-ify: scroll horizontal with hint */
   .scroll-x {
