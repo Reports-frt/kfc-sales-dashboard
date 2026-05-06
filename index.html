@@ -8,11 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
-/* ================================================================
-   MOBILE-FIRST DESIGN — base = 360px portrait
-   Enhanced for tablet (≥768px) and desktop (≥1280px)
-   ================================================================ */
-
 :root {
   --bg-0: #0a0e14;
   --bg-1: #11161e;
@@ -57,18 +52,13 @@ body {
   min-height: 100vh;
 }
 
-/* ================================================================
-   APP CONTAINER (mobile = full width with small padding)
-   ================================================================ */
 .app {
   width: 100%;
   max-width: 100%;
   padding: 12px;
 }
 
-/* ================================================================
-   LOADING OVERLAY
-   ================================================================ */
+/* ============== LOADING + ERRORS ============== */
 #loadingOverlay {
   position: fixed; inset: 0;
   background: var(--bg-0);
@@ -88,141 +78,34 @@ body {
   font-weight: 800; font-size: 14px; color: white;
   margin-bottom: 18px;
 }
-#loadingOverlay .msg {
-  font-size: 13px;
-  color: var(--text-1);
-  letter-spacing: 0.5px;
-  text-align: center;
-}
-#loadingOverlay .progress {
-  margin-top: 14px;
-  width: 200px;
-  max-width: 80vw;
-  height: 3px;
-  background: var(--bg-2);
-  border-radius: 2px;
-  overflow: hidden;
-}
-#loadingOverlay .bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--kfc), var(--accent-2));
-  transition: width 0.25s ease;
-}
+#loadingOverlay .msg { font-size: 13px; color: var(--text-1); letter-spacing: 0.5px; text-align: center; }
+#loadingOverlay .progress { margin-top: 14px; width: 200px; max-width: 80vw; height: 3px; background: var(--bg-2); border-radius: 2px; overflow: hidden; }
+#loadingOverlay .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--kfc), var(--accent-2)); transition: width 0.25s ease; }
 .error-box {
-  background: var(--bad-soft);
-  border: 1px solid var(--bad);
-  color: var(--text-0);
-  padding: 16px;
-  border-radius: 8px;
-  font-family: var(--mono);
-  font-size: 12px;
-  max-width: 480px;
-  width: 100%;
-  margin: 20px auto;
+  background: var(--bad-soft); border: 1px solid var(--bad); color: var(--text-0);
+  padding: 16px; border-radius: 8px; font-family: var(--mono); font-size: 12px;
+  max-width: 480px; width: 100%; margin: 20px auto;
 }
 .error-box .title { font-weight: 700; color: var(--bad); margin-bottom: 8px; font-size: 13px; }
 
-/* ================================================================
-   PASSWORD SCREEN
-   ================================================================ */
-#pwScreen {
-  position: fixed; inset: 0;
-  background: var(--bg-0);
-  z-index: 10000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-#pwScreen .panel-pw {
-  background: var(--bg-1);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 32px 24px;
-  width: 100%;
-  max-width: 360px;
-  position: relative;
-  overflow: hidden;
-}
-#pwScreen .panel-pw::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--kfc), var(--accent-2));
-}
-#pwScreen .pw-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 22px;
-}
-#pwScreen .pw-brand .mark {
-  width: 38px; height: 38px;
-  background: var(--kfc);
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 13px; color: white;
-}
+/* ============== PASSWORD SCREEN ============== */
+#pwScreen { position: fixed; inset: 0; background: var(--bg-0); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+#pwScreen .panel-pw { background: var(--bg-1); border: 1px solid var(--border); border-radius: 12px; padding: 32px 24px; width: 100%; max-width: 360px; position: relative; overflow: hidden; }
+#pwScreen .panel-pw::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--kfc), var(--accent-2)); }
+#pwScreen .pw-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+#pwScreen .pw-brand .mark { width: 38px; height: 38px; background: var(--kfc); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; color: white; }
 #pwScreen .pw-brand .title { font-size: 15px; font-weight: 700; color: var(--text-0); }
-#pwScreen .pw-brand .subtitle {
-  font-family: var(--mono); font-size: 9px; color: var(--text-2);
-  letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;
-}
-#pwScreen .pw-label {
-  font-size: 12px;
-  color: var(--text-1);
-  margin-bottom: 8px;
-}
-#pwScreen input[type="password"] {
-  width: 100%;
-  background: var(--bg-2);
-  color: var(--text-0);
-  border: 1px solid var(--border);
-  padding: 12px 14px;
-  border-radius: 6px;
-  font-size: 16px;
-  font-family: var(--mono);
-  outline: none;
-  letter-spacing: 2px;
-}
+#pwScreen .pw-brand .subtitle { font-family: var(--mono); font-size: 9px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+#pwScreen .pw-label { font-size: 12px; color: var(--text-1); margin-bottom: 8px; }
+#pwScreen input[type="password"] { width: 100%; background: var(--bg-2); color: var(--text-0); border: 1px solid var(--border); padding: 12px 14px; border-radius: 6px; font-size: 16px; font-family: var(--mono); outline: none; letter-spacing: 2px; }
 #pwScreen input[type="password"]:focus { border-color: var(--accent); }
-#pwScreen .pw-error {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--bad);
-  margin-top: 8px;
-  min-height: 14px;
-}
-#pwScreen button {
-  width: 100%;
-  background: var(--kfc);
-  color: white;
-  border: none;
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: var(--sans);
-  margin-top: 14px;
-}
+#pwScreen .pw-error { font-family: var(--mono); font-size: 11px; color: var(--bad); margin-top: 8px; min-height: 14px; }
+#pwScreen button { width: 100%; background: var(--kfc); color: white; border: none; padding: 12px 16px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: var(--sans); margin-top: 14px; }
 #pwScreen button:active { transform: scale(0.99); }
 #pwScreen button:disabled { opacity: 0.4; cursor: not-allowed; }
-#pwScreen .pw-footer {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--text-2);
-  letter-spacing: 1px;
-  margin-top: 18px;
-  text-align: center;
-  text-transform: uppercase;
-}
+#pwScreen .pw-footer { font-family: var(--mono); font-size: 9px; color: var(--text-2); letter-spacing: 1px; margin-top: 18px; text-align: center; text-transform: uppercase; }
 
-/* ================================================================
-   HEADER (mobile = stacked vertically, all info visible)
-   ================================================================ */
+/* ============== HEADER (mobile base) ============== */
 .header {
   background: linear-gradient(180deg, rgba(228,0,43,0.1) 0%, var(--bg-1) 100%);
   border: 1px solid var(--border);
@@ -232,95 +115,20 @@ body {
   position: relative;
   overflow: hidden;
 }
-.header::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--kfc), var(--accent-2));
-}
-.header-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.brand-mark {
-  width: 36px; height: 36px;
-  background: var(--kfc);
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 12px; color: white;
-  flex-shrink: 0;
-}
+.header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--kfc), var(--accent-2)); }
+.header-row { display: flex; align-items: center; gap: 10px; }
+.brand-mark { width: 36px; height: 36px; background: var(--kfc); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; color: white; flex-shrink: 0; }
 .brand-text { flex: 1; min-width: 0; }
-.brand-text h1 {
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-  color: var(--text-0);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.brand-text .subtitle {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--text-2);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.header-meta {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border-soft);
-}
-.header-meta .item {
-  min-width: 0;
-}
-.header-meta .label {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--text-2);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.header-meta .value {
-  font-size: 12px;
-  font-weight: 600;
-  font-family: var(--mono);
-  color: var(--text-0);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.live-dot {
-  display: inline-block;
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: var(--good);
-  margin-right: 4px;
-  vertical-align: 0;
-  animation: pulse 2s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+.brand-text h1 { font-size: 15px; font-weight: 700; line-height: 1.2; color: var(--text-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand-text .subtitle { font-family: var(--mono); font-size: 9px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-soft); }
+.header-meta .item { min-width: 0; }
+.header-meta .label { font-family: var(--mono); font-size: 8px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.header-meta .value { font-size: 12px; font-weight: 600; font-family: var(--mono); color: var(--text-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--good); margin-right: 4px; vertical-align: 0; animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-/* ================================================================
-   CONTROLS (mobile = stacked, full-width)
-   ================================================================ */
+/* ============== CONTROLS ============== */
 .controls {
   background: var(--bg-1);
   border: 1px solid var(--border);
@@ -331,68 +139,16 @@ body {
   flex-direction: column;
   gap: 10px;
 }
-.control-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.control-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--text-2);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.btn-group {
-  display: flex;
-  background: var(--bg-2);
-  border-radius: 6px;
-  padding: 2px;
-  gap: 1px;
-  flex-wrap: wrap;
-}
-.btn-group button {
-  flex: 1;
-  min-width: 0;
-  background: transparent;
-  color: var(--text-1);
-  border: none;
-  padding: 8px 6px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 4px;
-  font-family: var(--sans);
-  transition: background 0.15s ease;
-  white-space: nowrap;
-}
+.control-group { display: flex; flex-direction: column; gap: 6px; }
+.control-label { font-family: var(--mono); font-size: 9px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; }
+.btn-group { display: flex; background: var(--bg-2); border-radius: 6px; padding: 2px; gap: 1px; flex-wrap: wrap; }
+.btn-group button { flex: 1; min-width: 0; background: transparent; color: var(--text-1); border: none; padding: 8px 6px; font-size: 11px; font-weight: 500; cursor: pointer; border-radius: 4px; font-family: var(--sans); transition: background 0.15s ease; white-space: nowrap; }
 .btn-group button:active { background: var(--bg-3); }
-.btn-group button.active {
-  background: var(--accent);
-  color: white;
-  font-weight: 600;
-}
-.control-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-.control-row > * { flex: 1; min-width: 0; }
-input[type="date"], select {
-  background: var(--bg-2);
-  color: var(--text-0);
-  border: 1px solid var(--border);
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: var(--sans);
-  width: 100%;
-}
+.btn-group button.active { background: var(--accent); color: white; font-weight: 600; }
+input[type="date"], select { background: var(--bg-2); color: var(--text-0); border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px; font-size: 13px; font-family: var(--sans); width: 100%; }
 input[type="date"]:focus, select:focus { outline: none; border-color: var(--accent); }
 
-/* ================================================================
-   KPI CARDS (mobile = 2 columns, tablet = 3, desktop = 6)
-   ================================================================ */
+/* ============== KPI CARDS (mobile) ============== */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -408,75 +164,21 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
   overflow: hidden;
   min-width: 0;
 }
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-}
+.kpi-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; }
 .kpi-card.primary::before { background: var(--accent); }
 .kpi-card.secondary::before { background: var(--accent-2); }
 .kpi-card.tertiary::before { background: var(--good); }
-.kpi-label {
-  font-family: var(--mono);
-  font-size: 8.5px;
-  color: var(--text-2);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.kpi-value {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--text-0);
-}
-.kpi-sub {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-top: 6px;
-  font-size: 10px;
-}
-.kpi-sub .row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-.kpi-sub .versus {
-  color: var(--text-2);
-  font-family: var(--mono);
-  font-size: 8.5px;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.kpi-sub .delta {
-  font-family: var(--mono);
-  font-weight: 600;
-  font-size: 10px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-.delta.pos { color: var(--good); background: var(--good-soft); }
-.delta.neg { color: var(--bad); background: var(--bad-soft); }
-.delta.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
+.kpi-label { font-family: var(--mono); font-size: 8.5px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi-value { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-0); }
+.kpi-sub { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; font-size: 10px; }
+.kpi-sub .row { display: flex; justify-content: space-between; align-items: center; gap: 6px; min-width: 0; }
+.kpi-sub .versus { color: var(--text-2); font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi-sub .delta { font-family: var(--mono); font-weight: 600; font-size: 10px; padding: 1px 5px; border-radius: 3px; flex-shrink: 0; white-space: nowrap; }
+.delta.pos, .pct.pos { color: var(--good); background: var(--good-soft); }
+.delta.neg, .pct.neg { color: var(--bad); background: var(--bad-soft); }
+.delta.flat, .pct.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
 
-/* ================================================================
-   TABS (mobile = horizontal scroll, smooth)
-   ================================================================ */
+/* ============== TABS ============== */
 .tabs-wrap {
   background: var(--bg-1);
   border: 1px solid var(--border);
@@ -489,36 +191,12 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
   max-width: 100%;
 }
 .tabs-wrap::-webkit-scrollbar { display: none; }
-.tabs {
-  display: flex;
-  gap: 0;
-  min-width: max-content;
-  border-bottom: 1px solid var(--border);
-}
-.tab {
-  flex-shrink: 0;
-  background: transparent;
-  border: none;
-  color: var(--text-1);
-  font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 500;
-  padding: 11px 14px;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  transition: color 0.15s ease;
-}
+.tabs { display: flex; gap: 0; min-width: max-content; border-bottom: 1px solid var(--border); }
+.tab { flex-shrink: 0; background: transparent; border: none; color: var(--text-1); font-family: var(--sans); font-size: 12px; font-weight: 500; padding: 11px 14px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; transition: color 0.15s ease; }
 .tab:active { color: var(--text-0); }
-.tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  font-weight: 600;
-}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-/* ================================================================
-   PANEL (content area below tabs)
-   ================================================================ */
+/* ============== PANEL ============== */
 .panel {
   background: var(--bg-1);
   border: 1px solid var(--border);
@@ -529,59 +207,49 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
   max-width: 100%;
   overflow-x: hidden;
 }
-.tab-content {
-  display: none;
-  width: 100%;
-  max-width: 100%;
-}
-.tab-content.active {
-  display: block;
-  animation: fadeIn 0.2s ease;
-}
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+.tab-content { display: none; width: 100%; max-width: 100%; }
+.tab-content.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.panel-section {
-  margin-bottom: 20px;
-  width: 100%;
-  max-width: 100%;
-}
+.panel-section { margin-bottom: 20px; width: 100%; max-width: 100%; }
 .panel-section:last-child { margin-bottom: 0; }
-.section-title {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-1);
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-soft);
+.section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-1); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft); display: flex; flex-direction: column; gap: 4px; }
+.section-title .meta { font-family: var(--mono); font-size: 9px; color: var(--text-2); font-weight: 400; letter-spacing: 0.5px; text-transform: none; }
+
+/* ============== FILTER CHIPS (per-tab filters) ============== */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+.filter-group {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
-.section-title .meta {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--text-2);
-  font-weight: 400;
-  letter-spacing: 0.5px;
-  text-transform: none;
+.filter-group .label { font-family: var(--mono); font-size: 8px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; }
+.chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  color: var(--text-1);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-family: var(--sans);
+  white-space: nowrap;
+  transition: all 0.15s;
 }
+.chip:active { transform: scale(0.98); }
+.chip.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-/* ================================================================
-   CARD-BASED DATA LAYOUT (mobile primary)
-   Each "row" of data is a card with vertical label/value pairs
-   ================================================================ */
-.cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
+/* ============== CARD-BASED LAYOUT (mobile) ============== */
+.cards { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .card {
   background: var(--bg-2);
   border: 1px solid var(--border-soft);
@@ -595,347 +263,146 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
 .card.accent { border-left: 3px solid var(--accent); padding-left: 10px; }
 .card.accent-2 { border-left: 3px solid var(--accent-2); padding-left: 10px; }
 .card.good { border-left: 3px solid var(--good); padding-left: 10px; }
-.card.grand {
-  border-left: 3px solid var(--kfc);
-  background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.05) 100%);
-  padding-left: 10px;
-}
-.card.subcard {
-  background: var(--bg-3);
-  margin-left: 12px;
-  max-width: calc(100% - 12px);
-}
-
-.card-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-0);
-  margin-bottom: 8px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-soft);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-.card-title .name {
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.card-title .rank {
-  flex-shrink: 0;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text-2);
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-.card-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.card-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  font-size: 12px;
-  min-height: 20px;
-}
-.card-row .lbl {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--text-2);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 1;
-}
-.card-row .val {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
-  color: var(--text-0);
-  font-size: 12px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.card-row-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-soft);
-}
-.metric-mini {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.metric-mini .lbl {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--text-2);
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.metric-mini .val {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-0);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Pill-style delta badges (for vs LY, vs Budget) */
-.pct {
-  font-family: var(--mono);
-  font-weight: 600;
-  font-size: 10px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.pct.pos { color: var(--good); background: var(--good-soft); }
-.pct.neg { color: var(--bad); background: var(--bad-soft); }
-.pct.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
-
-/* Section heading inside content (e.g. for By Sales Type per-store header) */
-.subsection-header {
-  background: var(--kfc);
-  color: white;
-  font-weight: 700;
-  font-size: 13px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 12px 0 6px 0;
-}
+.card.grand { border-left: 3px solid var(--kfc); background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.05) 100%); padding-left: 10px; }
+.card.subcard { background: var(--bg-3); margin-left: 12px; max-width: calc(100% - 12px); }
+.card-title { font-size: 13px; font-weight: 700; color: var(--text-0); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0; }
+.card-title .name { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-title .rank { flex-shrink: 0; font-family: var(--mono); font-size: 10px; color: var(--text-2); font-weight: 500; letter-spacing: 0.5px; }
+.card-rows { display: flex; flex-direction: column; gap: 4px; }
+.card-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-width: 0; font-size: 12px; min-height: 20px; }
+.card-row .lbl { font-family: var(--mono); font-size: 9px; color: var(--text-2); letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
+.card-row .val { font-family: var(--mono); font-variant-numeric: tabular-nums; font-weight: 500; color: var(--text-0); font-size: 12px; white-space: nowrap; flex-shrink: 0; }
+.pct { font-family: var(--mono); font-weight: 600; font-size: 10px; padding: 1px 5px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.subsection-header { background: var(--kfc); color: white; font-weight: 700; font-size: 13px; padding: 8px 12px; border-radius: 6px; margin: 12px 0 6px 0; }
 .subsection-header:first-child { margin-top: 0; }
+.mini-bar { display: inline-block; height: 4px; background: var(--bg-3); border-radius: 2px; overflow: hidden; vertical-align: middle; flex: 1; min-width: 30px; }
+.mini-bar > div { height: 100%; background: var(--accent); transition: width 0.3s; }
 
-/* Mini progress bar for rankings */
-.mini-bar {
-  display: inline-block;
-  height: 4px;
-  background: var(--bg-3);
-  border-radius: 2px;
-  overflow: hidden;
-  vertical-align: middle;
-  flex: 1;
-  min-width: 30px;
-}
-.mini-bar > div {
-  height: 100%;
-  background: var(--accent);
-  transition: width 0.3s;
-}
+/* ============== HEATMAP + CHARTS ============== */
+.heatmap-wrap { width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 6px; border: 1px solid var(--border-soft); }
+.heatmap { display: grid; gap: 1px; background: var(--border-soft); min-width: max-content; }
+.heat-cell { font-family: var(--mono); font-size: 9px; padding: 4px 6px; text-align: right; background: var(--bg-2); }
+.heat-label { padding: 4px 8px; font-size: 10px; color: var(--text-1); text-align: left; font-weight: 500; background: var(--bg-2); position: sticky; left: 0; z-index: 2; }
+.heat-header { font-family: var(--mono); font-size: 8px; color: var(--text-2); letter-spacing: 0.5px; padding: 4px 6px; text-align: center; background: var(--bg-2); }
+.chart-wrap { background: var(--bg-2); border-radius: 6px; padding: 10px; border: 1px solid var(--border-soft); width: 100%; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.chart-title { font-size: 10px; font-weight: 600; color: var(--text-1); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; padding: 0 4px; }
+.chart-wrap svg { display: block; min-width: 600px; height: auto; }
 
-/* ================================================================
-   HEATMAP (always horizontal scroll on mobile, fits on desktop)
-   ================================================================ */
-.heatmap-wrap {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 6px;
-  border: 1px solid var(--border-soft);
-}
-.heatmap {
-  display: grid;
-  gap: 1px;
-  background: var(--border-soft);
-  min-width: max-content;
-}
-.heat-cell {
-  font-family: var(--mono);
-  font-size: 9px;
-  padding: 4px 6px;
-  text-align: right;
-  background: var(--bg-2);
-}
-.heat-label {
-  padding: 4px 8px;
-  font-size: 10px;
-  color: var(--text-1);
-  text-align: left;
-  font-weight: 500;
-  background: var(--bg-2);
-  position: sticky;
-  left: 0;
-  z-index: 2;
-}
-.heat-header {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--text-2);
-  letter-spacing: 0.5px;
-  padding: 4px 6px;
-  text-align: center;
-  background: var(--bg-2);
-}
+/* ============== DESKTOP LAYOUT (≥1024px) ============== */
+@media (min-width: 1024px) {
+  .app { padding: 20px 24px; max-width: 1800px; margin: 0 auto; }
+  
+  /* Header in single row */
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 14px 22px; }
+  .header-meta { display: flex; gap: 28px; margin-top: 0; padding-top: 0; border-top: none; grid-template-columns: none; }
+  .header-meta .item { text-align: right; min-width: 80px; }
+  .brand-text h1 { font-size: 18px; }
+  .brand-mark { width: 40px; height: 40px; font-size: 14px; }
 
-/* ================================================================
-   CHARTS (SVG: scrollable container on mobile)
-   ================================================================ */
-.chart-wrap {
-  background: var(--bg-2);
-  border-radius: 6px;
-  padding: 10px;
-  border: 1px solid var(--border-soft);
-  width: 100%;
-  max-width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.chart-title {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-1);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-  padding: 0 4px;
-}
-.chart-wrap svg {
-  display: block;
-  min-width: 600px;
-  height: auto;
-}
-
-/* ================================================================
-   FOOTER
-   ================================================================ */
-.footer {
-  font-family: var(--mono);
-  font-size: 9px;
-  color: var(--text-2);
-  letter-spacing: 1px;
-  text-align: center;
-  margin-top: 16px;
-  padding: 12px;
-  border-top: 1px solid var(--border-soft);
-}
-
-/* ================================================================
-   STORE DROPDOWN (deep-dive)
-   ================================================================ */
-.store-select-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-.store-select-wrap select {
-  width: 100%;
-  font-size: 14px;
-  padding: 10px 12px;
-}
-
-/* ================================================================
-   TABLET (>=768px) — SIDE-BY-SIDE LAYOUTS
-   ================================================================ */
-@media (min-width: 768px) {
-  .app { padding: 16px 18px; }
-
-  .header { padding: 14px 18px; }
-  .brand-text h1 { font-size: 17px; }
-  .header-meta { gap: 14px; }
-  .header-meta .label { font-size: 9px; }
-  .header-meta .value { font-size: 13px; }
-
+  /* Controls in single row */
   .controls { padding: 12px 14px; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: center; }
   .control-group { flex-direction: row; align-items: center; gap: 8px; }
   .control-row > * { flex: 0 0 auto; min-width: 130px; }
 
-  .kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .kpi-card { padding: 12px 14px; }
-  .kpi-value { font-size: 20px; }
-
-  .panel { padding: 16px; }
-
-  .grid-2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .heatmap { gap: 2px; }
-  .heat-cell { font-size: 10px; padding: 5px 7px; }
-
-  .chart-wrap { padding: 12px; }
-  .chart-wrap svg { min-width: 700px; }
-}
-
-/* ================================================================
-   DESKTOP (>=1280px) — FULL LAYOUT
-   ================================================================ */
-@media (min-width: 1280px) {
-  .app { padding: 20px 24px; max-width: 1800px; margin: 0 auto; }
-
-  .header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 22px;
-  }
-  .header-row { flex: 0 0 auto; }
-  .header-meta {
-    display: flex;
-    gap: 28px;
-    margin-top: 0;
-    padding-top: 0;
-    border-top: none;
-  }
-  .header-meta .item { text-align: right; min-width: 80px; }
-
-  .brand-text h1 { font-size: 18px; }
-
+  /* 6 KPI cards in one row */
   .kpi-row { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
   .kpi-value { font-size: 22px; }
+  .kpi-card { padding: 12px 14px; }
   .kpi-sub { flex-direction: row; flex-wrap: wrap; gap: 8px; }
   .kpi-sub .row { flex: 1; min-width: 0; }
 
-  /* Cards in 2-column grid where it makes sense */
-  .grid-2 { gap: 18px; }
-  .grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 18px;
+  /* Panels */
+  .panel { padding: 16px 18px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+
+  /* DESKTOP TABLES — dense, professional, like the original */
+  .desktop-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-2);
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 12px;
   }
+  .desktop-table thead th {
+    background: var(--bg-3);
+    color: var(--text-2);
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 10px;
+    text-align: right;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .desktop-table thead th:first-child { text-align: left; }
+  .desktop-table tbody td {
+    padding: 6px 10px;
+    text-align: right;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    border-bottom: 1px solid var(--border-soft);
+    white-space: nowrap;
+  }
+  .desktop-table tbody td:first-child {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-0);
+    font-family: var(--sans);
+  }
+  .desktop-table tbody tr:hover td { background: rgba(228,0,43,0.05); }
+  .desktop-table tbody tr.row-grand td {
+    background: linear-gradient(180deg, rgba(228,0,43,0.15) 0%, rgba(228,0,43,0.05) 100%);
+    font-weight: 700;
+    color: var(--text-0);
+    border-bottom: 1px solid var(--accent);
+    border-top: 1px solid var(--accent);
+  }
+  .desktop-table tbody tr.row-store-header td {
+    background: var(--bg-3);
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .desktop-table .pct { display: inline-block; }
 
-  .chart-wrap svg { min-width: auto; }
+  /* Chart on desktop = full width, no scroll */
+  .chart-wrap { padding: 14px 18px; }
+  .chart-wrap svg { min-width: 100%; }
 
+  /* Footer */
   .footer { font-size: 10px; }
 }
 
-/* Tiny phones (≤360px) — even more compact */
+/* ============== TABLET (768-1023px) ============== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .app { padding: 16px 18px; }
+  .kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+}
+
+/* ============== TINY MOBILE (≤360px) ============== */
 @media (max-width: 360px) {
   .app { padding: 8px; }
   .kpi-row { grid-template-columns: 1fr; }
-  .kpi-value { font-size: 17px; }
   .header-meta { grid-template-columns: 1fr 1fr; }
   .header-meta .item:nth-child(3) { grid-column: span 2; }
-  .card-row-group { grid-template-columns: 1fr 1fr; }
 }
+
+.footer {
+  font-family: var(--mono); font-size: 9px; color: var(--text-2);
+  letter-spacing: 1px; text-align: center; margin-top: 16px;
+  padding: 12px; border-top: 1px solid var(--border-soft);
+}
+
+.store-select-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.store-select-wrap select { width: 100%; font-size: 14px; padding: 10px 12px; }
+@media (min-width: 1024px) { .store-select-wrap { max-width: 360px; } }
 </style>
 </head>
 <body>
@@ -1015,6 +482,24 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
         <button data-ly="cal">Calendar</button>
       </div>
     </div>
+    <div class="control-group">
+      <span class="control-label">Maturity</span>
+      <div class="btn-group" id="matBtns">
+        <button data-mat="all" class="active">Όλα</button>
+        <button data-mat="same">Same Store</button>
+        <button data-mat="new">New Store</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Store Type</span>
+      <div class="btn-group" id="typeBtns">
+        <button data-type="all" class="active">Όλα</button>
+        <button data-type="In Line">In Line</button>
+        <button data-type="In Line Mall">Mall</button>
+        <button data-type="Mall Food Court">Food Court</button>
+        <button data-type="Drive Through">Drive Thru</button>
+      </div>
+    </div>
   </div>
 
   <div class="kpi-row" id="kpiRow"></div>
@@ -1029,6 +514,7 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
       <button class="tab" data-tab="dow">Day-of-Week</button>
       <button class="tab" data-tab="trend">Trend</button>
       <button class="tab" data-tab="storedeep">Store Deep-Dive</button>
+      <button class="tab" data-tab="hourly" id="hourlyTabBtn">Hourly</button>
     </div>
   </div>
 
@@ -1041,6 +527,7 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
     <div class="tab-content" id="tab-dow"></div>
     <div class="tab-content" id="tab-trend"></div>
     <div class="tab-content" id="tab-storedeep"></div>
+    <div class="tab-content" id="tab-hourly"></div>
   </div>
 
   <div class="footer">KFC GREECE · Sales Command Centre · Day-of-week adjusted</div>
@@ -1052,7 +539,7 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
 // PASSWORD GATE
 // =====================================================================
 const __PW_HASH__ = "901a59ce290f1a8ac51ac15eff692276dd83bf6bb39155af3fbc204086fd041f";
-const __SESSION_KEY__ = "kfc_dash_auth_v2";
+const __SESSION_KEY__ = "kfc_dash_auth_v3";
 
 async function __sha256(text) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
@@ -1117,14 +604,12 @@ function setProgress(pct, msg) {
   if (bar) bar.style.width = pct + "%";
   if (m && msg) m.textContent = msg;
 }
-
 function hideLoader() {
   const o = document.getElementById("loadingOverlay");
   const a = document.getElementById("appRoot");
   if (a) a.style.display = "";
   if (o) { o.style.opacity = "0"; setTimeout(() => o.remove(), 300); }
 }
-
 function showError(msg, detail) {
   const o = document.getElementById("loadingOverlay");
   if (o) {
@@ -1167,30 +652,43 @@ function bootstrap(RAW) {
 const META = RAW.meta;
 const STORES = META.stores;
 const SALESTYPES = META.salestypes;
-const CHANNELGROUPS = META.channelgroups;
+// Backwards-compat: old data.json had channelgroups; new has channels + types.
+const CHANNELS = META.channels || META.channelgroups || [];
+const TYPES = META.types || ['STORE', 'DRIVE THRU', 'END-TO-END'];
 const STORE_META = META.store_meta;
 const BUDGET = RAW.budget;
 
+// Use whichever channel-level records exist
+const REC_CH = RAW.records_ch || [];
+const REC_ST = RAW.records_st || [];
+const REC_TYPE = RAW.records_type || [];
+
+const DESKTOP_BREAKPOINT = 1024;
+function isDesktop() { return window.innerWidth >= DESKTOP_BREAKPOINT; }
+
 // --- Pre-build aggregates by date ---
-const dailyStoreST = new Map();
-const dailyStoreCH = new Map();
-const dailyStore = new Map();
-const dailyTotal = new Map();
+const dailyStoreST = new Map();      // by sales type
+const dailyStoreType = new Map();    // by Type (View A)
+const dailyStoreCH = new Map();      // by individual channel
+const dailyStore = new Map();        // total per store
+const dailyTotal = new Map();        // grand total
 
 function ensureDate(d) {
-  if (!dailyStore.has(d)) {
-    dailyStore.set(d, new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0})));
-    dailyTotal.set(d, {sales:0, tcs:0});
-    const stArr = new Array(STORES.length);
-    for (let i = 0; i < STORES.length; i++) stArr[i] = new Array(SALESTYPES.length).fill(null).map(() => ({sales:0, tcs:0}));
-    dailyStoreST.set(d, stArr);
-    const chArr = new Array(STORES.length);
-    for (let i = 0; i < STORES.length; i++) chArr[i] = new Array(CHANNELGROUPS.length).fill(null).map(() => ({sales:0, tcs:0}));
-    dailyStoreCH.set(d, chArr);
-  }
+  if (dailyStore.has(d)) return;
+  dailyStore.set(d, new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0})));
+  dailyTotal.set(d, {sales:0, tcs:0});
+  const stArr = new Array(STORES.length);
+  for (let i = 0; i < STORES.length; i++) stArr[i] = new Array(SALESTYPES.length).fill(null).map(() => ({sales:0, tcs:0}));
+  dailyStoreST.set(d, stArr);
+  const typArr = new Array(STORES.length);
+  for (let i = 0; i < STORES.length; i++) typArr[i] = new Array(TYPES.length).fill(null).map(() => ({sales:0, tcs:0}));
+  dailyStoreType.set(d, typArr);
+  const chArr = new Array(STORES.length);
+  for (let i = 0; i < STORES.length; i++) chArr[i] = new Array(CHANNELS.length).fill(null).map(() => ({sales:0, tcs:0}));
+  dailyStoreCH.set(d, chArr);
 }
 
-RAW.records_st.forEach(r => {
+REC_ST.forEach(r => {
   const [d, si, sti, s, t] = r;
   ensureDate(d);
   dailyStore.get(d)[si].sales += s;
@@ -1200,7 +698,36 @@ RAW.records_st.forEach(r => {
   dailyStoreST.get(d)[si][sti].sales += s;
   dailyStoreST.get(d)[si][sti].tcs += t;
 });
-RAW.records_ch.forEach(r => {
+if (REC_TYPE.length > 0) {
+  REC_TYPE.forEach(r => {
+    const [d, si, ti, s, t] = r;
+    ensureDate(d);
+    dailyStoreType.get(d)[si][ti].sales += s;
+    dailyStoreType.get(d)[si][ti].tcs += t;
+  });
+} else {
+  // Old data.json format: derive Type (View A) from Sales Type (View B).
+  // Mapping: DINEIN+TAKEAWAY → STORE, DRIVE THRU → DRIVE THRU, END-TO-END → END-TO-END
+  // (TYPES = ['STORE', 'DRIVE THRU', 'END-TO-END'])
+  const stToType = {};
+  for (let sti = 0; sti < SALESTYPES.length; sti++) {
+    const name = SALESTYPES[sti];
+    if (name === 'DRIVE THRU') stToType[sti] = 1;
+    else if (name === 'END-TO-END') stToType[sti] = 2;
+    else stToType[sti] = 0; // DINEIN, TAKEAWAY → STORE
+  }
+  for (const [d, perStore] of dailyStoreST.entries()) {
+    const tp = dailyStoreType.get(d);
+    for (let si = 0; si < STORES.length; si++) {
+      for (let sti = 0; sti < SALESTYPES.length; sti++) {
+        const ti = stToType[sti];
+        tp[si][ti].sales += perStore[si][sti].sales;
+        tp[si][ti].tcs += perStore[si][sti].tcs;
+      }
+    }
+  }
+}
+REC_CH.forEach(r => {
   const [d, si, ci, s, t] = r;
   ensureDate(d);
   dailyStoreCH.get(d)[si][ci].sales += s;
@@ -1222,6 +749,66 @@ for (const [d, perStore] of dailyStore.entries()) {
 
 const LATEST = META.latest_date;
 const FIRST = META.first_date;
+
+// =====================================================================
+// HOURLY DATA (optional)
+// =====================================================================
+const HOURLY = RAW.hourly || null;
+// Hide hourly tab if no data
+if (!HOURLY) {
+  const tabBtn = document.getElementById('hourlyTabBtn');
+  if (tabBtn) tabBtn.style.display = 'none';
+}
+
+// Pre-aggregate hourly data into useful structures
+// hourlyByYearStoreHour[year][storeIdx][hour] = {sales, byChannel: [arr 8 channels]}
+// hourlyByYearDowHour[year][dow][hour] = {sales}
+const hourlyByYearStoreHour = {};
+const hourlyByYearDowHour = {};
+const hourlyByYearChHour = {};   // year -> hour -> channelIdx -> sales (chain wide)
+const hourlyYearTotal = {};      // year -> total sales
+
+if (HOURLY) {
+  HOURLY.years.forEach(y => {
+    hourlyByYearStoreHour[y] = {};
+    hourlyByYearDowHour[y] = {};
+    hourlyByYearChHour[y] = {};
+    hourlyYearTotal[y] = 0;
+    for (let si = 0; si < STORES.length; si++) {
+      hourlyByYearStoreHour[y][si] = {};
+      HOURLY.hours.forEach(h => {
+        hourlyByYearStoreHour[y][si][h] = { sales: 0, byChannel: new Array(CHANNELS.length).fill(0) };
+      });
+    }
+    for (let dow = 0; dow < 7; dow++) {
+      hourlyByYearDowHour[y][dow] = {};
+      HOURLY.hours.forEach(h => { hourlyByYearDowHour[y][dow][h] = 0; });
+    }
+    HOURLY.hours.forEach(h => {
+      hourlyByYearChHour[y][h] = new Array(CHANNELS.length).fill(0);
+    });
+  });
+
+  // [year, hour, ch_idx, store_idx, sales]
+  HOURLY.records_hsc.forEach(r => {
+    const [year, hour, ci, si, s] = r;
+    if (!hourlyByYearStoreHour[year]) return;
+    if (!hourlyByYearStoreHour[year][si]) return;
+    if (!hourlyByYearStoreHour[year][si][hour]) return;
+    hourlyByYearStoreHour[year][si][hour].sales += s;
+    if (ci < CHANNELS.length) hourlyByYearStoreHour[year][si][hour].byChannel[ci] += s;
+    if (ci < CHANNELS.length) hourlyByYearChHour[year][hour][ci] += s;
+    hourlyYearTotal[year] += s;
+  });
+  // [year, dow, hour, sales]
+  HOURLY.records_dow_hour.forEach(r => {
+    const [year, dow, hour, s] = r;
+    if (hourlyByYearDowHour[year] && hourlyByYearDowHour[year][dow] && hourlyByYearDowHour[year][dow][hour] !== undefined) {
+      hourlyByYearDowHour[year][dow][hour] = s;
+    }
+  });
+}
+
 
 // =====================================================================
 // DATE HELPERS — UTC SAFE
@@ -1295,9 +882,7 @@ function pctClass(v, threshold=0.005) {
   if (v < -threshold) return "neg";
   return "flat";
 }
-function pctTag(v) {
-  return `<span class="pct ${pctClass(v)}">${fmtPct(v)}</span>`;
-}
+function pctTag(v) { return `<span class="pct ${pctClass(v)}">${fmtPct(v)}</span>`; }
 
 // =====================================================================
 // PERIOD RESOLUTION
@@ -1318,39 +903,62 @@ function resolvePeriod(view, asOf) {
 }
 
 // =====================================================================
-// AGGREGATION
+// AGGREGATION (with optional per-store filter)
 // =====================================================================
-function aggregate(fromDate, toDate) {
+function buildStoreFilter() {
+  // Returns a Set of store indices that pass the maturity + storeType filters
+  const include = new Set();
+  for (let si = 0; si < STORES.length; si++) {
+    const meta = STORE_META[STORES[si]] || {};
+    const isNew = !!meta.is_new;
+    const stype = meta.store_type || '';
+    // Maturity filter
+    if (STATE.maturity === 'same' && isNew) continue;
+    if (STATE.maturity === 'new' && !isNew) continue;
+    // Store type filter
+    if (STATE.storeType !== 'all' && stype !== STATE.storeType) continue;
+    include.add(si);
+  }
+  return include;
+}
+
+function aggregate(fromDate, toDate, storeFilter) {
   const dates = dateRange(fromDate, toDate);
   const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
   const byST = new Array(STORES.length).fill(null).map(() => new Array(SALESTYPES.length).fill(null).map(() => ({sales:0, tcs:0})));
-  const byCH = new Array(STORES.length).fill(null).map(() => new Array(CHANNELGROUPS.length).fill(null).map(() => ({sales:0, tcs:0})));
+  const byType = new Array(STORES.length).fill(null).map(() => new Array(TYPES.length).fill(null).map(() => ({sales:0, tcs:0})));
+  const byCH = new Array(STORES.length).fill(null).map(() => new Array(CHANNELS.length).fill(null).map(() => ({sales:0, tcs:0})));
   let totalSales = 0, totalTCs = 0;
   for (const d of dates) {
     const ds = dailyStore.get(d);
     if (!ds) continue;
-    const dt = dailyTotal.get(d);
-    totalSales += dt.sales; totalTCs += dt.tcs;
     for (let si = 0; si < STORES.length; si++) {
+      if (storeFilter && !storeFilter.has(si)) continue;
       byStore[si].sales += ds[si].sales;
       byStore[si].tcs += ds[si].tcs;
+      totalSales += ds[si].sales;
+      totalTCs += ds[si].tcs;
     }
     const st = dailyStoreST.get(d);
-    for (let si = 0; si < STORES.length; si++) {
-      for (let sti = 0; sti < SALESTYPES.length; sti++) {
-        byST[si][sti].sales += st[si][sti].sales;
-        byST[si][sti].tcs += st[si][sti].tcs;
-      }
-    }
+    const tp = dailyStoreType.get(d);
     const ch = dailyStoreCH.get(d);
     for (let si = 0; si < STORES.length; si++) {
-      for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
-        byCH[si][ci].sales += ch[si][ci].sales;
-        byCH[si][ci].tcs += ch[si][ci].tcs;
+      if (storeFilter && !storeFilter.has(si)) continue;
+      for (let i = 0; i < SALESTYPES.length; i++) {
+        byST[si][i].sales += st[si][i].sales;
+        byST[si][i].tcs += st[si][i].tcs;
+      }
+      for (let i = 0; i < TYPES.length; i++) {
+        byType[si][i].sales += tp[si][i].sales;
+        byType[si][i].tcs += tp[si][i].tcs;
+      }
+      for (let i = 0; i < CHANNELS.length; i++) {
+        byCH[si][i].sales += ch[si][i].sales;
+        byCH[si][i].tcs += ch[si][i].tcs;
       }
     }
   }
-  return { byStore, byST, byCH, total: {sales: totalSales, tcs: totalTCs}, dates };
+  return { byStore, byST, byType, byCH, total: {sales: totalSales, tcs: totalTCs}, dates };
 }
 
 const _budgetDayCache = new Map();
@@ -1381,11 +989,12 @@ function getDayBudget(dateStr, storeIdx, ly_mode) {
   return r;
 }
 
-function periodBudget(fromDate, toDate, ly_mode) {
+function periodBudget(fromDate, toDate, ly_mode, storeFilter) {
   const dates = dateRange(fromDate, toDate);
   const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
   let totalSales = 0, totalTCs = 0;
   for (let si = 0; si < STORES.length; si++) {
+    if (storeFilter && !storeFilter.has(si)) continue;
     let s = 0, t = 0;
     for (const d of dates) {
       const b = getDayBudget(d, si, ly_mode);
@@ -1397,11 +1006,12 @@ function periodBudget(fromDate, toDate, ly_mode) {
   return { byStore, total: {sales: totalSales, tcs: totalTCs} };
 }
 
-function fullMonthBudget(monthStr) {
+function fullMonthBudget(monthStr, storeFilter) {
   const month = parseInt(monthStr.split("-")[1]);
   const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
   let totalSales = 0, totalTCs = 0;
   for (let si = 0; si < STORES.length; si++) {
+    if (storeFilter && !storeFilter.has(si)) continue;
     const sn = STORES[si];
     const mb = BUDGET[sn] && BUDGET[sn][String(month)];
     if (mb) {
@@ -1418,32 +1028,41 @@ const STATE = {
   ly_mode: "364",
   activeTab: "overview",
   selectedStore: 0,
+  maturity: "all",        // all | same | new
+  storeType: "all",       // all | "In Line" | "Mall Food Court" | etc
+  channelView: "type",    // "type" (View A) or "salestype" (View B)
 };
 
 function compute() {
+  const filter = buildStoreFilter();
   const [from, to] = resolvePeriod(STATE.view, STATE.asOf);
-  const cy = aggregate(from, to);
+  const cy = aggregate(from, to, filter);
   const lyFrom = lyDate(from, STATE.ly_mode);
   const lyTo = lyDate(to, STATE.ly_mode);
-  const ly = aggregate(lyFrom, lyTo);
-  const budget = periodBudget(from, to, STATE.ly_mode);
+  const ly = aggregate(lyFrom, lyTo, filter);
+  const budget = periodBudget(from, to, STATE.ly_mode, filter);
   const periodDays = dateRange(from, to).length;
   const month = to.slice(0,7);
   const [yE, mE] = to.split("-").map(Number);
   const monthDays = new Date(Date.UTC(yE, mE, 0)).getUTCDate();
-  const fullMonth = fullMonthBudget(month);
-  return { from, to, periodDays, monthDays, month, cy, ly, budget, fullMonth };
+  const fullMonth = fullMonthBudget(month, filter);
+  return { from, to, periodDays, monthDays, month, cy, ly, budget, fullMonth, storeFilter: filter };
 }
 
+
 // =====================================================================
-// HEADER + KPI RENDERERS
+// HEADER + KPI (shared mobile/desktop)
 // =====================================================================
 function renderHeader(R) {
   document.getElementById("reportDate").textContent = dateGreek(R.to);
   document.getElementById("reportCoverage").textContent = R.periodDays + "/" + R.monthDays + " ημ.";
   let active = 0;
-  for (let si = 0; si < STORES.length; si++) if (R.cy.byStore[si].sales > 0) active++;
-  document.getElementById("reportStores").textContent = active + "/" + STORES.length;
+  for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
+    if (R.cy.byStore[si].sales > 0) active++;
+  }
+  const totalEligible = R.storeFilter ? R.storeFilter.size : STORES.length;
+  document.getElementById("reportStores").textContent = active + "/" + totalEligible;
 }
 
 function renderKPI(R) {
@@ -1494,18 +1113,14 @@ function renderKPI(R) {
 }
 
 // =====================================================================
-// CARD HELPERS — used by all data renderers
+// MOBILE CARD HELPERS
 // =====================================================================
-function storeCard(opts) {
-  // opts: { name, rank?, cy, ly, b, accent: "primary"|"good"|"grand" }
+function storeCard_M(opts) {
   const { name, rank, cy, ly, b, accent } = opts;
   const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
-  const lyAvg = ly && ly.tcs > 0 ? ly.sales/ly.tcs : 0;
   const dSL = ly && ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
   const dTL = ly && ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
   const dSB = b && b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
-  const dTB = b && b.tcs > 0 ? (cy.tcs - b.tcs)/b.tcs : null;
-
   const cls = accent === "grand" ? "grand" : "accent";
   return `
     <div class="card ${cls}">
@@ -1521,15 +1136,12 @@ function storeCard(opts) {
         ${ly ? `<div class="card-row"><span class="lbl">vs LY (Sales)</span><span class="val">${pctTag(dSL)}</span></div>` : ""}
         ${ly ? `<div class="card-row"><span class="lbl">vs LY (TCs)</span><span class="val">${pctTag(dTL)}</span></div>` : ""}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-function breakdownCard(opts) {
-  // opts: { label, cy, ly, mix }
+function breakdownCard_M(opts) {
   const { label, cy, ly, mix } = opts;
   const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
-  const lyAvg = ly && ly.tcs > 0 ? ly.sales/ly.tcs : 0;
   const dS = ly && ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
   const dT = ly && ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
   return `
@@ -1545,140 +1157,299 @@ function breakdownCard(opts) {
         ${ly ? `<div class="card-row"><span class="lbl">vs LY Sales</span><span class="val">${pctTag(dS)}</span></div>` : ""}
         ${ly ? `<div class="card-row"><span class="lbl">vs LY TCs</span><span class="val">${pctTag(dT)}</span></div>` : ""}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 // =====================================================================
-// TAB RENDERERS — all use card layout
+// DESKTOP TABLE HELPERS
 // =====================================================================
+function storeRow_D(name, cy, ly, b) {
+  const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+  const lyAvg = ly && ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+  const bAvg = b && b.tcs > 0 ? b.sales/b.tcs : 0;
+  const dSL = ly && ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+  const dTL = ly && ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
+  const dAL = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
+  const dSB = b && b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
+  const dTB = b && b.tcs > 0 ? (cy.tcs - b.tcs)/b.tcs : null;
+  const dAB = bAvg > 0 ? (cyAvg - bAvg)/bAvg : null;
+  return `<td>${name}</td>
+    <td>${fmtEur(cy.sales)}</td>
+    <td>${fmtNum(cy.tcs)}</td>
+    <td>${fmtAvg(cyAvg)}</td>
+    <td>${b ? fmtEur(b.sales) : "—"}</td>
+    <td>${pctTag(dSB)}</td>
+    <td>${pctTag(dTB)}</td>
+    <td>${pctTag(dAB)}</td>
+    <td>${ly ? fmtEur(ly.sales) : "—"}</td>
+    <td>${pctTag(dSL)}</td>
+    <td>${pctTag(dTL)}</td>
+    <td>${pctTag(dAL)}</td>`;
+}
 
+function tableHead_StoresFull() {
+  return `<thead><tr>
+    <th>Store</th>
+    <th>CY Sales</th>
+    <th>CY TCs</th>
+    <th>CY Avg</th>
+    <th>Budget</th>
+    <th>Sales vs B</th>
+    <th>TCs vs B</th>
+    <th>Avg vs B</th>
+    <th>LY Sales</th>
+    <th>Sales vs LY</th>
+    <th>TCs vs LY</th>
+    <th>Avg vs LY</th>
+  </tr></thead>`;
+}
+
+
+// =====================================================================
+// OVERVIEW TAB
+// =====================================================================
 function renderOverview(R) {
   const root = document.getElementById("tab-overview");
+  const desktop = isDesktop();
   let html = "";
 
-  // Sales Type breakdown — total
-  const typeTotals = new Array(SALESTYPES.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
+  // Pick channel grouping based on STATE.channelView
+  const useType = STATE.channelView === "type";
+  const groupLabels = useType ? TYPES : SALESTYPES;
+  const groupKey = useType ? "byType" : "byST";
+
+  // Aggregate group totals across all stores
+  const groupTotals = new Array(groupLabels.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
   for (let si = 0; si < STORES.length; si++) {
-    for (let sti = 0; sti < SALESTYPES.length; sti++) {
-      typeTotals[sti].cyS += R.cy.byST[si][sti].sales;
-      typeTotals[sti].cyT += R.cy.byST[si][sti].tcs;
-      typeTotals[sti].lyS += R.ly.byST[si][sti].sales;
-      typeTotals[sti].lyT += R.ly.byST[si][sti].tcs;
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
+    for (let i = 0; i < groupLabels.length; i++) {
+      groupTotals[i].cyS += R.cy[groupKey][si][i].sales;
+      groupTotals[i].cyT += R.cy[groupKey][si][i].tcs;
+      groupTotals[i].lyS += R.ly[groupKey][si][i].sales;
+      groupTotals[i].lyT += R.ly[groupKey][si][i].tcs;
     }
   }
 
-  html += `<div class="panel-section">
-    <div class="section-title"><span>By Sales Type</span><span class="meta">${R.from} → ${R.to} · ${R.periodDays} ημ.</span></div>
-    <div class="cards">`;
-  for (let sti = 0; sti < SALESTYPES.length; sti++) {
-    const t = typeTotals[sti];
-    if (t.cyS === 0 && t.lyS === 0) continue;
-    const mix = R.cy.total.sales > 0 ? t.cyS / R.cy.total.sales : 0;
-    html += breakdownCard({
-      label: SALESTYPES[sti],
-      cy: { sales: t.cyS, tcs: t.cyT },
-      ly: { sales: t.lyS, tcs: t.lyT },
-      mix
-    });
-  }
-  // Total card
-  html += `<div class="card grand">
-    <div class="card-title">
-      <span class="name">TOTAL KFC</span>
-    </div>
-    <div class="card-rows">
-      <div class="card-row"><span class="lbl">CY Sales</span><span class="val">${fmtEur(R.cy.total.sales)}</span></div>
-      <div class="card-row"><span class="lbl">LY Sales</span><span class="val">${fmtEur(R.ly.total.sales)}</span></div>
-      <div class="card-row"><span class="lbl">CY TCs</span><span class="val">${fmtNum(R.cy.total.tcs)}</span></div>
-      <div class="card-row"><span class="lbl">LY TCs</span><span class="val">${fmtNum(R.ly.total.tcs)}</span></div>
-      <div class="card-row"><span class="lbl">Sales vs LY</span><span class="val">${pctTag(R.ly.total.sales > 0 ? (R.cy.total.sales - R.ly.total.sales)/R.ly.total.sales : null)}</span></div>
+  // Channel view toggle
+  html += `<div class="filter-row">
+    <div class="filter-group">
+      <span class="label">Grouping</span>
+      <div class="chip-row" id="chViewChips">
+        <span class="chip ${STATE.channelView === 'type' ? 'active' : ''}" data-cv="type">View A · Type (3)</span>
+        <span class="chip ${STATE.channelView === 'salestype' ? 'active' : ''}" data-cv="salestype">View B · Sales Type (4)</span>
+      </div>
     </div>
   </div>`;
-  html += `</div></div>`;
 
-  // Channel mix
-  const chTotals = new Array(CHANNELGROUPS.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
+  // Section: by group (Type or Sales Type)
+  html += `<div class="panel-section">
+    <div class="section-title"><span>${useType ? 'By Type (Operational)' : 'By Sales Type (Customer)'}</span><span class="meta">${R.from} → ${R.to} · ${R.periodDays} ημ.</span></div>`;
+
+  if (desktop) {
+    html += `<table class="desktop-table">
+      <thead><tr>
+        <th>Group</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg</th>
+        <th>Mix %</th><th>LY Sales</th><th>vs LY (Sales)</th><th>vs LY (TCs)</th>
+      </tr></thead><tbody>`;
+    let totS = 0;
+    for (const t of groupTotals) totS += t.cyS;
+    for (let i = 0; i < groupLabels.length; i++) {
+      const t = groupTotals[i];
+      if (t.cyS === 0 && t.lyS === 0) continue;
+      const cyAvg = t.cyT > 0 ? t.cyS/t.cyT : 0;
+      const dS = t.lyS > 0 ? (t.cyS - t.lyS)/t.lyS : null;
+      const dT = t.lyT > 0 ? (t.cyT - t.lyT)/t.lyT : null;
+      const mix = totS > 0 ? t.cyS/totS : 0;
+      html += `<tr>
+        <td>${groupLabels[i]}</td>
+        <td>${fmtEur(t.cyS)}</td>
+        <td>${fmtNum(t.cyT)}</td>
+        <td>${fmtAvg(cyAvg)}</td>
+        <td>${(mix*100).toFixed(1).replace(".",",")}%</td>
+        <td>${fmtEur(t.lyS)}</td>
+        <td>${pctTag(dS)}</td>
+        <td>${pctTag(dT)}</td>
+      </tr>`;
+    }
+    // Total row
+    let totT = 0, totLS = 0, totLT = 0;
+    for (const t of groupTotals) { totT += t.cyT; totLS += t.lyS; totLT += t.lyT; }
+    const totAvg = totT > 0 ? totS/totT : 0;
+    const totDS = totLS > 0 ? (totS - totLS)/totLS : null;
+    const totDT = totLT > 0 ? (totT - totLT)/totLT : null;
+    html += `<tr class="row-grand">
+      <td>TOTAL</td>
+      <td>${fmtEur(totS)}</td>
+      <td>${fmtNum(totT)}</td>
+      <td>${fmtAvg(totAvg)}</td>
+      <td>100%</td>
+      <td>${fmtEur(totLS)}</td>
+      <td>${pctTag(totDS)}</td>
+      <td>${pctTag(totDT)}</td>
+    </tr>`;
+    html += `</tbody></table>`;
+  } else {
+    // Mobile: cards
+    html += `<div class="cards">`;
+    let totalCyS = 0;
+    for (const t of groupTotals) totalCyS += t.cyS;
+    for (let i = 0; i < groupLabels.length; i++) {
+      const t = groupTotals[i];
+      if (t.cyS === 0 && t.lyS === 0) continue;
+      const mix = totalCyS > 0 ? t.cyS / totalCyS : 0;
+      html += breakdownCard_M({
+        label: groupLabels[i],
+        cy: { sales: t.cyS, tcs: t.cyT },
+        ly: { sales: t.lyS, tcs: t.lyT },
+        mix
+      });
+    }
+    html += `<div class="card grand">
+      <div class="card-title"><span class="name">TOTAL</span></div>
+      <div class="card-rows">
+        <div class="card-row"><span class="lbl">CY Sales</span><span class="val">${fmtEur(R.cy.total.sales)}</span></div>
+        <div class="card-row"><span class="lbl">LY Sales</span><span class="val">${fmtEur(R.ly.total.sales)}</span></div>
+        <div class="card-row"><span class="lbl">vs LY</span><span class="val">${pctTag(R.ly.total.sales > 0 ? (R.cy.total.sales - R.ly.total.sales)/R.ly.total.sales : null)}</span></div>
+      </div>
+    </div>`;
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // Channel mix section (always 8 channels)
+  const chTotals = new Array(CHANNELS.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
   for (let si = 0; si < STORES.length; si++) {
-    for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
+    for (let ci = 0; ci < CHANNELS.length; ci++) {
       chTotals[ci].cyS += R.cy.byCH[si][ci].sales;
       chTotals[ci].cyT += R.cy.byCH[si][ci].tcs;
       chTotals[ci].lyS += R.ly.byCH[si][ci].sales;
       chTotals[ci].lyT += R.ly.byCH[si][ci].tcs;
     }
   }
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Channel Mix</span></div>
-    <div class="cards">`;
-  for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
-    const t = chTotals[ci];
-    if (t.cyS === 0 && t.lyS === 0) continue;
-    const mix = R.cy.total.sales > 0 ? t.cyS / R.cy.total.sales : 0;
-    html += breakdownCard({
-      label: CHANNELGROUPS[ci],
-      cy: { sales: t.cyS, tcs: t.cyT },
-      ly: { sales: t.lyS, tcs: t.lyT },
-      mix
-    });
-  }
-  html += `</div></div>`;
+  const totChS = chTotals.reduce((a,t)=>a+t.cyS,0);
 
-  // Top / Bottom movers
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Channel Mix</span><span class="meta">All ${CHANNELS.length} channels</span></div>`;
+  if (desktop) {
+    html += `<table class="desktop-table">
+      <thead><tr>
+        <th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg</th>
+        <th>Mix %</th><th>LY Sales</th><th>vs LY (Sales)</th><th>vs LY (TCs)</th>
+      </tr></thead><tbody>`;
+    for (let ci = 0; ci < CHANNELS.length; ci++) {
+      const t = chTotals[ci];
+      if (t.cyS === 0 && t.lyS === 0) continue;
+      const cyAvg = t.cyT > 0 ? t.cyS/t.cyT : 0;
+      const dS = t.lyS > 0 ? (t.cyS - t.lyS)/t.lyS : null;
+      const dT = t.lyT > 0 ? (t.cyT - t.lyT)/t.lyT : null;
+      const mix = totChS > 0 ? t.cyS/totChS : 0;
+      html += `<tr>
+        <td>${CHANNELS[ci]}</td>
+        <td>${fmtEur(t.cyS)}</td>
+        <td>${fmtNum(t.cyT)}</td>
+        <td>${fmtAvg(cyAvg)}</td>
+        <td>${(mix*100).toFixed(1).replace(".",",")}%</td>
+        <td>${fmtEur(t.lyS)}</td>
+        <td>${pctTag(dS)}</td>
+        <td>${pctTag(dT)}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+  } else {
+    html += `<div class="cards">`;
+    for (let ci = 0; ci < CHANNELS.length; ci++) {
+      const t = chTotals[ci];
+      if (t.cyS === 0 && t.lyS === 0) continue;
+      const mix = totChS > 0 ? t.cyS/totChS : 0;
+      html += breakdownCard_M({
+        label: CHANNELS[ci],
+        cy: { sales: t.cyS, tcs: t.cyT },
+        ly: { sales: t.lyS, tcs: t.lyT },
+        mix
+      });
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // Top/Bottom movers
   const moverData = [];
   for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
     const cy = R.cy.byStore[si];
     const ly = R.ly.byStore[si];
     if (cy.sales === 0 && ly.sales === 0) continue;
     const dS = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
     if (dS == null) continue;
-    moverData.push({ short: STORE_META[STORES[si]].short, cy, ly, b: R.budget.byStore[si], dS });
+    moverData.push({ short: STORE_META[STORES[si]].short, cy, ly, dS });
   }
   const best = [...moverData].sort((a,b)=>b.dS-a.dS).slice(0,5);
   const worst = [...moverData].sort((a,b)=>a.dS-b.dS).slice(0,5);
 
-  html += `<div class="grid-2">`;
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Top 5 Performers · vs LY</span></div>
-    <div class="cards">`;
-  for (const m of best) {
-    html += `<div class="card good">
-      <div class="card-title">
-        <span class="name">${m.short}</span>
-        <span class="rank">${pctTag(m.dS)}</span>
-      </div>
-      <div class="card-rows">
-        <div class="card-row"><span class="lbl">CY</span><span class="val">${fmtEurK(m.cy.sales)}</span></div>
-        <div class="card-row"><span class="lbl">LY</span><span class="val">${fmtEurK(m.ly.sales)}</span></div>
-      </div>
-    </div>`;
+  html += `<div class="grid-2">
+    <div class="panel-section">
+      <div class="section-title"><span>Top 5 · vs LY</span></div>`;
+  if (desktop) {
+    html += `<table class="desktop-table"><thead><tr><th>Store</th><th>CY Sales</th><th>LY Sales</th><th>vs LY</th></tr></thead><tbody>`;
+    for (const m of best) {
+      html += `<tr><td>${m.short}</td><td>${fmtEurK(m.cy.sales)}</td><td>${fmtEurK(m.ly.sales)}</td><td>${pctTag(m.dS)}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+  } else {
+    html += `<div class="cards">`;
+    for (const m of best) {
+      html += `<div class="card good">
+        <div class="card-title"><span class="name">${m.short}</span><span class="rank">${pctTag(m.dS)}</span></div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">CY</span><span class="val">${fmtEurK(m.cy.sales)}</span></div>
+          <div class="card-row"><span class="lbl">LY</span><span class="val">${fmtEurK(m.ly.sales)}</span></div>
+        </div></div>`;
+    }
+    html += `</div>`;
   }
-  html += `</div></div>`;
-
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Bottom 5 · vs LY</span></div>
-    <div class="cards">`;
-  for (const m of worst) {
-    html += `<div class="card accent">
-      <div class="card-title">
-        <span class="name">${m.short}</span>
-        <span class="rank">${pctTag(m.dS)}</span>
-      </div>
-      <div class="card-rows">
-        <div class="card-row"><span class="lbl">CY</span><span class="val">${fmtEurK(m.cy.sales)}</span></div>
-        <div class="card-row"><span class="lbl">LY</span><span class="val">${fmtEurK(m.ly.sales)}</span></div>
-      </div>
-    </div>`;
-  }
-  html += `</div></div>`;
   html += `</div>`;
 
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Bottom 5 · vs LY</span></div>`;
+  if (desktop) {
+    html += `<table class="desktop-table"><thead><tr><th>Store</th><th>CY Sales</th><th>LY Sales</th><th>vs LY</th></tr></thead><tbody>`;
+    for (const m of worst) {
+      html += `<tr><td>${m.short}</td><td>${fmtEurK(m.cy.sales)}</td><td>${fmtEurK(m.ly.sales)}</td><td>${pctTag(m.dS)}</td></tr>`;
+    }
+    html += `</tbody></table>`;
+  } else {
+    html += `<div class="cards">`;
+    for (const m of worst) {
+      html += `<div class="card accent">
+        <div class="card-title"><span class="name">${m.short}</span><span class="rank">${pctTag(m.dS)}</span></div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">CY</span><span class="val">${fmtEurK(m.cy.sales)}</span></div>
+          <div class="card-row"><span class="lbl">LY</span><span class="val">${fmtEurK(m.ly.sales)}</span></div>
+        </div></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div></div>`;
+
   root.innerHTML = html;
+
+  // Hook up channel view chips
+  root.querySelectorAll('#chViewChips .chip').forEach(c => c.addEventListener('click', e => {
+    STATE.channelView = e.target.dataset.cv;
+    renderActive();
+  }));
 }
 
+// =====================================================================
+// BY STORE TAB
+// =====================================================================
 function renderByStore(R) {
   const root = document.getElementById("tab-bystore");
+  const desktop = isDesktop();
   const arr = [];
   for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
     const cy = R.cy.byStore[si];
     const ly = R.ly.byStore[si];
     const b = R.budget.byStore[si];
@@ -1687,10 +1458,6 @@ function renderByStore(R) {
   }
   arr.sort((a, b) => b.cy.sales - a.cy.sales);
 
-  let html = `<div class="panel-section">
-    <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="cards">`;
-
   // Total
   let totS=0, totT=0, totLS=0, totLT=0, totBS=0, totBT=0;
   for (const r of arr) {
@@ -1698,79 +1465,212 @@ function renderByStore(R) {
     totLS += r.ly.sales; totLT += r.ly.tcs;
     totBS += r.b.sales; totBT += r.b.tcs;
   }
-  html += storeCard({
-    name: "TOTAL KFC",
-    cy: {sales: totS, tcs: totT},
-    ly: {sales: totLS, tcs: totLT},
-    b: {sales: totBS, tcs: totBT},
-    accent: "grand"
-  });
 
-  arr.forEach((r, idx) => {
-    html += storeCard({
-      name: STORE_META[STORES[r.si]].short,
-      rank: "#" + (idx+1),
-      cy: r.cy, ly: r.ly, b: r.b,
-      accent: "primary"
+  let html = `<div class="panel-section">
+    <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to} · ${arr.length} stores</span></div>`;
+
+  if (desktop) {
+    html += `<table class="desktop-table">${tableHead_StoresFull()}<tbody>`;
+    html += `<tr class="row-grand">${storeRow_D("TOTAL", {sales: totS, tcs: totT}, {sales: totLS, tcs: totLT}, {sales: totBS, tcs: totBT})}</tr>`;
+    arr.forEach((r) => {
+      html += `<tr>${storeRow_D(STORE_META[STORES[r.si]].short, r.cy, r.ly, r.b)}</tr>`;
     });
-  });
-
-  html += `</div></div>`;
+    html += `</tbody></table>`;
+  } else {
+    html += `<div class="cards">`;
+    html += storeCard_M({
+      name: "TOTAL",
+      cy: {sales: totS, tcs: totT},
+      ly: {sales: totLS, tcs: totLT},
+      b: {sales: totBS, tcs: totBT},
+      accent: "grand"
+    });
+    arr.forEach((r, idx) => {
+      html += storeCard_M({
+        name: STORE_META[STORES[r.si]].short,
+        rank: "#" + (idx+1),
+        cy: r.cy, ly: r.ly, b: r.b,
+        accent: "primary"
+      });
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
   root.innerHTML = html;
 }
 
-function renderSalesType(R) {
-  renderBreakdownByStore(R, "salestype");
-}
-function renderChannels(R) {
-  renderBreakdownByStore(R, "channels");
-}
 
-function renderBreakdownByStore(R, mode) {
+// =====================================================================
+// BY SALES TYPE / BY CHANNEL — per-store breakdown
+// =====================================================================
+function renderSalesType(R) { renderBreakdown(R, "salestype"); }
+function renderChannels(R) { renderBreakdown(R, "channels"); }
+
+function renderBreakdown(R, mode) {
   const root = document.getElementById("tab-" + mode);
+  const desktop = isDesktop();
   const arr = [];
   for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
     const cy = R.cy.byStore[si];
     if (cy.sales === 0 && R.ly.byStore[si].sales === 0) continue;
     arr.push({si, cy: cy.sales});
   }
   arr.sort((a, b) => b.cy - a.cy);
 
-  const labels = mode === "salestype" ? SALESTYPES : CHANNELGROUPS;
-  const dataKey = mode === "salestype" ? "byST" : "byCH";
-  const title = mode === "salestype" ? "Sales Type Breakdown · Per Store" : "Channel Breakdown · Per Store";
-
-  let html = `<div class="panel-section">
-    <div class="section-title"><span>${title}</span><span class="meta">${R.from} → ${R.to}</span></div>`;
-
-  for (const {si} of arr) {
-    const short = STORE_META[STORES[si]].short;
-    const cyTotal = R.cy.byStore[si];
-    html += `<div class="subsection-header">${short} · ${fmtEurK(cyTotal.sales)}</div>`;
-    html += `<div class="cards">`;
-    for (let li = 0; li < labels.length; li++) {
-      const cy = R.cy[dataKey][si][li];
-      const ly = R.ly[dataKey][si][li];
-      if (cy.sales === 0 && ly.sales === 0) continue;
-      const mix = cyTotal.sales > 0 ? cy.sales / cyTotal.sales : 0;
-      html += breakdownCard({
-        label: labels[li],
-        cy: { sales: cy.sales, tcs: cy.tcs },
-        ly: { sales: ly.sales, tcs: ly.tcs },
-        mix
-      });
+  // For salestype tab, allow toggle between View A (Type) and View B (Sales Type)
+  let labels, dataKey, title;
+  if (mode === "salestype") {
+    if (STATE.channelView === "type") {
+      labels = TYPES; dataKey = "byType"; title = "Type Breakdown · Per Store (View A)";
+    } else {
+      labels = SALESTYPES; dataKey = "byST"; title = "Sales Type Breakdown · Per Store (View B)";
     }
-    html += `</div>`;
+  } else {
+    labels = CHANNELS; dataKey = "byCH"; title = "Channel Breakdown · Per Store (8 channels)";
+  }
+
+  let html = "";
+
+  // For salestype, add toggle chips
+  if (mode === "salestype") {
+    html += `<div class="filter-row">
+      <div class="filter-group">
+        <span class="label">Grouping</span>
+        <div class="chip-row" id="chViewChipsST">
+          <span class="chip ${STATE.channelView === 'type' ? 'active' : ''}" data-cv="type">View A · Type (3)</span>
+          <span class="chip ${STATE.channelView === 'salestype' ? 'active' : ''}" data-cv="salestype">View B · Sales Type (4)</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  html += `<div class="panel-section">
+    <div class="section-title"><span>${title}</span><span class="meta">${R.from} → ${R.to} · ${arr.length} stores</span></div>`;
+
+  if (desktop) {
+    // Desktop: one big table with stores as rows, groups as repeated columns
+    // For 3 groups (Type) we have 3 sets of columns; for 4 (SalesType) → 4 sets; for 8 (Channels) too many → use stacked layout
+    if (labels.length <= 4) {
+      html += `<table class="desktop-table"><thead><tr><th>Store</th>`;
+      for (const lbl of labels) {
+        html += `<th>${lbl}<br><span style="font-weight:400;opacity:0.6">CY</span></th>
+                 <th>${lbl}<br><span style="font-weight:400;opacity:0.6">vs LY</span></th>
+                 <th>${lbl}<br><span style="font-weight:400;opacity:0.6">Mix</span></th>`;
+      }
+      html += `<th>Total</th></tr></thead><tbody>`;
+
+      // Total row
+      const grandByGroup = labels.map(() => ({cy:0, ly:0}));
+      for (const r of arr) {
+        for (let i = 0; i < labels.length; i++) {
+          grandByGroup[i].cy += R.cy[dataKey][r.si][i].sales;
+          grandByGroup[i].ly += R.ly[dataKey][r.si][i].sales;
+        }
+      }
+      let grandTotal = 0;
+      grandByGroup.forEach(g => grandTotal += g.cy);
+      let grandRow = `<tr class="row-grand"><td>TOTAL</td>`;
+      for (const g of grandByGroup) {
+        const dS = g.ly > 0 ? (g.cy - g.ly)/g.ly : null;
+        const mix = grandTotal > 0 ? g.cy/grandTotal : 0;
+        grandRow += `<td>${fmtEurK(g.cy)}</td><td>${pctTag(dS)}</td><td>${(mix*100).toFixed(1).replace(".",",")}%</td>`;
+      }
+      grandRow += `<td>${fmtEurK(grandTotal)}</td></tr>`;
+      html += grandRow;
+
+      // Per-store rows
+      for (const r of arr) {
+        const short = STORE_META[STORES[r.si]].short;
+        const cyTotal = R.cy.byStore[r.si].sales;
+        let row = `<tr><td>${short}</td>`;
+        for (let i = 0; i < labels.length; i++) {
+          const cyV = R.cy[dataKey][r.si][i];
+          const lyV = R.ly[dataKey][r.si][i];
+          const dS = lyV.sales > 0 ? (cyV.sales - lyV.sales)/lyV.sales : null;
+          const mix = cyTotal > 0 ? cyV.sales/cyTotal : 0;
+          row += `<td>${fmtEurK(cyV.sales)}</td><td>${pctTag(dS)}</td><td>${(mix*100).toFixed(1).replace(".",",")}%</td>`;
+        }
+        row += `<td>${fmtEurK(cyTotal)}</td></tr>`;
+        html += row;
+      }
+      html += `</tbody></table>`;
+    } else {
+      // 8 channels: too wide, use one section per store
+      for (const r of arr) {
+        const short = STORE_META[STORES[r.si]].short;
+        const cyTotal = R.cy.byStore[r.si];
+        html += `<div style="margin-bottom: 18px">
+          <div style="background: var(--bg-3); color: var(--accent); font-weight: 700; padding: 8px 12px; border-radius: 6px 6px 0 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px">${short} <span style="float:right; font-family: var(--mono); font-size: 11px; color: var(--text-2); font-weight: 500">${fmtEurK(cyTotal.sales)}</span></div>
+          <table class="desktop-table" style="border-radius: 0 0 6px 6px"><thead><tr>
+            <th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg</th>
+            <th>Mix %</th><th>LY Sales</th><th>vs LY (Sales)</th><th>vs LY (TCs)</th>
+          </tr></thead><tbody>`;
+        for (let i = 0; i < labels.length; i++) {
+          const cyV = R.cy[dataKey][r.si][i];
+          const lyV = R.ly[dataKey][r.si][i];
+          if (cyV.sales === 0 && lyV.sales === 0) continue;
+          const cyAvg = cyV.tcs > 0 ? cyV.sales/cyV.tcs : 0;
+          const dS = lyV.sales > 0 ? (cyV.sales - lyV.sales)/lyV.sales : null;
+          const dT = lyV.tcs > 0 ? (cyV.tcs - lyV.tcs)/lyV.tcs : null;
+          const mix = cyTotal.sales > 0 ? cyV.sales/cyTotal.sales : 0;
+          html += `<tr>
+            <td>${labels[i]}</td>
+            <td>${fmtEur(cyV.sales)}</td>
+            <td>${fmtNum(cyV.tcs)}</td>
+            <td>${fmtAvg(cyAvg)}</td>
+            <td>${(mix*100).toFixed(1).replace(".",",")}%</td>
+            <td>${fmtEur(lyV.sales)}</td>
+            <td>${pctTag(dS)}</td>
+            <td>${pctTag(dT)}</td>
+          </tr>`;
+        }
+        html += `</tbody></table></div>`;
+      }
+    }
+  } else {
+    // Mobile: stacked cards per store
+    for (const r of arr) {
+      const short = STORE_META[STORES[r.si]].short;
+      const cyTotal = R.cy.byStore[r.si];
+      html += `<div class="subsection-header">${short} · ${fmtEurK(cyTotal.sales)}</div>`;
+      html += `<div class="cards">`;
+      for (let i = 0; i < labels.length; i++) {
+        const cyV = R.cy[dataKey][r.si][i];
+        const lyV = R.ly[dataKey][r.si][i];
+        if (cyV.sales === 0 && lyV.sales === 0) continue;
+        const mix = cyTotal.sales > 0 ? cyV.sales / cyTotal.sales : 0;
+        html += breakdownCard_M({
+          label: labels[i],
+          cy: { sales: cyV.sales, tcs: cyV.tcs },
+          ly: { sales: lyV.sales, tcs: lyV.tcs },
+          mix
+        });
+      }
+      html += `</div>`;
+    }
   }
   html += `</div>`;
-
   root.innerHTML = html;
+
+  // Hook up chips for salestype mode
+  if (mode === "salestype") {
+    root.querySelectorAll('#chViewChipsST .chip').forEach(c => c.addEventListener('click', e => {
+      STATE.channelView = e.target.dataset.cv;
+      renderActive();
+    }));
+  }
 }
 
+// =====================================================================
+// RANKINGS TAB
+// =====================================================================
 function renderRankings(R) {
   const root = document.getElementById("tab-rankings");
+  const desktop = isDesktop();
   const arr = [];
   for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
     const cy = R.cy.byStore[si];
     const ly = R.ly.byStore[si];
     const b = R.budget.byStore[si];
@@ -1787,29 +1687,41 @@ function renderRankings(R) {
     const sorted = [...arr].sort((a,b) => b[metricKey] - a[metricKey]);
     const max = sorted[0] && sorted[0][metricKey] || 1;
     let html = `<div class="panel-section">
-      <div class="section-title"><span>${label}</span></div>
-      <div class="cards">`;
-    sorted.forEach((r, idx) => {
-      const dL = metricKey === "cyS" ? (r.lyS > 0 ? (r.cyS - r.lyS)/r.lyS : null) :
-                 metricKey === "cyT" ? (r.lyT > 0 ? (r.cyT - r.lyT)/r.lyT : null) :
-                                       (r.lyA > 0 ? (r.cyA - r.lyA)/r.lyA : null);
-      const dB = metricKey === "cyS" ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
-                 metricKey === "cyT" ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
-                                       (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
-      const w = (r[metricKey]/max*100).toFixed(0);
-      html += `<div class="card accent">
-        <div class="card-title">
-          <span class="name">${idx+1}. ${r.short}</span>
-          <span class="rank">${fmt(r[metricKey])}</span>
-        </div>
-        <div class="card-rows">
-          <div class="card-row"><span class="lbl">vs LY</span><span class="val">${pctTag(dL)}</span></div>
-          <div class="card-row"><span class="lbl">vs Budget</span><span class="val">${pctTag(dB)}</span></div>
-          <div class="card-row" style="margin-top:4px"><div class="mini-bar"><div style="width:${w}%"></div></div></div>
-        </div>
-      </div>`;
-    });
-    html += `</div></div>`;
+      <div class="section-title"><span>${label}</span></div>`;
+    if (desktop) {
+      html += `<table class="desktop-table"><thead><tr><th>#</th><th>Store</th><th>${label.split(' ')[0]}</th><th>vs LY</th><th>vs Budget</th><th></th></tr></thead><tbody>`;
+      sorted.forEach((r, idx) => {
+        const dL = metricKey === "cyS" ? (r.lyS > 0 ? (r.cyS - r.lyS)/r.lyS : null) :
+                   metricKey === "cyT" ? (r.lyT > 0 ? (r.cyT - r.lyT)/r.lyT : null) :
+                                         (r.lyA > 0 ? (r.cyA - r.lyA)/r.lyA : null);
+        const dB = metricKey === "cyS" ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
+                   metricKey === "cyT" ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
+                                         (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
+        const w = (r[metricKey]/max*100).toFixed(0);
+        html += `<tr><td>${idx+1}</td><td>${r.short}</td><td>${fmt(r[metricKey])}</td><td>${pctTag(dL)}</td><td>${pctTag(dB)}</td><td style="min-width: 80px"><div class="mini-bar"><div style="width:${w}%"></div></div></td></tr>`;
+      });
+      html += `</tbody></table>`;
+    } else {
+      html += `<div class="cards">`;
+      sorted.forEach((r, idx) => {
+        const dL = metricKey === "cyS" ? (r.lyS > 0 ? (r.cyS - r.lyS)/r.lyS : null) :
+                   metricKey === "cyT" ? (r.lyT > 0 ? (r.cyT - r.lyT)/r.lyT : null) :
+                                         (r.lyA > 0 ? (r.cyA - r.lyA)/r.lyA : null);
+        const dB = metricKey === "cyS" ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
+                   metricKey === "cyT" ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
+                                         (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
+        const w = (r[metricKey]/max*100).toFixed(0);
+        html += `<div class="card accent">
+          <div class="card-title"><span class="name">${idx+1}. ${r.short}</span><span class="rank">${fmt(r[metricKey])}</span></div>
+          <div class="card-rows">
+            <div class="card-row"><span class="lbl">vs LY</span><span class="val">${pctTag(dL)}</span></div>
+            <div class="card-row"><span class="lbl">vs Budget</span><span class="val">${pctTag(dB)}</span></div>
+            <div class="card-row" style="margin-top:4px"><div class="mini-bar"><div style="width:${w}%"></div></div></div>
+          </div></div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
     return html;
   }
 
@@ -1819,52 +1731,106 @@ function renderRankings(R) {
     rankSection("cyA", "Avg Ticket Ranking", fmtAvg);
 }
 
+
+// =====================================================================
+// DAY-OF-WEEK TAB
+// =====================================================================
 function renderDOW(R) {
   const root = document.getElementById("tab-dow");
+  const desktop = isDesktop();
   const cyByDOW = [0,1,2,3,4,5,6].map(()=>({sales:0, tcs:0, count:0}));
   const lyByDOW = [0,1,2,3,4,5,6].map(()=>({sales:0, tcs:0, count:0}));
   const dates = dateRange(R.from, R.to);
   for (const d of dates) {
     const dow = getDOW(d);
-    const dt = dailyTotal.get(d);
-    if (dt) { cyByDOW[dow].sales += dt.sales; cyByDOW[dow].tcs += dt.tcs; cyByDOW[dow].count++; }
+    let dayCY = {sales:0, tcs:0};
+    let dayLY = {sales:0, tcs:0};
+    const ds = dailyStore.get(d);
+    if (ds) {
+      for (let si = 0; si < STORES.length; si++) {
+        if (R.storeFilter && !R.storeFilter.has(si)) continue;
+        dayCY.sales += ds[si].sales;
+        dayCY.tcs += ds[si].tcs;
+      }
+    }
     const ld = lyDate(d, STATE.ly_mode);
+    const lds = dailyStore.get(ld);
+    if (lds) {
+      for (let si = 0; si < STORES.length; si++) {
+        if (R.storeFilter && !R.storeFilter.has(si)) continue;
+        dayLY.sales += lds[si].sales;
+        dayLY.tcs += lds[si].tcs;
+      }
+    }
+    cyByDOW[dow].sales += dayCY.sales;
+    cyByDOW[dow].tcs += dayCY.tcs;
+    cyByDOW[dow].count++;
     const dow2 = getDOW(ld);
-    const lt = dailyTotal.get(ld);
-    if (lt) { lyByDOW[dow2].sales += lt.sales; lyByDOW[dow2].tcs += lt.tcs; lyByDOW[dow2].count++; }
+    lyByDOW[dow2].sales += dayLY.sales;
+    lyByDOW[dow2].tcs += dayLY.tcs;
+    lyByDOW[dow2].count++;
   }
 
   let html = `<div class="panel-section">
-    <div class="section-title"><span>Day-of-Week Profile</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="cards">`;
-  for (let i = 0; i < 7; i++) {
-    const cy = cyByDOW[i], ly = lyByDOW[i];
-    if (cy.count === 0 && ly.count === 0) continue;
-    const cyAvgPerDay = cy.count > 0 ? cy.sales / cy.count : 0;
-    const lyAvgPerDay = ly.count > 0 ? ly.sales / ly.count : 0;
-    const dD = lyAvgPerDay > 0 ? (cyAvgPerDay - lyAvgPerDay)/lyAvgPerDay : null;
-    const cyTicket = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
-    const lyTicket = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
-    html += `<div class="card accent-2">
-      <div class="card-title">
-        <span class="name">${dowName(i)}</span>
-        <span class="rank">${cy.count} ημ.</span>
-      </div>
-      <div class="card-rows">
-        <div class="card-row"><span class="lbl">CY Avg/Day</span><span class="val">${fmtEur(cyAvgPerDay)}</span></div>
-        <div class="card-row"><span class="lbl">LY Avg/Day</span><span class="val">${fmtEur(lyAvgPerDay)}</span></div>
-        <div class="card-row"><span class="lbl">Δ Avg/Day</span><span class="val">${pctTag(dD)}</span></div>
-        <div class="card-row"><span class="lbl">CY Ticket</span><span class="val">${fmtAvg(cyTicket)}</span></div>
-        <div class="card-row"><span class="lbl">LY Ticket</span><span class="val">${fmtAvg(lyTicket)}</span></div>
-      </div>
-    </div>`;
-  }
-  html += `</div></div>`;
+    <div class="section-title"><span>Day-of-Week Profile</span><span class="meta">${R.from} → ${R.to}</span></div>`;
 
-  // Heatmap (last 30 days)
+  if (desktop) {
+    html += `<table class="desktop-table"><thead><tr>
+      <th>Day</th><th>CY Avg/Day</th><th>LY Avg/Day</th><th>Δ vs LY</th>
+      <th>CY TCs/Day</th><th>CY Ticket</th><th>LY Ticket</th><th>Δ Ticket</th><th># Days</th>
+    </tr></thead><tbody>`;
+    for (let i = 0; i < 7; i++) {
+      const cy = cyByDOW[i], ly = lyByDOW[i];
+      if (cy.count === 0 && ly.count === 0) continue;
+      const cyAvgD = cy.count > 0 ? cy.sales/cy.count : 0;
+      const lyAvgD = ly.count > 0 ? ly.sales/ly.count : 0;
+      const dD = lyAvgD > 0 ? (cyAvgD - lyAvgD)/lyAvgD : null;
+      const cyT = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+      const lyT = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+      const dT = lyT > 0 ? (cyT - lyT)/lyT : null;
+      const cyTcsD = cy.count > 0 ? cy.tcs/cy.count : 0;
+      html += `<tr>
+        <td>${dowName(i)}</td>
+        <td>${fmtEur(cyAvgD)}</td>
+        <td>${fmtEur(lyAvgD)}</td>
+        <td>${pctTag(dD)}</td>
+        <td>${fmtNum(cyTcsD)}</td>
+        <td>${fmtAvg(cyT)}</td>
+        <td>${fmtAvg(lyT)}</td>
+        <td>${pctTag(dT)}</td>
+        <td>${cy.count}</td>
+      </tr>`;
+    }
+    html += `</tbody></table>`;
+  } else {
+    html += `<div class="cards">`;
+    for (let i = 0; i < 7; i++) {
+      const cy = cyByDOW[i], ly = lyByDOW[i];
+      if (cy.count === 0 && ly.count === 0) continue;
+      const cyAvgPerDay = cy.count > 0 ? cy.sales / cy.count : 0;
+      const lyAvgPerDay = ly.count > 0 ? ly.sales / ly.count : 0;
+      const dD = lyAvgPerDay > 0 ? (cyAvgPerDay - lyAvgPerDay)/lyAvgPerDay : null;
+      const cyTicket = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+      const lyTicket = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+      html += `<div class="card accent-2">
+        <div class="card-title"><span class="name">${dowName(i)}</span><span class="rank">${cy.count} ημ.</span></div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">CY Avg/Day</span><span class="val">${fmtEur(cyAvgPerDay)}</span></div>
+          <div class="card-row"><span class="lbl">LY Avg/Day</span><span class="val">${fmtEur(lyAvgPerDay)}</span></div>
+          <div class="card-row"><span class="lbl">Δ Avg/Day</span><span class="val">${pctTag(dD)}</span></div>
+          <div class="card-row"><span class="lbl">CY Ticket</span><span class="val">${fmtAvg(cyTicket)}</span></div>
+          <div class="card-row"><span class="lbl">LY Ticket</span><span class="val">${fmtAvg(lyTicket)}</span></div>
+        </div></div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div>`;
+
+  // Heatmap (last 30 days × stores)
   const heatDates = dates.slice(-30);
   const stores = [];
   for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
     let any = false;
     for (const d of heatDates) {
       const ds = dailyStore.get(d);
@@ -1883,7 +1849,7 @@ function renderDOW(R) {
   }
   stores.sort((a, b) => storeSales[b] - storeSales[a]);
 
-  let heatHTML = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 90px repeat(${heatDates.length}, minmax(34px, 1fr))">`;
+  let heatHTML = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 110px repeat(${heatDates.length}, minmax(34px, 1fr))">`;
   heatHTML += `<div class="heat-header" style="text-align:left">DAY</div>`;
   for (const d of heatDates) {
     const [yh, mh, dh] = d.split("-").map(Number);
@@ -1918,16 +1884,24 @@ function renderDOW(R) {
   root.innerHTML = html;
 }
 
+// =====================================================================
+// TREND TAB
+// =====================================================================
 function renderTrend(R) {
   const root = document.getElementById("tab-trend");
   const dates = dateRange(R.from, R.to);
   const series = dates.map(d => {
     const ld = lyDate(d, STATE.ly_mode);
-    const dt = dailyTotal.get(d) || {sales:0, tcs:0};
-    const lt = dailyTotal.get(ld) || {sales:0, tcs:0};
-    let bS = 0;
-    for (let si = 0; si < STORES.length; si++) bS += getDayBudget(d, si, STATE.ly_mode).sales;
-    return {date:d, cyS:dt.sales, lyS:lt.sales, bS};
+    const ds = dailyStore.get(d);
+    const ls = dailyStore.get(ld);
+    let cyS = 0, lyS = 0, bS = 0;
+    for (let si = 0; si < STORES.length; si++) {
+      if (R.storeFilter && !R.storeFilter.has(si)) continue;
+      if (ds) cyS += ds[si].sales;
+      if (ls) lyS += ls[si].sales;
+      bS += getDayBudget(d, si, STATE.ly_mode).sales;
+    }
+    return {date:d, cyS, lyS, bS};
   });
   let cumCY = 0, cumLY = 0, cumB = 0;
   const cumSeries = series.map(p => { cumCY += p.cyS; cumLY += p.lyS; cumB += p.bS; return {date:p.date, cumCY, cumLY, cumB}; });
@@ -1983,7 +1957,7 @@ function renderTrend(R) {
   ];
   root.innerHTML = `
     <div class="panel-section">
-      <div class="section-title"><span>Daily Trend</span><span class="meta">${R.from} → ${R.to} · σύρε δεξιά</span></div>
+      <div class="section-title"><span>Daily Trend</span><span class="meta">${R.from} → ${R.to}</span></div>
       <div class="chart-wrap">
         <div class="chart-title">Daily Net Sales (€)</div>
         ${chartSVG(series, acc1, fmtEurK)}
@@ -1998,19 +1972,35 @@ function renderTrend(R) {
     </div>`;
 }
 
+
+// =====================================================================
+// STORE DEEP-DIVE TAB
+// =====================================================================
 function renderStoreDeep(R) {
   const root = document.getElementById("tab-storedeep");
-  const opts = STORES.map((s,i) => `<option value="${i}" ${i===STATE.selectedStore?"selected":""}>${STORE_META[s].short}</option>`).join("");
+  const desktop = isDesktop();
+  // Build store options that pass the filter
+  const validStores = [];
+  for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
+    validStores.push(si);
+  }
+  if (validStores.length === 0) {
+    root.innerHTML = `<div class="panel-section"><div class="section-title"><span>Store Deep-Dive</span></div><p style="color:var(--text-2)">Δεν υπάρχουν καταστήματα με τα τρέχοντα φίλτρα.</p></div>`;
+    return;
+  }
+  if (!validStores.includes(STATE.selectedStore)) STATE.selectedStore = validStores[0];
+
+  const opts = validStores.map(i => `<option value="${i}" ${i===STATE.selectedStore?"selected":""}>${STORE_META[STORES[i]].short}</option>`).join("");
   const si = STATE.selectedStore;
   const storeName = STORES[si];
-  const short = STORE_META[storeName].short;
+  const meta = STORE_META[storeName] || {};
+  const short = meta.short || storeName;
   const cy = R.cy.byStore[si];
   const ly = R.ly.byStore[si];
   const b = R.budget.byStore[si];
   const fb = R.fullMonth.byStore[si];
   const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
-  const lyAvg = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
-  const bAvg = b.tcs > 0 ? b.sales/b.tcs : 0;
   const forecast = b.sales > 0 ? cy.sales * (fb.sales / b.sales) : null;
   const forecastVsBudget = forecast && fb.sales > 0 ? (forecast - fb.sales)/fb.sales : null;
 
@@ -2019,9 +2009,26 @@ function renderStoreDeep(R) {
     <select id="storeSelect">${opts}</select>
   </div>`;
 
+  // Header info: store metadata
   html += `<div class="panel-section">
-    <div class="cards">
-      ${storeCard({ name: short + " · MTD", cy, ly, b, accent: "primary" })}
+    <div class="section-title"><span>${short} · ${meta.store_type || ''} ${meta.is_new ? '· New Store' : ''}</span><span class="meta">Άνοιγμα: ${meta.opening_date || '—'}</span></div>`;
+
+  if (desktop) {
+    html += `<table class="desktop-table">${tableHead_StoresFull()}<tbody>
+      <tr>${storeRow_D(short, cy, ly, b)}</tr>
+    </tbody></table>`;
+    // Forecast info
+    html += `<div style="margin-top: 14px; padding: 12px; background: var(--bg-2); border-radius: 6px; border-left: 3px solid var(--good)">
+      <div style="font-family: var(--mono); font-size: 9px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase">Month Forecast</div>
+      <div style="display: flex; gap: 30px; align-items: baseline; margin-top: 6px">
+        <div><span style="font-size: 20px; font-weight: 700">${fmtEurK(forecast)}</span></div>
+        <div><span style="color: var(--text-2); font-size: 11px">vs Monthly Budget</span> <span style="margin-left: 8px">${pctTag(forecastVsBudget)}</span></div>
+        <div><span style="color: var(--text-2); font-size: 11px">Monthly Budget</span> <span style="margin-left: 8px; font-family: var(--mono)">${fmtEurK(fb.sales)}</span></div>
+      </div>
+    </div>`;
+  } else {
+    html += `<div class="cards">
+      ${storeCard_M({ name: short + " · " + STATE.view, cy, ly, b, accent: "primary" })}
       <div class="card good">
         <div class="card-title">
           <span class="name">Month Forecast</span>
@@ -2032,50 +2039,346 @@ function renderStoreDeep(R) {
           <div class="card-row"><span class="lbl">Monthly Budget</span><span class="val">${fmtEurK(fb.sales)}</span></div>
         </div>
       </div>
-    </div>
-  </div>`;
-
-  // Sales Type breakdown for this store
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Sales Type Breakdown</span></div>
-    <div class="cards">`;
-  for (let sti = 0; sti < SALESTYPES.length; sti++) {
-    const cyV = R.cy.byST[si][sti];
-    const lyV = R.ly.byST[si][sti];
-    if (cyV.sales === 0 && lyV.sales === 0) continue;
-    const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
-    html += breakdownCard({
-      label: SALESTYPES[sti],
-      cy: { sales: cyV.sales, tcs: cyV.tcs },
-      ly: { sales: lyV.sales, tcs: lyV.tcs },
-      mix
-    });
+    </div>`;
   }
-  html += `</div></div>`;
+  html += `</div>`;
 
-  // Channel breakdown
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Channel Breakdown</span></div>
-    <div class="cards">`;
-  for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
-    const cyV = R.cy.byCH[si][ci];
-    const lyV = R.ly.byCH[si][ci];
-    if (cyV.sales === 0 && lyV.sales === 0) continue;
-    const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
-    html += breakdownCard({
-      label: CHANNELGROUPS[ci],
-      cy: { sales: cyV.sales, tcs: cyV.tcs },
-      ly: { sales: lyV.sales, tcs: lyV.tcs },
-      mix
-    });
+  // Channel breakdown for this store
+  function deepBreakdown(labels, dataKey, title) {
+    let h = `<div class="panel-section">
+      <div class="section-title"><span>${title}</span></div>`;
+    if (desktop) {
+      h += `<table class="desktop-table"><thead><tr>
+        <th>${title.split(' ')[0]}</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg</th>
+        <th>Mix %</th><th>LY Sales</th><th>vs LY (Sales)</th><th>vs LY (TCs)</th>
+      </tr></thead><tbody>`;
+      for (let i = 0; i < labels.length; i++) {
+        const cyV = R.cy[dataKey][si][i];
+        const lyV = R.ly[dataKey][si][i];
+        if (cyV.sales === 0 && lyV.sales === 0) continue;
+        const cyAvg = cyV.tcs > 0 ? cyV.sales/cyV.tcs : 0;
+        const dS = lyV.sales > 0 ? (cyV.sales - lyV.sales)/lyV.sales : null;
+        const dT = lyV.tcs > 0 ? (cyV.tcs - lyV.tcs)/lyV.tcs : null;
+        const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
+        h += `<tr>
+          <td>${labels[i]}</td>
+          <td>${fmtEur(cyV.sales)}</td>
+          <td>${fmtNum(cyV.tcs)}</td>
+          <td>${fmtAvg(cyAvg)}</td>
+          <td>${(mix*100).toFixed(1).replace(".",",")}%</td>
+          <td>${fmtEur(lyV.sales)}</td>
+          <td>${pctTag(dS)}</td>
+          <td>${pctTag(dT)}</td>
+        </tr>`;
+      }
+      h += `</tbody></table>`;
+    } else {
+      h += `<div class="cards">`;
+      for (let i = 0; i < labels.length; i++) {
+        const cyV = R.cy[dataKey][si][i];
+        const lyV = R.ly[dataKey][si][i];
+        if (cyV.sales === 0 && lyV.sales === 0) continue;
+        const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
+        h += breakdownCard_M({
+          label: labels[i],
+          cy: { sales: cyV.sales, tcs: cyV.tcs },
+          ly: { sales: lyV.sales, tcs: lyV.tcs },
+          mix
+        });
+      }
+      h += `</div>`;
+    }
+    h += `</div>`;
+    return h;
   }
-  html += `</div></div>`;
+
+  html += deepBreakdown(SALESTYPES, "byST", "Sales Type Breakdown (View B)");
+  html += deepBreakdown(TYPES, "byType", "Type Breakdown (View A)");
+  html += deepBreakdown(CHANNELS, "byCH", "Channel Breakdown (8 channels)");
 
   root.innerHTML = html;
   document.getElementById("storeSelect").addEventListener("change", e => {
     STATE.selectedStore = parseInt(e.target.value);
     renderActive();
   });
+}
+
+// =====================================================================
+// HOURLY TAB
+// =====================================================================
+function renderHourly(R) {
+  const root = document.getElementById('tab-hourly');
+  const desktop = isDesktop();
+  
+  if (!HOURLY) {
+    root.innerHTML = `<div class="panel-section">
+      <div class="section-title"><span>Hourly Profile</span></div>
+      <p style="color: var(--text-2); padding: 20px; text-align: center;">
+        Δεν υπάρχουν hourly δεδομένα διαθέσιμα.<br>
+        <span style="font-size: 11px">Στείλε το αρχείο "Sales Analysis by Time and Day" από Targit για να ενεργοποιηθεί αυτό το tab.</span>
+      </p>
+    </div>`;
+    return;
+  }
+
+  const years = HOURLY.years.slice().sort();
+  const hours = HOURLY.hours.slice().sort((a,b) => a-b);
+  const cyYear = Math.max(...years);
+  const lyYear = years.length > 1 ? years[years.findIndex(y => y === cyYear) - 1] : null;
+
+  let html = "";
+
+  // ---- Section 1: Hour profile chain-wide (hour x year totals) ----
+  // Stack bar / line chart
+  const SVG_W = 700, SVG_H = 280, PAD = {l:55, r:15, t:25, b:30};
+  const innerW = SVG_W - PAD.l - PAD.r, innerH = SVG_H - PAD.t - PAD.b;
+  
+  const cyByHour = hours.map(h => {
+    let s = 0;
+    for (let si = 0; si < STORES.length; si++) {
+      if (R.storeFilter && !R.storeFilter.has(si)) continue;
+      const cell = hourlyByYearStoreHour[cyYear] && hourlyByYearStoreHour[cyYear][si] && hourlyByYearStoreHour[cyYear][si][h];
+      if (cell) s += cell.sales;
+    }
+    return s;
+  });
+  const lyByHour = lyYear ? hours.map(h => {
+    let s = 0;
+    for (let si = 0; si < STORES.length; si++) {
+      if (R.storeFilter && !R.storeFilter.has(si)) continue;
+      const cell = hourlyByYearStoreHour[lyYear] && hourlyByYearStoreHour[lyYear][si] && hourlyByYearStoreHour[lyYear][si][h];
+      if (cell) s += cell.sales;
+    }
+    return s;
+  }) : null;
+
+  const allVals = cyByHour.concat(lyByHour || []);
+  const maxV = Math.max(...allVals, 1) * 1.1;
+  const xScale = i => PAD.l + (i / (hours.length - 1 || 1)) * innerW;
+  const yScale = v => PAD.t + innerH - (v / maxV) * innerH;
+
+  let svg = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg">`;
+  // Grid
+  for (let i = 0; i <= 4; i++) {
+    const y = PAD.t + innerH * i / 4;
+    const v = maxV - (maxV) * i / 4;
+    svg += `<line x1="${PAD.l}" y1="${y}" x2="${SVG_W - PAD.r}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
+    svg += `<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${fmtEurK(v)}</text>`;
+  }
+  // X-axis labels
+  for (let i = 0; i < hours.length; i++) {
+    if (i % 2 === 0 || hours.length <= 12) {
+      const x = xScale(i);
+      svg += `<text x="${x}" y="${SVG_H-10}" text-anchor="middle" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${String(hours[i]).padStart(2,'0')}h</text>`;
+    }
+  }
+  // LY line (if exists)
+  if (lyByHour) {
+    const ptsLy = lyByHour.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
+    svg += `<polyline fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="4 3" points="${ptsLy}" />`;
+  }
+  // CY line
+  const ptsCy = cyByHour.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
+  svg += `<polyline fill="none" stroke="#ef4444" stroke-width="2.2" points="${ptsCy}" />`;
+  // Legend
+  svg += `<rect x="${PAD.l+10}" y="${PAD.t+5}" width="14" height="3" fill="#ef4444"/><text x="${PAD.l+30}" y="${PAD.t+9}" fill="var(--text-1)" font-size="11">CY ${cyYear}</text>`;
+  if (lyByHour) {
+    svg += `<rect x="${PAD.l+90}" y="${PAD.t+5}" width="14" height="3" fill="#f59e0b" stroke-dasharray="4 3"/><text x="${PAD.l+110}" y="${PAD.t+9}" fill="var(--text-1)" font-size="11">LY ${lyYear}</text>`;
+  }
+  svg += `</svg>`;
+
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Hour Profile · Chain Total</span><span class="meta">Sales by hour, summed across all selected stores</span></div>
+    <div class="chart-wrap"><div class="chart-title">Total sales per hour (€)</div>${svg}</div>
+  </div>`;
+
+  // ---- Section 2: Heatmap Store × Hour for current year ----
+  const stores = [];
+  for (let si = 0; si < STORES.length; si++) {
+    if (R.storeFilter && !R.storeFilter.has(si)) continue;
+    let total = 0;
+    for (const h of hours) {
+      const cell = hourlyByYearStoreHour[cyYear] && hourlyByYearStoreHour[cyYear][si] && hourlyByYearStoreHour[cyYear][si][h];
+      if (cell) total += cell.sales;
+    }
+    if (total > 0) stores.push({si, total});
+  }
+  stores.sort((a, b) => b.total - a.total);
+
+  // Find max value across all cells (for color scaling)
+  let maxCell = 0;
+  for (const s of stores) {
+    for (const h of hours) {
+      const c = hourlyByYearStoreHour[cyYear][s.si][h];
+      if (c && c.sales > maxCell) maxCell = c.sales;
+    }
+  }
+
+  let heatHTML = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 110px repeat(${hours.length}, minmax(38px, 1fr))">`;
+  heatHTML += `<div class="heat-header" style="text-align:left">STORE</div>`;
+  for (const h of hours) {
+    heatHTML += `<div class="heat-header">${String(h).padStart(2,'0')}h</div>`;
+  }
+  for (const s of stores) {
+    heatHTML += `<div class="heat-label">${STORE_META[STORES[s.si]].short}</div>`;
+    for (const h of hours) {
+      const cell = hourlyByYearStoreHour[cyYear][s.si][h];
+      const v = cell ? cell.sales : 0;
+      const intensity = maxCell > 0 ? Math.min(0.9, v / maxCell) : 0;
+      let bg = 'var(--bg-2)';
+      let col = v === 0 ? 'var(--text-2)' : 'var(--text-0)';
+      if (v > 0) {
+        bg = `rgba(228,0,43,${intensity.toFixed(2)})`;
+      }
+      const txt = v === 0 ? '·' : (v >= 1000 ? Math.round(v/1000) + 'K' : Math.round(v));
+      heatHTML += `<div class="heat-cell" style="background:${bg};color:${col}" title="${STORE_META[STORES[s.si]].short} · ${String(h).padStart(2,'0')}:00 · ${fmtEur(v)}">${txt}</div>`;
+    }
+  }
+  heatHTML += `</div></div>`;
+
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Heatmap · Store × Hour (${cyYear})</span><span class="meta">σύρε δεξιά αν χρειαστεί · Total sales per hour per store</span></div>
+    ${heatHTML}
+  </div>`;
+
+  // ---- Section 3: DOW × Hour heatmap (chain-wide) ----
+  const dowHourMax = {};
+  let maxDH = 0;
+  for (let dow = 0; dow < 7; dow++) {
+    for (const h of hours) {
+      const v = hourlyByYearDowHour[cyYear] && hourlyByYearDowHour[cyYear][dow] && hourlyByYearDowHour[cyYear][dow][h];
+      if (v && v > maxDH) maxDH = v;
+    }
+  }
+  let dowHtml = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 110px repeat(${hours.length}, minmax(38px, 1fr))">`;
+  dowHtml += `<div class="heat-header" style="text-align:left">DAY</div>`;
+  for (const h of hours) {
+    dowHtml += `<div class="heat-header">${String(h).padStart(2,'0')}h</div>`;
+  }
+  for (let dow = 0; dow < 7; dow++) {
+    dowHtml += `<div class="heat-label">${dowName(dow)}</div>`;
+    for (const h of hours) {
+      const v = (hourlyByYearDowHour[cyYear] && hourlyByYearDowHour[cyYear][dow] && hourlyByYearDowHour[cyYear][dow][h]) || 0;
+      const intensity = maxDH > 0 ? Math.min(0.9, v / maxDH) : 0;
+      let bg = v > 0 ? `rgba(228,0,43,${intensity.toFixed(2)})` : 'var(--bg-2)';
+      const col = v === 0 ? 'var(--text-2)' : 'var(--text-0)';
+      const txt = v === 0 ? '·' : (v >= 1000 ? Math.round(v/1000) + 'K' : Math.round(v));
+      dowHtml += `<div class="heat-cell" style="background:${bg};color:${col}" title="${dowName(dow)} · ${String(h).padStart(2,'0')}:00 · ${fmtEur(v)}">${txt}</div>`;
+    }
+  }
+  dowHtml += `</div></div>`;
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Pattern · Day-of-Week × Hour (${cyYear})</span><span class="meta">Όλη η αλυσίδα · ποια ώρα δουλεύεις πιο πολύ ανά ημέρα</span></div>
+    ${dowHtml}
+  </div>`;
+
+  // ---- Section 4: Channel × Hour mix (chain-wide) ----
+  // For each hour, what % of sales is each channel?
+  const ch = CHANNELS;
+  if (desktop) {
+    let chHtml = `<table class="desktop-table"><thead><tr><th>Hour</th>`;
+    for (const c of ch) chHtml += `<th>${c}</th>`;
+    chHtml += `<th>Total</th></tr></thead><tbody>`;
+    for (const h of hours) {
+      let total = 0;
+      const arr = hourlyByYearChHour[cyYear][h];
+      for (const v of arr) total += v;
+      if (total === 0) continue;
+      chHtml += `<tr><td>${String(h).padStart(2,'0')}:00</td>`;
+      for (let ci = 0; ci < ch.length; ci++) {
+        const v = arr[ci];
+        const mix = total > 0 ? v / total : 0;
+        chHtml += `<td>${(mix*100).toFixed(1).replace('.', ',')}%<br><span style="opacity:0.5; font-size:10px">${fmtEurK(v)}</span></td>`;
+      }
+      chHtml += `<td>${fmtEurK(total)}</td></tr>`;
+    }
+    chHtml += `</tbody></table>`;
+    html += `<div class="panel-section">
+      <div class="section-title"><span>Channel Mix per Hour (${cyYear})</span><span class="meta">Πώς αλλάζει το mix στις διαφορετικές ώρες</span></div>
+      ${chHtml}
+    </div>`;
+  } else {
+    // Mobile: cards per peak hour
+    let chHtml = `<div class="cards">`;
+    for (const h of hours) {
+      let total = 0;
+      const arr = hourlyByYearChHour[cyYear][h];
+      for (const v of arr) total += v;
+      if (total === 0) continue;
+      chHtml += `<div class="card accent">
+        <div class="card-title"><span class="name">${String(h).padStart(2,'0')}:00</span><span class="rank">${fmtEurK(total)}</span></div>
+        <div class="card-rows">`;
+      const top3 = arr.map((v, i) => ({v, ch: ch[i]})).sort((a,b)=>b.v-a.v).slice(0, 4);
+      for (const t of top3) {
+        if (t.v === 0) continue;
+        const mix = total > 0 ? t.v / total : 0;
+        chHtml += `<div class="card-row"><span class="lbl">${t.ch}</span><span class="val">${(mix*100).toFixed(1).replace('.', ',')}%</span></div>`;
+      }
+      chHtml += `</div></div>`;
+    }
+    chHtml += `</div>`;
+    html += `<div class="panel-section">
+      <div class="section-title"><span>Channel Mix per Hour (${cyYear})</span></div>
+      ${chHtml}
+    </div>`;
+  }
+
+  // ---- Section 5: Peak hours per store ----
+  if (desktop) {
+    let peakHtml = `<table class="desktop-table"><thead><tr>
+      <th>Store</th><th>Peak Hour</th><th>Peak Sales</th><th>% of Day</th><th>Quiet Hour</th><th>Total</th>
+    </tr></thead><tbody>`;
+    for (const s of stores) {
+      let peakH = null, peakV = 0, quietH = null, quietV = Infinity, totalDay = 0;
+      for (const h of hours) {
+        const c = hourlyByYearStoreHour[cyYear][s.si][h];
+        const v = c ? c.sales : 0;
+        totalDay += v;
+        if (v > peakV) { peakV = v; peakH = h; }
+        if (v > 0 && v < quietV) { quietV = v; quietH = h; }
+      }
+      const peakPct = totalDay > 0 ? peakV / totalDay : 0;
+      peakHtml += `<tr>
+        <td>${STORE_META[STORES[s.si]].short}</td>
+        <td>${peakH != null ? String(peakH).padStart(2,'0') + ':00' : '—'}</td>
+        <td>${fmtEur(peakV)}</td>
+        <td>${(peakPct*100).toFixed(1).replace('.', ',')}%</td>
+        <td>${quietH != null ? String(quietH).padStart(2,'0') + ':00' : '—'}</td>
+        <td>${fmtEurK(totalDay)}</td>
+      </tr>`;
+    }
+    peakHtml += `</tbody></table>`;
+    html += `<div class="panel-section">
+      <div class="section-title"><span>Peak / Quiet Hours per Store (${cyYear})</span><span class="meta">Πότε ξεσπάει η ζήτηση ανά κατάστημα</span></div>
+      ${peakHtml}
+    </div>`;
+  } else {
+    let peakHtml = `<div class="cards">`;
+    for (const s of stores) {
+      let peakH = null, peakV = 0, totalDay = 0;
+      for (const h of hours) {
+        const c = hourlyByYearStoreHour[cyYear][s.si][h];
+        const v = c ? c.sales : 0;
+        totalDay += v;
+        if (v > peakV) { peakV = v; peakH = h; }
+      }
+      const peakPct = totalDay > 0 ? peakV / totalDay : 0;
+      peakHtml += `<div class="card accent">
+        <div class="card-title"><span class="name">${STORE_META[STORES[s.si]].short}</span><span class="rank">${peakH != null ? String(peakH).padStart(2,'0') + ':00' : '—'}</span></div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Peak Sales</span><span class="val">${fmtEur(peakV)}</span></div>
+          <div class="card-row"><span class="lbl">% of Day</span><span class="val">${(peakPct*100).toFixed(1).replace('.', ',')}%</span></div>
+          <div class="card-row"><span class="lbl">Total Day</span><span class="val">${fmtEurK(totalDay)}</span></div>
+        </div></div>`;
+    }
+    peakHtml += `</div>`;
+    html += `<div class="panel-section">
+      <div class="section-title"><span>Peak Hours per Store (${cyYear})</span></div>
+      ${peakHtml}
+    </div>`;
+  }
+
+  root.innerHTML = html;
 }
 
 // =====================================================================
@@ -2090,7 +2393,7 @@ function renderActive() {
   const map = {
     overview: renderOverview, bystore: renderByStore, salestype: renderSalesType,
     channels: renderChannels, rankings: renderRankings, dow: renderDOW,
-    trend: renderTrend, storedeep: renderStoreDeep,
+    trend: renderTrend, storedeep: renderStoreDeep, hourly: renderHourly,
   };
   map[STATE.activeTab](R);
 }
@@ -2111,6 +2414,18 @@ document.querySelectorAll("#lyBtns button").forEach(b => b.addEventListener("cli
   STATE.ly_mode = e.target.dataset.ly;
   refresh();
 }));
+document.querySelectorAll("#matBtns button").forEach(b => b.addEventListener("click", e => {
+  document.querySelectorAll("#matBtns button").forEach(x => x.classList.remove("active"));
+  e.target.classList.add("active");
+  STATE.maturity = e.target.dataset.mat;
+  refresh();
+}));
+document.querySelectorAll("#typeBtns button").forEach(b => b.addEventListener("click", e => {
+  document.querySelectorAll("#typeBtns button").forEach(x => x.classList.remove("active"));
+  e.target.classList.add("active");
+  STATE.storeType = e.target.dataset.type;
+  refresh();
+}));
 document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", e => {
   document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("active"));
@@ -2123,6 +2438,20 @@ document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", e => 
 document.getElementById("asOfDate").addEventListener("change", e => {
   STATE.asOf = e.target.value;
   refresh();
+});
+
+// Re-render on viewport change (mobile <-> desktop)
+let _resizeTimer = null;
+let _wasDesktop = isDesktop();
+window.addEventListener("resize", () => {
+  if (_resizeTimer) clearTimeout(_resizeTimer);
+  _resizeTimer = setTimeout(() => {
+    const nowDesktop = isDesktop();
+    if (nowDesktop !== _wasDesktop) {
+      _wasDesktop = nowDesktop;
+      renderActive();
+    }
+  }, 200);
 });
 
 document.getElementById("asOfDate").value = LATEST;
