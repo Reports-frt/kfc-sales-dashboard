@@ -674,22 +674,25 @@ const dailyStore = new Map();        // total per store
 const dailyTotal = new Map();        // grand total
 
 function ensureDate(d) {
-  if (dailyStore.has(d)) return;
+  if (!d || dailyStore.has(d)) return;
   dailyStore.set(d, new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0})));
   dailyTotal.set(d, {sales:0, tcs:0});
   const stArr = new Array(STORES.length);
-  for (let i = 0; i < STORES.length; i++) stArr[i] = new Array(SALESTYPES.length).fill(null).map(() => ({sales:0, tcs:0}));
+  for (let i = 0; i < STORES.length; i++) stArr[i] = new Array(SALESTYPES.length || 1).fill(null).map(() => ({sales:0, tcs:0}));
   dailyStoreST.set(d, stArr);
   const typArr = new Array(STORES.length);
-  for (let i = 0; i < STORES.length; i++) typArr[i] = new Array(TYPES.length).fill(null).map(() => ({sales:0, tcs:0}));
+  for (let i = 0; i < STORES.length; i++) typArr[i] = new Array(TYPES.length || 1).fill(null).map(() => ({sales:0, tcs:0}));
   dailyStoreType.set(d, typArr);
   const chArr = new Array(STORES.length);
-  for (let i = 0; i < STORES.length; i++) chArr[i] = new Array(CHANNELS.length).fill(null).map(() => ({sales:0, tcs:0}));
+  const chLen = Math.max(CHANNELS.length, 1);
+  for (let i = 0; i < STORES.length; i++) chArr[i] = new Array(chLen).fill(null).map(() => ({sales:0, tcs:0}));
   dailyStoreCH.set(d, chArr);
 }
 
 REC_ST.forEach(r => {
   const [d, si, sti, s, t] = r;
+  if (si >= STORES.length || si < 0) return;
+  if (sti >= SALESTYPES.length || sti < 0) return;
   ensureDate(d);
   dailyStore.get(d)[si].sales += s;
   dailyStore.get(d)[si].tcs += t;
@@ -701,6 +704,8 @@ REC_ST.forEach(r => {
 if (REC_TYPE.length > 0) {
   REC_TYPE.forEach(r => {
     const [d, si, ti, s, t] = r;
+    if (si >= STORES.length || si < 0) return;
+    if (ti >= TYPES.length || ti < 0) return;
     ensureDate(d);
     dailyStoreType.get(d)[si][ti].sales += s;
     dailyStoreType.get(d)[si][ti].tcs += t;
@@ -729,6 +734,8 @@ if (REC_TYPE.length > 0) {
 }
 REC_CH.forEach(r => {
   const [d, si, ci, s, t] = r;
+  if (si >= STORES.length || si < 0) return;
+  if (ci >= CHANNELS.length || ci < 0) return;
   ensureDate(d);
   dailyStoreCH.get(d)[si][ci].sales += s;
   dailyStoreCH.get(d)[si][ci].tcs += t;
