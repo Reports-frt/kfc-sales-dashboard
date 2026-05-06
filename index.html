@@ -2,12 +2,17 @@
 <html lang="el">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>KFC Greece — Sales Command Centre</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
+/* ================================================================
+   MOBILE-FIRST DESIGN — base = 360px portrait
+   Enhanced for tablet (≥768px) and desktop (≥1280px)
+   ================================================================ */
+
 :root {
   --bg-0: #0a0e14;
   --bg-1: #11161e;
@@ -25,714 +30,955 @@
   --bad: #ef4444;
   --bad-soft: rgba(239,68,68,0.12);
   --warn: #f59e0b;
-  --warn-soft: rgba(245,158,11,0.12);
   --neutral: #64748b;
   --kfc: #e4002b;
   --mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
   --sans: 'Inter Tight', -apple-system, system-ui, sans-serif;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 html, body {
   background: var(--bg-0);
   color: var(--text-0);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.4;
   -webkit-font-smoothing: antialiased;
-  min-height: 100vh;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
+
 body {
   background:
-    radial-gradient(ellipse at top right, rgba(228,0,43,0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom left, rgba(249,115,22,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at top, rgba(228,0,43,0.05) 0%, transparent 50%),
     var(--bg-0);
+  min-height: 100vh;
 }
-.app { padding: 16px 20px; max-width: 1800px; margin: 0 auto; }
 
+/* ================================================================
+   APP CONTAINER (mobile = full width with small padding)
+   ================================================================ */
+.app {
+  width: 100%;
+  max-width: 100%;
+  padding: 12px;
+}
+
+/* ================================================================
+   LOADING OVERLAY
+   ================================================================ */
 #loadingOverlay {
-  position: fixed; inset: 0; background: var(--bg-0); z-index: 9999;
-  display: flex; align-items: center; justify-content: center; flex-direction: column;
+  position: fixed; inset: 0;
+  background: var(--bg-0);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
   transition: opacity 0.3s ease;
 }
 #loadingOverlay .mark {
-  width: 42px; height: 42px; background: var(--kfc); border-radius: 8px;
+  width: 44px; height: 44px;
+  background: var(--kfc);
+  border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 14px; color: white; margin-bottom: 18px;
-  box-shadow: 0 4px 16px rgba(228,0,43,0.4);
+  font-weight: 800; font-size: 14px; color: white;
+  margin-bottom: 18px;
 }
-#loadingOverlay .msg { font-size: 13px; color: var(--text-1); letter-spacing: 0.5px; }
+#loadingOverlay .msg {
+  font-size: 13px;
+  color: var(--text-1);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
 #loadingOverlay .progress {
-  margin-top: 14px; width: 200px; height: 3px; background: var(--bg-2);
-  border-radius: 2px; overflow: hidden;
+  margin-top: 14px;
+  width: 200px;
+  max-width: 80vw;
+  height: 3px;
+  background: var(--bg-2);
+  border-radius: 2px;
+  overflow: hidden;
 }
 #loadingOverlay .bar {
-  height: 100%; width: 0%;
+  height: 100%;
+  width: 0%;
   background: linear-gradient(90deg, var(--kfc), var(--accent-2));
   transition: width 0.25s ease;
 }
-
-.header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 20px;
-  background: linear-gradient(180deg, rgba(228,0,43,0.08) 0%, var(--bg-1) 100%);
-  border: 1px solid var(--border); border-radius: 8px;
-  margin-bottom: 16px; position: relative; overflow: hidden;
-}
-.header::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, var(--kfc) 0%, var(--accent-2) 50%, transparent 100%);
-}
-.brand { display: flex; align-items: center; gap: 14px; }
-.brand-mark {
-  width: 38px; height: 38px; background: var(--kfc);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 800; font-size: 14px; border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(228,0,43,0.3);
-}
-.brand-text h1 { font-size: 18px; font-weight: 700; }
-.brand-text .subtitle {
-  font-family: var(--mono); font-size: 10px; color: var(--text-2);
-  letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;
-}
-.header-meta { display: flex; gap: 24px; align-items: center; }
-.header-meta .item { text-align: right; }
-.header-meta .label {
-  font-family: var(--mono); font-size: 9px; color: var(--text-2);
-  letter-spacing: 1px; text-transform: uppercase;
-}
-.header-meta .value {
-  font-size: 14px; font-weight: 600;
-  font-family: var(--mono); margin-top: 2px;
-}
-.live-dot {
-  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-  background: var(--good); margin-right: 6px; animation: pulse 2s infinite;
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
-  50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(34,197,94,0); }
-}
-
-.controls {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  background: var(--bg-1); border: 1px solid var(--border);
-  border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;
-}
-.control-group { display: flex; align-items: center; gap: 8px; }
-.control-label {
-  font-family: var(--mono); font-size: 9px; color: var(--text-2);
-  letter-spacing: 1px; text-transform: uppercase;
-}
-.btn-group { display: flex; background: var(--bg-2); border-radius: 6px; padding: 2px; gap: 1px; }
-.btn-group button {
-  background: transparent; color: var(--text-1); border: none;
-  padding: 6px 12px; font-size: 11px; font-weight: 500;
-  cursor: pointer; border-radius: 4px; font-family: var(--sans);
-  transition: all 0.15s ease;
-}
-.btn-group button:hover { background: var(--bg-3); color: var(--text-0); }
-.btn-group button.active {
-  background: var(--accent); color: white; font-weight: 600;
-  box-shadow: 0 2px 6px rgba(239,68,68,0.3);
-}
-select, input[type="date"] {
-  background: var(--bg-2); color: var(--text-0); border: 1px solid var(--border);
-  padding: 6px 10px; border-radius: 6px; font-size: 11px; font-family: var(--sans);
-  cursor: pointer;
-}
-select:focus, input:focus { outline: none; border-color: var(--accent); }
-
-.kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px; }
-.kpi-row-deepdive { grid-template-columns: repeat(4, 1fr); }
-.kpi-card {
-  background: var(--bg-1); border: 1px solid var(--border-soft);
-  border-radius: 8px; padding: 14px 16px;
-  position: relative; overflow: hidden;
-  transition: all 0.2s ease;
-}
-.kpi-card:hover { border-color: var(--border); transform: translateY(-1px); }
-.kpi-card .kpi-label {
-  font-family: var(--mono); font-size: 9px; color: var(--text-2);
-  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;
-}
-.kpi-card .kpi-value {
-  font-size: 22px; font-weight: 700; letter-spacing: -0.5px;
-  font-variant-numeric: tabular-nums;
-}
-.kpi-card .kpi-sub {
-  display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap;
-  margin-top: 4px; font-size: 10px;
-}
-.kpi-card .kpi-sub .delta {
-  font-family: var(--mono); font-weight: 600;
-  padding: 2px 6px; border-radius: 4px;
-}
-.kpi-card .kpi-sub .delta.pos { color: var(--good); background: var(--good-soft); }
-.kpi-card .kpi-sub .delta.neg { color: var(--bad); background: var(--bad-soft); }
-.kpi-card .kpi-sub .delta.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
-.kpi-card .kpi-sub .versus { color: var(--text-2); font-family: var(--mono); font-size: 9px; }
-.kpi-card .accent-line { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; }
-.kpi-card.primary .accent-line { background: var(--accent); }
-.kpi-card.secondary .accent-line { background: var(--accent-2); }
-.kpi-card.tertiary .accent-line { background: var(--good); }
-
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); }
-.tab {
-  padding: 10px 20px; cursor: pointer; font-size: 12px; font-weight: 500;
-  color: var(--text-1); border: none; background: transparent;
-  border-bottom: 2px solid transparent; transition: all 0.15s ease;
-  font-family: var(--sans);
-}
-.tab:hover { color: var(--text-0); }
-.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
-
-.panel {
-  background: var(--bg-1); border: 1px solid var(--border);
-  border-top: none; border-radius: 0 0 8px 8px; padding: 16px;
-  min-height: 200px;
-}
-.panel-section { margin-bottom: 24px; }
-.panel-section:last-child { margin-bottom: 0; }
-.section-title {
-  font-size: 11px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 1.5px; color: var(--text-1);
-  margin-bottom: 10px; padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-soft);
-  display: flex; justify-content: space-between; align-items: baseline;
-}
-.section-title .meta { font-family: var(--mono); font-size: 9px; color: var(--text-2); font-weight: 400; letter-spacing: 1px; }
-
-table {
-  width: 100%; border-collapse: collapse;
-  font-variant-numeric: tabular-nums; font-size: 11px;
-}
-th {
-  background: var(--bg-2); color: var(--text-2);
-  font-family: var(--mono); font-size: 9px; font-weight: 600;
-  letter-spacing: 1px; text-transform: uppercase;
-  padding: 8px 8px; text-align: right;
-  border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 10;
-}
-th:first-child, td:first-child { text-align: left; }
-th.center, td.center { text-align: center; }
-td {
-  padding: 6px 8px; border-bottom: 1px solid var(--border-soft);
-  text-align: right; color: var(--text-0);
-}
-tr:hover td { background: rgba(255,255,255,0.02); }
-.row-total td {
-  background: var(--bg-2); font-weight: 700;
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-}
-.row-store td { font-weight: 600; }
-.row-type td { color: var(--text-1); padding-left: 16px; font-size: 10.5px; }
-.row-type td:first-child { padding-left: 24px; color: var(--text-2); font-size: 10px; }
-.row-grand td {
-  background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.06) 100%);
-  font-weight: 800; border-top: 2px solid var(--accent);
-  border-bottom: 2px solid var(--accent); padding-top: 8px; padding-bottom: 8px;
-}
-td .pct { font-family: var(--mono); font-weight: 600; padding: 1px 6px; border-radius: 3px; font-size: 10px; }
-td .pct.pos { color: var(--good); background: var(--good-soft); }
-td .pct.neg { color: var(--bad); background: var(--bad-soft); }
-td .pct.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
-
-.mini-bar {
-  display: inline-block; height: 4px; background: var(--bg-3); border-radius: 2px;
-  position: relative; overflow: hidden; vertical-align: middle; min-width: 40px;
-}
-.mini-bar > div { height: 100%; background: var(--text-1); transition: width 0.3s; }
-
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.scroll-x { overflow-x: auto; }
-
-.heatmap { display: grid; gap: 2px; }
-.heat-cell {
-  font-family: var(--mono); font-size: 9px; padding: 4px 6px;
-  text-align: right; border-radius: 2px;
-}
-.heat-label { padding: 4px 8px; font-size: 10px; color: var(--text-1); text-align: left; font-weight: 500; }
-.heat-header {
-  font-family: var(--mono); font-size: 9px; color: var(--text-2);
-  letter-spacing: 1px; padding: 4px 6px; text-align: right;
-}
-
-.chart-wrap { background: var(--bg-2); border-radius: 6px; padding: 12px; border: 1px solid var(--border-soft); }
-.chart-title { font-size: 10px; font-weight: 600; color: var(--text-1); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-svg { display: block; max-width: 100%; }
-
-.footer {
-  font-family: var(--mono); font-size: 9px; color: var(--text-2);
-  letter-spacing: 1px; text-align: center; margin-top: 20px;
-  padding: 12px; border-top: 1px solid var(--border-soft);
-}
-
-.tab-content { display: none; }
-.tab-content.active { display: block; animation: fadeIn 0.25s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
 .error-box {
-  background: var(--bad-soft); border: 1px solid var(--bad);
-  color: var(--text-0); padding: 16px; border-radius: 8px;
-  font-family: var(--mono); font-size: 12px; max-width: 600px;
-  margin: 40px auto;
+  background: var(--bad-soft);
+  border: 1px solid var(--bad);
+  color: var(--text-0);
+  padding: 16px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  max-width: 480px;
+  width: 100%;
+  margin: 20px auto;
 }
 .error-box .title { font-weight: 700; color: var(--bad); margin-bottom: 8px; font-size: 13px; }
 
-/* ===========================================================
-   RESPONSIVE — Tablet (≤1024px) and Mobile (≤640px)
-   =========================================================== */
+/* ================================================================
+   PASSWORD SCREEN
+   ================================================================ */
+#pwScreen {
+  position: fixed; inset: 0;
+  background: var(--bg-0);
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+#pwScreen .panel-pw {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 360px;
+  position: relative;
+  overflow: hidden;
+}
+#pwScreen .panel-pw::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--kfc), var(--accent-2));
+}
+#pwScreen .pw-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+#pwScreen .pw-brand .mark {
+  width: 38px; height: 38px;
+  background: var(--kfc);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 13px; color: white;
+}
+#pwScreen .pw-brand .title { font-size: 15px; font-weight: 700; color: var(--text-0); }
+#pwScreen .pw-brand .subtitle {
+  font-family: var(--mono); font-size: 9px; color: var(--text-2);
+  letter-spacing: 1px; text-transform: uppercase; margin-top: 2px;
+}
+#pwScreen .pw-label {
+  font-size: 12px;
+  color: var(--text-1);
+  margin-bottom: 8px;
+}
+#pwScreen input[type="password"] {
+  width: 100%;
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-family: var(--mono);
+  outline: none;
+  letter-spacing: 2px;
+}
+#pwScreen input[type="password"]:focus { border-color: var(--accent); }
+#pwScreen .pw-error {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--bad);
+  margin-top: 8px;
+  min-height: 14px;
+}
+#pwScreen button {
+  width: 100%;
+  background: var(--kfc);
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--sans);
+  margin-top: 14px;
+}
+#pwScreen button:active { transform: scale(0.99); }
+#pwScreen button:disabled { opacity: 0.4; cursor: not-allowed; }
+#pwScreen .pw-footer {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 1px;
+  margin-top: 18px;
+  text-align: center;
+  text-transform: uppercase;
+}
 
-/* Tablet adjustments */
-@media (max-width: 1024px) {
-  .app { padding: 12px 14px; }
-  .kpi-row { grid-template-columns: repeat(3, 1fr); }
-  .grid-2 { grid-template-columns: 1fr; }
-  .grid-3 { grid-template-columns: 1fr; }
+/* ================================================================
+   HEADER (mobile = stacked vertically, all info visible)
+   ================================================================ */
+.header {
+  background: linear-gradient(180deg, rgba(228,0,43,0.1) 0%, var(--bg-1) 100%);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--kfc), var(--accent-2));
+}
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-mark {
+  width: 36px; height: 36px;
+  background: var(--kfc);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 12px; color: white;
+  flex-shrink: 0;
+}
+.brand-text { flex: 1; min-width: 0; }
+.brand-text h1 {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand-text .subtitle {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
+.header-meta .item {
+  min-width: 0;
+}
+.header-meta .label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text-2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-meta .value {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--text-0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.live-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--good);
+  margin-right: 4px;
+  vertical-align: 0;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ================================================================
+   CONTROLS (mobile = stacked, full-width)
+   ================================================================ */
+.controls {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.control-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.btn-group {
+  display: flex;
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 1px;
+  flex-wrap: wrap;
+}
+.btn-group button {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  color: var(--text-1);
+  border: none;
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: var(--sans);
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+.btn-group button:active { background: var(--bg-3); }
+.btn-group button.active {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+.control-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.control-row > * { flex: 1; min-width: 0; }
+input[type="date"], select {
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: var(--sans);
+  width: 100%;
+}
+input[type="date"]:focus, select:focus { outline: none; border-color: var(--accent); }
+
+/* ================================================================
+   KPI CARDS (mobile = 2 columns, tablet = 3, desktop = 6)
+   ================================================================ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.kpi-card {
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2px;
+}
+.kpi-card.primary::before { background: var(--accent); }
+.kpi-card.secondary::before { background: var(--accent-2); }
+.kpi-card.tertiary::before { background: var(--good); }
+.kpi-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  color: var(--text-2);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kpi-value {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-0);
+}
+.kpi-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+  font-size: 10px;
+}
+.kpi-sub .row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.kpi-sub .versus {
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kpi-sub .delta {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.delta.pos { color: var(--good); background: var(--good-soft); }
+.delta.neg { color: var(--bad); background: var(--bad-soft); }
+.delta.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
+
+/* ================================================================
+   TABS (mobile = horizontal scroll, smooth)
+   ================================================================ */
+.tabs-wrap {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  width: 100%;
+  max-width: 100%;
+}
+.tabs-wrap::-webkit-scrollbar { display: none; }
+.tabs {
+  display: flex;
+  gap: 0;
+  min-width: max-content;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-1);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 11px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+.tab:active { color: var(--text-0); }
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ================================================================
+   PANEL (content area below tabs)
+   ================================================================ */
+.panel {
+  background: var(--bg-1);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  padding: 12px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.tab-content {
+  display: none;
+  width: 100%;
+  max-width: 100%;
+}
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.panel-section {
+  margin-bottom: 20px;
+  width: 100%;
+  max-width: 100%;
+}
+.panel-section:last-child { margin-bottom: 0; }
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-1);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.section-title .meta {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  font-weight: 400;
+  letter-spacing: 0.5px;
+  text-transform: none;
+}
+
+/* ================================================================
+   CARD-BASED DATA LAYOUT (mobile primary)
+   Each "row" of data is a card with vertical label/value pairs
+   ================================================================ */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.card.accent { border-left: 3px solid var(--accent); padding-left: 10px; }
+.card.accent-2 { border-left: 3px solid var(--accent-2); padding-left: 10px; }
+.card.good { border-left: 3px solid var(--good); padding-left: 10px; }
+.card.grand {
+  border-left: 3px solid var(--kfc);
+  background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.05) 100%);
+  padding-left: 10px;
+}
+.card.subcard {
+  background: var(--bg-3);
+  margin-left: 12px;
+  max-width: calc(100% - 12px);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-0);
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.card-title .name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-title .rank {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.card-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+  min-height: 20px;
+}
+.card-row .lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+}
+.card-row .val {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--text-0);
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.card-row-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-soft);
+}
+.metric-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.metric-mini .lbl {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.metric-mini .val {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-0);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Pill-style delta badges (for vs LY, vs Budget) */
+.pct {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.pct.pos { color: var(--good); background: var(--good-soft); }
+.pct.neg { color: var(--bad); background: var(--bad-soft); }
+.pct.flat { color: var(--neutral); background: rgba(100,116,139,0.12); }
+
+/* Section heading inside content (e.g. for By Sales Type per-store header) */
+.subsection-header {
+  background: var(--kfc);
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin: 12px 0 6px 0;
+}
+.subsection-header:first-child { margin-top: 0; }
+
+/* Mini progress bar for rankings */
+.mini-bar {
+  display: inline-block;
+  height: 4px;
+  background: var(--bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+  vertical-align: middle;
+  flex: 1;
+  min-width: 30px;
+}
+.mini-bar > div {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+/* ================================================================
+   HEATMAP (always horizontal scroll on mobile, fits on desktop)
+   ================================================================ */
+.heatmap-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 6px;
+  border: 1px solid var(--border-soft);
+}
+.heatmap {
+  display: grid;
+  gap: 1px;
+  background: var(--border-soft);
+  min-width: max-content;
+}
+.heat-cell {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 4px 6px;
+  text-align: right;
+  background: var(--bg-2);
+}
+.heat-label {
+  padding: 4px 8px;
+  font-size: 10px;
+  color: var(--text-1);
+  text-align: left;
+  font-weight: 500;
+  background: var(--bg-2);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+.heat-header {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  padding: 4px 6px;
+  text-align: center;
+  background: var(--bg-2);
+}
+
+/* ================================================================
+   CHARTS (SVG: scrollable container on mobile)
+   ================================================================ */
+.chart-wrap {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 10px;
+  border: 1px solid var(--border-soft);
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.chart-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-1);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+.chart-wrap svg {
+  display: block;
+  min-width: 600px;
+  height: auto;
+}
+
+/* ================================================================
+   FOOTER
+   ================================================================ */
+.footer {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 1px;
+  text-align: center;
+  margin-top: 16px;
+  padding: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ================================================================
+   STORE DROPDOWN (deep-dive)
+   ================================================================ */
+.store-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.store-select-wrap select {
+  width: 100%;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+
+/* ================================================================
+   TABLET (>=768px) — SIDE-BY-SIDE LAYOUTS
+   ================================================================ */
+@media (min-width: 768px) {
+  .app { padding: 16px 18px; }
+
+  .header { padding: 14px 18px; }
+  .brand-text h1 { font-size: 17px; }
   .header-meta { gap: 14px; }
-  .header-meta .label { font-size: 8px; }
-  .header-meta .value { font-size: 12px; }
-  .brand-text h1 { font-size: 16px; }
-  .brand-text .subtitle { font-size: 9px; }
-}
+  .header-meta .label { font-size: 9px; }
+  .header-meta .value { font-size: 13px; }
 
-/* Mobile (phones) */
-@media (max-width: 640px) {
-  body { font-size: 12px; }
-  .app { padding: 10px 10px; }
+  .controls { padding: 12px 14px; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: center; }
+  .control-group { flex-direction: row; align-items: center; gap: 8px; }
+  .control-row > * { flex: 0 0 auto; min-width: 130px; }
 
-  /* Header — stack vertically */
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-    padding: 12px 14px;
-  }
-  .brand { gap: 10px; }
-  .brand-mark { width: 32px; height: 32px; font-size: 12px; }
-  .brand-text h1 { font-size: 15px; line-height: 1.2; }
-  .brand-text .subtitle { font-size: 8px; letter-spacing: 0.5px; }
-  .header-meta {
+  .kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .kpi-card { padding: 12px 14px; }
+  .kpi-value { font-size: 20px; }
+
+  .panel { padding: 16px; }
+
+  .grid-2 {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border-soft);
-  }
-  .header-meta .item { text-align: left; }
-  .header-meta .label { font-size: 8px; letter-spacing: 0.5px; }
-  .header-meta .value { font-size: 11px; }
-
-  /* Controls — stack & wrap */
-  .controls {
-    padding: 10px 12px;
-    gap: 10px;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .control-group { flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
-  .control-label { width: 100%; margin-bottom: 2px; font-size: 8px; }
-  .btn-group { flex-wrap: wrap; }
-  .btn-group button { padding: 8px 10px; font-size: 11px; }
-  input[type="date"], select { font-size: 12px; padding: 7px 8px; }
-
-  /* KPI cards — 2 columns on phone */
-  .kpi-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .kpi-row-deepdive { grid-template-columns: repeat(2, 1fr) !important; }
-  .kpi-card {
-    padding: 10px 12px;
-    min-width: 0;
-  }
-  .kpi-card .kpi-label { font-size: 8px; margin-bottom: 6px; }
-  .kpi-card .kpi-value { font-size: 17px; letter-spacing: -0.3px; }
-  .kpi-card .kpi-sub {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    font-size: 9px;
-  }
-  .kpi-card .kpi-sub .versus { font-size: 8px; }
-
-  /* Tabs — horizontally scrollable strip */
-  .tabs {
-    overflow-x: auto;
-    overflow-y: hidden;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    border-bottom: 1px solid var(--border);
-  }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab {
-    padding: 10px 14px;
-    font-size: 11px;
-    flex-shrink: 0;
-    white-space: nowrap;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
   }
 
-  /* Panel */
-  .panel { padding: 12px 10px; }
-  .section-title {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    font-size: 10px;
-  }
-  .section-title .meta { font-size: 8px; }
+  .heatmap { gap: 2px; }
+  .heat-cell { font-size: 10px; padding: 5px 7px; }
 
-  /* TABLES → CARD-BASED LAYOUT on phone
-     Each row becomes a stacked card with label:value pairs */
-  /* CRITICAL: prevent any container from forcing table to be wider than viewport */
-  .panel .scroll-x {
-    overflow-x: visible !important;
-    border: none !important;
-    border-radius: 0 !important;
-    width: 100%;
-    max-width: 100%;
-  }
-  .panel table.responsive-table {
-    border-collapse: separate;
-    table-layout: fixed;
-    max-width: 100%;
-    width: 100%;
-  }
-  .panel table.responsive-table thead { display: none; }
-  .panel table.responsive-table,
-  .panel table.responsive-table tbody {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-  }
-  .panel table.responsive-table tr {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    background: var(--bg-2);
-    border-radius: 6px;
-    margin-bottom: 6px;
-    padding: 10px 10px 10px 12px;
-    border-left: 3px solid var(--accent);
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-  .panel table.responsive-table tr.row-grand {
-    border-left: 3px solid var(--kfc);
-    background: linear-gradient(180deg, rgba(228,0,43,0.12) 0%, rgba(228,0,43,0.06) 100%);
-  }
-  .panel table.responsive-table tr.row-type {
-    border-left: 3px solid var(--accent-2);
-    margin-left: 10px;
-    max-width: calc(100% - 10px);
-  }
-  /* Header row (e.g. store name with colspan) — show as full-width title */
-  .panel table.responsive-table tr.row-store-header {
-    background: var(--kfc) !important;
-    border-left: none;
-    padding: 8px 14px;
-    margin-top: 10px;
-    margin-bottom: 6px;
-  }
-  .panel table.responsive-table tr.row-store-header td {
-    background: transparent !important;
-    color: white !important;
-    font-weight: 700;
-    font-size: 13px;
-    text-align: left !important;
-    padding: 0 !important;
-    border: none !important;
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  .panel table.responsive-table tr.row-store-header td:before { content: none !important; }
-  .panel table.responsive-table td {
-    display: flex !important;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    padding: 3px 0;
-    width: 100%;
-    max-width: 100%;
-    text-align: right !important;
-    border: none;
-    box-sizing: border-box;
-    min-height: 20px;
-    overflow: hidden;
-    font-size: 11px;
-  }
-  /* The value (right-side content) — let it shrink and wrap if needed */
-  .panel table.responsive-table td > * {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  /* First cell is the row label (sales type name, store name, etc.) */
-  .panel table.responsive-table td:first-child {
-    border-bottom: 1px solid var(--border-soft);
-    padding-bottom: 8px;
-    margin-bottom: 6px;
-    font-weight: 700;
-    color: var(--text-0);
-    font-size: 13px;
-    display: block !important;
-    text-align: left !important;
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  /* For all cells AFTER the first, inject the column label from data-label */
-  .panel table.responsive-table td:not(:first-child):before {
-    content: attr(data-label);
-    font-family: var(--mono);
-    font-size: 8.5px;
-    color: var(--text-2);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    flex-shrink: 1;
-    font-weight: 500;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
-  }
-  /* The value in the right side */
-  .panel table.responsive-table td:not(:first-child) {
-    font-variant-numeric: tabular-nums;
-    font-family: var(--mono);
-    font-size: 11px;
-  }
-  /* If data-label is empty, hide the entire cell */
-  .panel table.responsive-table td:not(:first-child):not([data-label]),
-  .panel table.responsive-table td:not(:first-child)[data-label=""] {
-    display: none !important;
-  }
-  /* Make sure pct badges don't overflow */
-  .panel table.responsive-table td .pct {
-    flex-shrink: 0;
-    white-space: nowrap;
-    font-size: 10px;
-    padding: 1px 5px;
-  }
-  /* Force panel itself not to scroll horizontally on mobile */
-  .panel { overflow-x: hidden; }
-
-  /* Tables that we can't easily card-ify: scroll horizontal with hint */
-  .scroll-x {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border: 1px solid var(--border-soft);
-    border-radius: 6px;
-    position: relative;
-  }
-  .scroll-x table { font-size: 10px; min-width: 600px; }
-  .scroll-x th, .scroll-x td { padding: 5px 6px; }
-
-  /* Heatmap — keep readable, scroll horizontally */
-  .heatmap {
-    grid-template-columns: 80px repeat(auto-fit, minmax(28px, 1fr)) !important;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .heat-label { font-size: 9px; padding: 3px 6px; }
-  .heat-header { font-size: 8px; padding: 3px 4px; }
-  .heat-cell { font-size: 8px; padding: 3px 4px; }
-
-  /* Charts — keep aspect, scroll if needed */
-  .chart-wrap { padding: 8px; }
-  .chart-title { font-size: 9px; }
-  svg { min-width: 100%; }
-
-  /* Mini bar in rankings stays */
-  .mini-bar { min-width: 30px; }
-
-  /* Footer */
-  .footer { font-size: 8px; padding: 10px; }
-
-  /* Password screen on mobile */
-  #pwScreen > div { width: calc(100vw - 32px) !important; padding: 28px 20px !important; }
-
-  /* ===== HARD VIEWPORT CAP — nothing escapes the screen ===== */
-  html, body { max-width: 100vw; overflow-x: hidden; }
-  .app { max-width: 100vw; overflow-x: hidden; box-sizing: border-box; }
-  .panel, .panel * { max-width: 100%; box-sizing: border-box; }
-  .panel { overflow-x: hidden !important; }
-
-  /* Force panel sections to clip overflow */
-  .panel-section { max-width: 100%; overflow-x: hidden; }
-
-  /* Charts: must fit inside viewport, cap SVG width */
-  .chart-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .chart-wrap svg { max-width: none; min-width: 600px; }
-
-  /* Heatmap: scroll only inside its own container */
-  .heatmap {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
-  }
-
-  /* Make sure data-label cells don't overflow horizontally */
-  .panel table.responsive-table td {
-    min-width: 0;
-    white-space: nowrap;
-  }
-  .panel table.responsive-table td > * {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-  }
-
-  /* Tabs strip: confine its overflow to itself */
-  .tabs { max-width: 100vw; }
-
-  /* Header: confine */
-  .header, .controls, .kpi-row { max-width: 100%; box-sizing: border-box; }
+  .chart-wrap { padding: 12px; }
+  .chart-wrap svg { min-width: 700px; }
 }
 
-/* Very small (≤380px, e.g. iPhone SE) */
-@media (max-width: 380px) {
+/* ================================================================
+   DESKTOP (>=1280px) — FULL LAYOUT
+   ================================================================ */
+@media (min-width: 1280px) {
+  .app { padding: 20px 24px; max-width: 1800px; margin: 0 auto; }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 22px;
+  }
+  .header-row { flex: 0 0 auto; }
+  .header-meta {
+    display: flex;
+    gap: 28px;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+  .header-meta .item { text-align: right; min-width: 80px; }
+
+  .brand-text h1 { font-size: 18px; }
+
+  .kpi-row { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+  .kpi-value { font-size: 22px; }
+  .kpi-sub { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .kpi-sub .row { flex: 1; min-width: 0; }
+
+  /* Cards in 2-column grid where it makes sense */
+  .grid-2 { gap: 18px; }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .chart-wrap svg { min-width: auto; }
+
+  .footer { font-size: 10px; }
+}
+
+/* Tiny phones (≤360px) — even more compact */
+@media (max-width: 360px) {
+  .app { padding: 8px; }
   .kpi-row { grid-template-columns: 1fr; }
+  .kpi-value { font-size: 17px; }
   .header-meta { grid-template-columns: 1fr 1fr; }
   .header-meta .item:nth-child(3) { grid-column: span 2; }
+  .card-row-group { grid-template-columns: 1fr 1fr; }
 }
-
 </style>
 </head>
 <body>
 
-<!-- ============== PASSWORD GATE ============== -->
-<div id="pwScreen" style="position:fixed;inset:0;background:#0a0e14;z-index:10000;display:flex;align-items:center;justify-content:center;">
-  <div style="background:#11161e;border:1px solid #2d3748;border-radius:12px;padding:40px;width:340px;box-shadow:0 12px 40px rgba(0,0,0,0.5);position:relative;overflow:hidden">
-    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#e4002b,#f97316);"></div>
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
-      <div style="width:36px;height:36px;background:#e4002b;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;font-family:'Inter Tight',-apple-system,sans-serif;box-shadow:0 4px 12px rgba(228,0,43,0.3)">KFC</div>
+<!-- =============== PASSWORD GATE =============== -->
+<div id="pwScreen">
+  <div class="panel-pw">
+    <div class="pw-brand">
+      <div class="mark">KFC</div>
       <div>
-        <div style="font-family:'Inter Tight',-apple-system,sans-serif;font-size:15px;font-weight:700;color:#e8edf5">Sales Command Centre</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#6b7689;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Restricted Access</div>
+        <div class="title">Sales Command Centre</div>
+        <div class="subtitle">Restricted Access</div>
       </div>
     </div>
-    <div style="font-family:'Inter Tight',-apple-system,sans-serif;font-size:12px;color:#aab4c5;margin-bottom:8px">Εισάγετε κωδικό πρόσβασης</div>
-    <input id="pwInput" type="password" autocomplete="off"
-      style="width:100%;background:#1a212c;color:#e8edf5;border:1px solid #2d3748;padding:10px 12px;border-radius:6px;font-size:14px;font-family:'JetBrains Mono',monospace;outline:none;letter-spacing:2px;box-sizing:border-box"
-      placeholder="••••••••••" />
-    <div id="pwError" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#ef4444;margin-top:8px;min-height:14px;letter-spacing:0.5px"></div>
-    <button id="pwSubmit"
-      style="width:100%;background:#e4002b;color:white;border:none;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter Tight',-apple-system,sans-serif;margin-top:14px;letter-spacing:0.3px;box-shadow:0 4px 12px rgba(228,0,43,0.3);transition:all 0.15s ease">Είσοδος</button>
-    <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:#6b7689;letter-spacing:1px;margin-top:18px;text-align:center;text-transform:uppercase">KFC Greece · Internal Only</div>
+    <div class="pw-label">Εισάγετε κωδικό πρόσβασης</div>
+    <input id="pwInput" type="password" autocomplete="off" placeholder="••••••••" />
+    <div id="pwError" class="pw-error"></div>
+    <button id="pwSubmit">Είσοδος</button>
+    <div class="pw-footer">KFC Greece · Internal Only</div>
   </div>
 </div>
 
-<script>
-// Password hash for "kfc2026" — replace this hash to change password.
-// To generate a new hash, open browser console and run:
-//   crypto.subtle.digest("SHA-256", new TextEncoder().encode("YOUR_PASSWORD"))
-//     .then(h => console.log(Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,"0")).join("")))
-const __PW_HASH__ = "901a59ce290f1a8ac51ac15eff692276dd83bf6bb39155af3fbc204086fd041f";
-const __SESSION_KEY__ = "kfc_dash_auth_v1";
-
-async function __sha256(text) {
-  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
-}
-
-async function __checkPassword(pw) {
-  return (await __sha256(pw)) === __PW_HASH__;
-}
-
-function __unlockApp() {
-  const pwScreen = document.getElementById("pwScreen");
-  if (pwScreen) pwScreen.remove();
-  // Trigger the dashboard init (the existing init() runs but is gated)
-  if (typeof __initDashboard === "function") __initDashboard();
-}
-
-(function __setupPasswordGate() {
-  // Already authenticated this session?
-  try {
-    if (sessionStorage.getItem(__SESSION_KEY__) === "1") {
-      // Defer unlock until DOM is ready and init is loaded
-      if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", __unlockApp);
-      } else {
-        __unlockApp();
-      }
-      return;
-    }
-  } catch(e) { /* sessionStorage might be blocked, fall through */ }
-
-  function attach() {
-    const inp = document.getElementById("pwInput");
-    const btn = document.getElementById("pwSubmit");
-    const err = document.getElementById("pwError");
-    if (!inp || !btn) return;
-
-    let attempts = 0;
-    let locked = false;
-
-    async function tryLogin() {
-      if (locked) return;
-      const pw = inp.value;
-      if (!pw) { err.textContent = "Εισάγετε κωδικό"; return; }
-      const ok = await __checkPassword(pw);
-      if (ok) {
-        try { sessionStorage.setItem(__SESSION_KEY__, "1"); } catch(e) {}
-        err.textContent = "";
-        btn.textContent = "...";
-        setTimeout(__unlockApp, 100);
-      } else {
-        attempts++;
-        err.textContent = "Λάθος κωδικός";
-        inp.value = "";
-        if (attempts >= 5) {
-          locked = true;
-          btn.disabled = true;
-          inp.disabled = true;
-          err.textContent = "Πολλές αποτυχημένες προσπάθειες. Refresh τη σελίδα.";
-        } else {
-          inp.focus();
-        }
-      }
-    }
-    btn.addEventListener("click", tryLogin);
-    inp.addEventListener("keydown", e => {
-      if (e.key === "Enter") tryLogin();
-    });
-    inp.focus();
-  }
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", attach);
-  } else {
-    attach();
-  }
-})();
-</script>
-
-<div id="loadingOverlay">
+<!-- =============== LOADING OVERLAY =============== -->
+<div id="loadingOverlay" style="display:none">
   <div class="mark">KFC</div>
   <div class="msg" id="loadingMsg">Φόρτωση…</div>
   <div class="progress"><div class="bar" id="loadingBar"></div></div>
 </div>
 
+<!-- =============== APP =============== -->
 <div class="app" id="appRoot" style="display:none">
 
   <div class="header">
-    <div class="brand">
+    <div class="header-row">
       <div class="brand-mark">KFC</div>
       <div class="brand-text">
         <h1>Sales Command Centre — Greece</h1>
-        <div class="subtitle">Daily · Sales vs Budget vs LY · Day-of-Week Adjusted</div>
+        <div class="subtitle">Daily · Sales vs Budget vs LY</div>
       </div>
     </div>
     <div class="header-meta">
       <div class="item">
-        <div class="label">Reporting As Of</div>
+        <div class="label">As Of</div>
         <div class="value" id="reportDate">—</div>
       </div>
       <div class="item">
@@ -753,21 +999,14 @@ function __unlockApp() {
         <button data-view="MTD" class="active">MTD</button>
         <button data-view="QTD">QTD</button>
         <button data-view="YTD">YTD</button>
-        <button data-view="LAST7">Last 7d</button>
-        <button data-view="LAST30">Last 30d</button>
-        <button data-view="DAY">Single Day</button>
-        <button data-view="CUSTOM">Custom</button>
+        <button data-view="LAST7">7d</button>
+        <button data-view="LAST30">30d</button>
+        <button data-view="DAY">Day</button>
       </div>
     </div>
     <div class="control-group" id="dateAsOfWrap">
       <span class="control-label">As Of</span>
       <input type="date" id="asOfDate">
-    </div>
-    <div class="control-group" id="customWrap" style="display:none">
-      <span class="control-label">From</span>
-      <input type="date" id="customFrom">
-      <span class="control-label">To</span>
-      <input type="date" id="customTo">
     </div>
     <div class="control-group">
       <span class="control-label">LY Match</span>
@@ -780,15 +1019,17 @@ function __unlockApp() {
 
   <div class="kpi-row" id="kpiRow"></div>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="bystore">By Store</button>
-    <button class="tab" data-tab="salestype">By Sales Type</button>
-    <button class="tab" data-tab="channels">By Channel</button>
-    <button class="tab" data-tab="rankings">Rankings</button>
-    <button class="tab" data-tab="dow">Day-of-Week</button>
-    <button class="tab" data-tab="trend">Trend</button>
-    <button class="tab" data-tab="storedeep">Store Deep-Dive</button>
+  <div class="tabs-wrap">
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">Overview</button>
+      <button class="tab" data-tab="bystore">By Store</button>
+      <button class="tab" data-tab="salestype">By Sales Type</button>
+      <button class="tab" data-tab="channels">By Channel</button>
+      <button class="tab" data-tab="rankings">Rankings</button>
+      <button class="tab" data-tab="dow">Day-of-Week</button>
+      <button class="tab" data-tab="trend">Trend</button>
+      <button class="tab" data-tab="storedeep">Store Deep-Dive</button>
+    </div>
   </div>
 
   <div class="panel">
@@ -802,64 +1043,125 @@ function __unlockApp() {
     <div class="tab-content" id="tab-storedeep"></div>
   </div>
 
-  <div class="footer">KFC GREECE · Sales Command Centre · Day-of-week adjusted comparisons via 364-day shift</div>
+  <div class="footer">KFC GREECE · Sales Command Centre · Day-of-week adjusted</div>
 
 </div>
 
 <script>
+// =====================================================================
+// PASSWORD GATE
+// =====================================================================
+const __PW_HASH__ = "901a59ce290f1a8ac51ac15eff692276dd83bf6bb39155af3fbc204086fd041f";
+const __SESSION_KEY__ = "kfc_dash_auth_v2";
+
+async function __sha256(text) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+function __hidePwScreen() {
+  const pw = document.getElementById("pwScreen");
+  if (pw) pw.remove();
+  document.getElementById("loadingOverlay").style.display = "flex";
+  startApp();
+}
+
+(function setupPasswordGate() {
+  try {
+    if (sessionStorage.getItem(__SESSION_KEY__) === "1") {
+      __hidePwScreen();
+      return;
+    }
+  } catch(e) {}
+
+  const inp = document.getElementById("pwInput");
+  const btn = document.getElementById("pwSubmit");
+  const err = document.getElementById("pwError");
+  let attempts = 0;
+
+  async function tryLogin() {
+    if (btn.disabled) return;
+    const pw = inp.value;
+    if (!pw) { err.textContent = "Εισάγετε κωδικό"; return; }
+    const hash = await __sha256(pw);
+    if (hash === __PW_HASH__) {
+      try { sessionStorage.setItem(__SESSION_KEY__, "1"); } catch(e) {}
+      err.textContent = "";
+      btn.textContent = "...";
+      btn.disabled = true;
+      setTimeout(__hidePwScreen, 100);
+    } else {
+      attempts++;
+      err.textContent = "Λάθος κωδικός";
+      inp.value = "";
+      if (attempts >= 5) {
+        btn.disabled = true;
+        inp.disabled = true;
+        err.textContent = "Πολλές αποτυχημένες προσπάθειες. Refresh τη σελίδα.";
+      } else {
+        inp.focus();
+      }
+    }
+  }
+  btn.addEventListener("click", tryLogin);
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") tryLogin(); });
+  inp.focus();
+})();
+
+// =====================================================================
+// LOADING + DATA FETCH
+// =====================================================================
 function setProgress(pct, msg) {
-  const bar = document.getElementById('loadingBar');
-  const m = document.getElementById('loadingMsg');
-  if (bar) bar.style.width = pct + '%';
+  const bar = document.getElementById("loadingBar");
+  const m = document.getElementById("loadingMsg");
+  if (bar) bar.style.width = pct + "%";
   if (m && msg) m.textContent = msg;
 }
+
 function hideLoader() {
-  const o = document.getElementById('loadingOverlay');
-  const a = document.getElementById('appRoot');
-  if (a) a.style.display = '';
-  if (o) { o.style.opacity = '0'; setTimeout(() => o.remove(), 300); }
+  const o = document.getElementById("loadingOverlay");
+  const a = document.getElementById("appRoot");
+  if (a) a.style.display = "";
+  if (o) { o.style.opacity = "0"; setTimeout(() => o.remove(), 300); }
 }
+
 function showError(msg, detail) {
-  const o = document.getElementById('loadingOverlay');
+  const o = document.getElementById("loadingOverlay");
   if (o) {
-    o.innerHTML = `
-      <div class="error-box">
-        <div class="title">Σφάλμα φόρτωσης</div>
-        <div>${msg}</div>
-        ${detail ? `<div style="margin-top:10px;color:var(--text-2);font-size:10px">${detail}</div>` : ''}
-      </div>
-    `;
+    o.innerHTML = `<div class="error-box"><div class="title">Σφάλμα φόρτωσης</div><div>${msg}</div>${detail ? `<div style="margin-top:10px;color:var(--text-2);font-size:10px">${detail}</div>` : ""}</div>`;
   }
 }
 
-async function __initDashboard() {
+async function startApp() {
   let RAW;
   try {
-    setProgress(10, 'Σύνδεση με δεδομένα…');
-    const resp = await fetch('data.json', { cache: 'no-cache' });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' — ' + resp.statusText);
-    setProgress(30, 'Λήψη δεδομένων…');
+    setProgress(10, "Φόρτωση δεδομένων…");
+    const resp = await fetch("data.json", { cache: "no-cache" });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    setProgress(40, "Ανάγνωση…");
     const text = await resp.text();
-    setProgress(60, 'Επεξεργασία (' + (text.length/1024/1024).toFixed(1) + ' MB)…');
+    setProgress(70, "Επεξεργασία…");
     await new Promise(r => setTimeout(r, 30));
     RAW = JSON.parse(text);
-    setProgress(80, 'Υπολογισμός metrics…');
+    setProgress(90, "Σχεδίαση…");
     await new Promise(r => setTimeout(r, 30));
   } catch (err) {
-    showError('Αδυναμία φόρτωσης data.json',
-      err.message + '<br><br>Βεβαιώσου ότι το αρχείο data.json βρίσκεται στον ίδιο φάκελο και ότι σερβίρεται από web server (όχι file://).');
+    showError("Αδυναμία φόρτωσης data.json", err.message);
     return;
   }
   try {
     bootstrap(RAW);
-    setProgress(100, 'Έτοιμο');
+    setProgress(100, "Έτοιμο");
     setTimeout(hideLoader, 200);
   } catch (err) {
-    showError('Σφάλμα κατά τον υπολογισμό', err.message + '<br><br>' + (err.stack || '').replace(/\n/g, '<br>'));
+    showError("Σφάλμα κατά τον υπολογισμό", err.message + "<br><br>" + (err.stack || "").replace(/\n/g, "<br>"));
     console.error(err);
   }
 }
 
+// =====================================================================
+// MAIN APPLICATION
+// =====================================================================
 function bootstrap(RAW) {
 
 const META = RAW.meta;
@@ -869,15 +1171,12 @@ const CHANNELGROUPS = META.channelgroups;
 const STORE_META = META.store_meta;
 const BUDGET = RAW.budget;
 
-// Build per-(date, store) aggregates for FAST lookup. Avoids re-scanning per call.
-// dailyStoreST[date][storeIdx][stIdx] = {sales, tcs}
-// dailyStore[date][storeIdx] = {sales, tcs}
-const dailyStoreST = new Map();   // dateStr -> Array(stores) of Array(salestypes) of {sales,tcs}
+// --- Pre-build aggregates by date ---
+const dailyStoreST = new Map();
 const dailyStoreCH = new Map();
-const dailyStore = new Map();     // dateStr -> Array(stores) of {sales,tcs}
-const dailyTotal = new Map();     // dateStr -> {sales,tcs}
+const dailyStore = new Map();
+const dailyTotal = new Map();
 
-// Initialize empty buckets only for dates that have records
 function ensureDate(d) {
   if (!dailyStore.has(d)) {
     dailyStore.set(d, new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0})));
@@ -908,8 +1207,6 @@ RAW.records_ch.forEach(r => {
   dailyStoreCH.get(d)[si][ci].tcs += t;
 });
 
-// Pre-compute per-store monthly totals (for budget weight calc)
-// monthStoreTotal[YYYY-MM][storeIdx] = {sales, tcs}
 const monthStoreTotal = new Map();
 for (const [d, perStore] of dailyStore.entries()) {
   const ym = d.slice(0,7);
@@ -926,27 +1223,29 @@ for (const [d, perStore] of dailyStore.entries()) {
 const LATEST = META.latest_date;
 const FIRST = META.first_date;
 
-// ============ DATE HELPERS — UTC-SAFE ============
+// =====================================================================
+// DATE HELPERS — UTC SAFE
+// =====================================================================
 function dateStrAdd(dStr, days) {
-  const [y, m, d] = dStr.split('-').map(Number);
+  const [y, m, d] = dStr.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m-1, d));
   dt.setUTCDate(dt.getUTCDate() + days);
-  return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth()+1).padStart(2,'0') + '-' + String(dt.getUTCDate()).padStart(2,'0');
+  return dt.getUTCFullYear() + "-" + String(dt.getUTCMonth()+1).padStart(2,"0") + "-" + String(dt.getUTCDate()).padStart(2,"0");
 }
-function dowName(i) { return ['Δευ','Τρι','Τετ','Πεμ','Παρ','Σαβ','Κυρ'][i]; }
-function shortMonth(m) { return ['','Ιαν','Φεβ','Μαρ','Απρ','Μαι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'][m]; }
+function dowName(i) { return ["Δευ","Τρι","Τετ","Πεμ","Παρ","Σαβ","Κυρ"][i]; }
+function shortMonth(m) { return ["","Ιαν","Φεβ","Μαρ","Απρ","Μαι","Ιουν","Ιουλ","Αυγ","Σεπ","Οκτ","Νοε","Δεκ"][m]; }
 function dateGreek(dStr) {
-  const [y, m, d] = dStr.split('-').map(Number);
-  return d + ' ' + shortMonth(m) + ' ' + y;
+  const [y, m, d] = dStr.split("-").map(Number);
+  return d + " " + shortMonth(m) + " " + y;
 }
 function getDOW(dStr) {
-  const [y, m, d] = dStr.split('-').map(Number);
+  const [y, m, d] = dStr.split("-").map(Number);
   return (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;
 }
 function lyDate(dStr, mode) {
-  if (mode === 'cal') {
-    const [y,m,d] = dStr.split('-').map(Number);
-    return (y-1) + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  if (mode === "cal") {
+    const [y,m,d] = dStr.split("-").map(Number);
+    return (y-1) + "-" + String(m).padStart(2,"0") + "-" + String(d).padStart(2,"0");
   }
   return dateStrAdd(dStr, -364);
 }
@@ -962,57 +1261,65 @@ function dateRange(from, to) {
   return out;
 }
 
-// ============ FORMATTERS ============
+// =====================================================================
+// FORMATTERS
+// =====================================================================
 function fmtEur(v) {
-  if (v === null || v === undefined || isNaN(v)) return '—';
-  const sign = v < 0 ? '-' : '';
+  if (v == null || isNaN(v)) return "—";
+  const sign = v < 0 ? "-" : "";
   v = Math.abs(v);
-  return sign + Math.round(v).toLocaleString('en-US').replace(/,/g, '.') + ' €';
+  return sign + Math.round(v).toLocaleString("en-US").replace(/,/g, ".") + " €";
 }
 function fmtEurK(v) {
-  if (v === null || v === undefined || isNaN(v)) return '—';
-  if (Math.abs(v) >= 1000000) return (v/1000000).toFixed(2).replace('.', ',') + ' M€';
-  if (Math.abs(v) >= 1000) return Math.round(v/1000).toLocaleString('en-US').replace(/,/g, '.') + 'K €';
-  return Math.round(v).toLocaleString('en-US').replace(/,/g, '.') + ' €';
+  if (v == null || isNaN(v)) return "—";
+  if (Math.abs(v) >= 1000000) return (v/1000000).toFixed(2).replace(".", ",") + " M€";
+  if (Math.abs(v) >= 1000) return Math.round(v/1000).toLocaleString("en-US").replace(/,/g, ".") + "K €";
+  return Math.round(v).toLocaleString("en-US").replace(/,/g, ".") + " €";
 }
 function fmtNum(v) {
-  if (v === null || v === undefined || isNaN(v)) return '—';
-  return Math.round(v).toLocaleString('en-US').replace(/,/g, '.');
+  if (v == null || isNaN(v)) return "—";
+  return Math.round(v).toLocaleString("en-US").replace(/,/g, ".");
 }
 function fmtPct(v, decimals=1) {
-  if (v === null || v === undefined || isNaN(v) || !isFinite(v)) return '—';
-  const sign = v > 0 ? '+' : '';
-  return sign + (v*100).toFixed(decimals).replace('.', ',') + '%';
+  if (v == null || isNaN(v) || !isFinite(v)) return "—";
+  const sign = v > 0 ? "+" : "";
+  return sign + (v*100).toFixed(decimals).replace(".", ",") + "%";
 }
 function fmtAvg(v) {
-  if (v === null || v === undefined || isNaN(v)) return '—';
-  return v.toFixed(2).replace('.', ',') + ' €';
+  if (v == null || isNaN(v)) return "—";
+  return v.toFixed(2).replace(".", ",") + " €";
 }
 function pctClass(v, threshold=0.005) {
-  if (v === null || v === undefined || isNaN(v) || !isFinite(v)) return 'flat';
-  if (v > threshold) return 'pos';
-  if (v < -threshold) return 'neg';
-  return 'flat';
+  if (v == null || isNaN(v) || !isFinite(v)) return "flat";
+  if (v > threshold) return "pos";
+  if (v < -threshold) return "neg";
+  return "flat";
+}
+function pctTag(v) {
+  return `<span class="pct ${pctClass(v)}">${fmtPct(v)}</span>`;
 }
 
-// ============ PERIOD ============
-function resolvePeriod(view, asOf, customFrom, customTo) {
-  const [y, m, d] = asOf.split('-').map(Number);
+// =====================================================================
+// PERIOD RESOLUTION
+// =====================================================================
+function resolvePeriod(view, asOf) {
+  const [y, m, d] = asOf.split("-").map(Number);
   let from, to;
-  if (view === 'MTD') { from = asOf.slice(0,7) + '-01'; to = asOf; }
-  else if (view === 'QTD') {
+  if (view === "MTD") { from = asOf.slice(0,7) + "-01"; to = asOf; }
+  else if (view === "QTD") {
     const qStart = m - ((m-1)%3);
-    from = y + '-' + String(qStart).padStart(2,'0') + '-01'; to = asOf;
+    from = y + "-" + String(qStart).padStart(2,"0") + "-01"; to = asOf;
   }
-  else if (view === 'YTD') { from = y + '-01-01'; to = asOf; }
-  else if (view === 'LAST7') { from = dateStrAdd(asOf, -6); to = asOf; }
-  else if (view === 'LAST30') { from = dateStrAdd(asOf, -29); to = asOf; }
-  else if (view === 'DAY') { from = asOf; to = asOf; }
-  else if (view === 'CUSTOM') { from = customFrom; to = customTo; }
+  else if (view === "YTD") { from = y + "-01-01"; to = asOf; }
+  else if (view === "LAST7") { from = dateStrAdd(asOf, -6); to = asOf; }
+  else if (view === "LAST30") { from = dateStrAdd(asOf, -29); to = asOf; }
+  else if (view === "DAY") { from = asOf; to = asOf; }
   return [from, to];
 }
 
-// ============ AGGREGATION (FAST — uses pre-built indices) ============
+// =====================================================================
+// AGGREGATION
+// =====================================================================
 function aggregate(fromDate, toDate) {
   const dates = dateRange(fromDate, toDate);
   const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
@@ -1046,39 +1353,31 @@ function aggregate(fromDate, toDate) {
   return { byStore, byST, byCH, total: {sales: totalSales, tcs: totalTCs}, dates };
 }
 
-// ============ BUDGET (DAY-OF-WEEK WEIGHTED, FAST) ============
 const _budgetDayCache = new Map();
 function getDayBudget(dateStr, storeIdx, ly_mode) {
-  const cacheKey = dateStr + '|' + storeIdx + '|' + ly_mode;
-  if (_budgetDayCache.has(cacheKey)) return _budgetDayCache.get(cacheKey);
-  const month = parseInt(dateStr.split('-')[1]);
+  const key = dateStr + "|" + storeIdx + "|" + ly_mode;
+  if (_budgetDayCache.has(key)) return _budgetDayCache.get(key);
+  const month = parseInt(dateStr.split("-")[1]);
   const storeName = STORES[storeIdx];
   const monthBudget = BUDGET[storeName] && BUDGET[storeName][String(month)];
   if (!monthBudget) {
     const r = {sales:0, tcs:0};
-    _budgetDayCache.set(cacheKey, r); return r;
+    _budgetDayCache.set(key, r); return r;
   }
   const lyD = lyDate(dateStr, ly_mode);
   const lyYM = lyD.slice(0,7);
-  const [lyY, lyM] = lyD.split('-').map(Number);
+  const [lyY, lyM] = lyD.split("-").map(Number);
   const lyDaysInMonth = new Date(Date.UTC(lyY, lyM, 0)).getUTCDate();
-
-  // O(1) lookups now
   const lyMonthAgg = monthStoreTotal.get(lyYM);
   const lyMonthSales = lyMonthAgg ? lyMonthAgg[storeIdx].sales : 0;
   const lyMonthTCs = lyMonthAgg ? lyMonthAgg[storeIdx].tcs : 0;
   const lyDayAgg = dailyStore.get(lyD);
   const lyDaySales = lyDayAgg ? lyDayAgg[storeIdx].sales : 0;
   const lyDayTCs = lyDayAgg ? lyDayAgg[storeIdx].tcs : 0;
-
-  const dayBudgetSales = lyMonthSales > 0
-    ? monthBudget.Sales * (lyDaySales / lyMonthSales)
-    : monthBudget.Sales / lyDaysInMonth;
-  const dayBudgetTCs = lyMonthTCs > 0
-    ? monthBudget.TCs * (lyDayTCs / lyMonthTCs)
-    : monthBudget.TCs / lyDaysInMonth;
-  const r = {sales: dayBudgetSales, tcs: dayBudgetTCs};
-  _budgetDayCache.set(cacheKey, r);
+  const dayBS = lyMonthSales > 0 ? monthBudget.Sales * (lyDaySales / lyMonthSales) : monthBudget.Sales / lyDaysInMonth;
+  const dayBT = lyMonthTCs > 0 ? monthBudget.TCs * (lyDayTCs / lyMonthTCs) : monthBudget.TCs / lyDaysInMonth;
+  const r = {sales: dayBS, tcs: dayBT};
+  _budgetDayCache.set(key, r);
   return r;
 }
 
@@ -1099,7 +1398,7 @@ function periodBudget(fromDate, toDate, ly_mode) {
 }
 
 function fullMonthBudget(monthStr) {
-  const month = parseInt(monthStr.split('-')[1]);
+  const month = parseInt(monthStr.split("-")[1]);
   const byStore = new Array(STORES.length).fill(null).map(() => ({sales:0, tcs:0}));
   let totalSales = 0, totalTCs = 0;
   for (let si = 0; si < STORES.length; si++) {
@@ -1114,13 +1413,15 @@ function fullMonthBudget(monthStr) {
 }
 
 const STATE = {
-  view: 'MTD', asOf: LATEST,
-  customFrom: LATEST.slice(0,7) + '-01', customTo: LATEST,
-  ly_mode: '364', activeTab: 'overview', selectedStore: 0,
+  view: "MTD",
+  asOf: LATEST,
+  ly_mode: "364",
+  activeTab: "overview",
+  selectedStore: 0,
 };
 
 function compute() {
-  const [from, to] = resolvePeriod(STATE.view, STATE.asOf, STATE.customFrom, STATE.customTo);
+  const [from, to] = resolvePeriod(STATE.view, STATE.asOf);
   const cy = aggregate(from, to);
   const lyFrom = lyDate(from, STATE.ly_mode);
   const lyTo = lyDate(to, STATE.ly_mode);
@@ -1128,22 +1429,25 @@ function compute() {
   const budget = periodBudget(from, to, STATE.ly_mode);
   const periodDays = dateRange(from, to).length;
   const month = to.slice(0,7);
-  const [yE, mE] = to.split('-').map(Number);
+  const [yE, mE] = to.split("-").map(Number);
   const monthDays = new Date(Date.UTC(yE, mE, 0)).getUTCDate();
   const fullMonth = fullMonthBudget(month);
   return { from, to, periodDays, monthDays, month, cy, ly, budget, fullMonth };
 }
 
+// =====================================================================
+// HEADER + KPI RENDERERS
+// =====================================================================
 function renderHeader(R) {
-  document.getElementById('reportDate').textContent = dateGreek(R.to);
-  document.getElementById('reportCoverage').textContent = R.periodDays + ' / ' + R.monthDays + ' ημ.';
+  document.getElementById("reportDate").textContent = dateGreek(R.to);
+  document.getElementById("reportCoverage").textContent = R.periodDays + "/" + R.monthDays + " ημ.";
   let active = 0;
   for (let si = 0; si < STORES.length; si++) if (R.cy.byStore[si].sales > 0) active++;
-  document.getElementById('reportStores').textContent = active + ' / ' + STORES.length;
+  document.getElementById("reportStores").textContent = active + "/" + STORES.length;
 }
 
 function renderKPI(R) {
-  const root = document.getElementById('kpiRow');
+  const root = document.getElementById("kpiRow");
   const cyS = R.cy.total.sales, cyT = R.cy.total.tcs;
   const lyS = R.ly.total.sales, lyT = R.ly.total.tcs;
   const bS = R.budget.total.sales, bT = R.budget.total.tcs;
@@ -1159,32 +1463,101 @@ function renderKPI(R) {
   const monthlyBudget = R.fullMonth.total.sales;
   const forecast = bS > 0 ? cyS * (monthlyBudget / bS) : null;
   const forecastVsBudget = forecast && monthlyBudget > 0 ? (forecast - monthlyBudget) / monthlyBudget : null;
+
   const cards = [
-    { cls:'primary', label:'Net Sales', value:fmtEurK(cyS), sub:[['vs Budget', dSB], ['vs LY', dSL]] },
-    { cls:'secondary', label:'Transactions', value:fmtNum(cyT), sub:[['vs Budget', dTB], ['vs LY', dTL]] },
-    { cls:'tertiary', label:'Avg Ticket', value:fmtAvg(cyAvg), sub:[['vs Budget', dAB], ['vs LY', dAL]] },
-    { cls:'primary', label:'Period Budget', value:fmtEurK(bS), sub:[['Coverage', null, (R.periodDays / R.monthDays).toFixed(2).replace('.',',')]] },
-    { cls:'secondary', label:'Monthly Budget', value:fmtEurK(monthlyBudget), sub:[['Days', null, R.monthDays + ' days']] },
-    { cls:'tertiary', label:'Month Forecast', value:fmtEurK(forecast), sub:[['vs Monthly Budget', forecastVsBudget]] }
+    { cls: "primary", label: "Net Sales", value: fmtEurK(cyS),
+      sub: [["vs Budget", dSB], ["vs LY", dSL]] },
+    { cls: "secondary", label: "Transactions", value: fmtNum(cyT),
+      sub: [["vs Budget", dTB], ["vs LY", dTL]] },
+    { cls: "tertiary", label: "Avg Ticket", value: fmtAvg(cyAvg),
+      sub: [["vs Budget", dAB], ["vs LY", dAL]] },
+    { cls: "primary", label: "Period Budget", value: fmtEurK(bS),
+      sub: [["Days covered", null, R.periodDays + "/" + R.monthDays]] },
+    { cls: "secondary", label: "Monthly Budget", value: fmtEurK(monthlyBudget),
+      sub: [["Month", null, shortMonth(parseInt(R.month.split("-")[1]))]] },
+    { cls: "tertiary", label: "Month Forecast", value: fmtEurK(forecast),
+      sub: [["vs Monthly", forecastVsBudget]] }
   ];
+
   root.innerHTML = cards.map(c => `
     <div class="kpi-card ${c.cls}">
-      <div class="accent-line"></div>
       <div class="kpi-label">${c.label}</div>
       <div class="kpi-value">${c.value}</div>
       <div class="kpi-sub">
         ${c.sub.map(s => {
-          if (s[1] === null) return `<span class="versus">${s[0]}</span><span class="delta flat">${s[2]||'—'}</span>`;
-          return `<span class="versus">${s[0]}</span><span class="delta ${pctClass(s[1])}">${fmtPct(s[1])}</span>`;
-        }).join('')}
+          if (s[1] === null) return `<div class="row"><span class="versus">${s[0]}</span><span class="delta flat">${s[2]||"—"}</span></div>`;
+          return `<div class="row"><span class="versus">${s[0]}</span><span class="delta ${pctClass(s[1])}">${fmtPct(s[1])}</span></div>`;
+        }).join("")}
       </div>
     </div>
-  `).join('');
+  `).join("");
 }
 
+// =====================================================================
+// CARD HELPERS — used by all data renderers
+// =====================================================================
+function storeCard(opts) {
+  // opts: { name, rank?, cy, ly, b, accent: "primary"|"good"|"grand" }
+  const { name, rank, cy, ly, b, accent } = opts;
+  const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+  const lyAvg = ly && ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+  const dSL = ly && ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+  const dTL = ly && ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
+  const dSB = b && b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
+  const dTB = b && b.tcs > 0 ? (cy.tcs - b.tcs)/b.tcs : null;
+
+  const cls = accent === "grand" ? "grand" : "accent";
+  return `
+    <div class="card ${cls}">
+      <div class="card-title">
+        <span class="name">${name}</span>
+        ${rank ? `<span class="rank">${rank}</span>` : ""}
+      </div>
+      <div class="card-rows">
+        <div class="card-row"><span class="lbl">Net Sales</span><span class="val">${fmtEur(cy.sales)}</span></div>
+        <div class="card-row"><span class="lbl">Transactions</span><span class="val">${fmtNum(cy.tcs)}</span></div>
+        <div class="card-row"><span class="lbl">Avg Ticket</span><span class="val">${fmtAvg(cyAvg)}</span></div>
+        ${b ? `<div class="card-row"><span class="lbl">vs Budget</span><span class="val">${pctTag(dSB)}</span></div>` : ""}
+        ${ly ? `<div class="card-row"><span class="lbl">vs LY (Sales)</span><span class="val">${pctTag(dSL)}</span></div>` : ""}
+        ${ly ? `<div class="card-row"><span class="lbl">vs LY (TCs)</span><span class="val">${pctTag(dTL)}</span></div>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function breakdownCard(opts) {
+  // opts: { label, cy, ly, mix }
+  const { label, cy, ly, mix } = opts;
+  const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+  const lyAvg = ly && ly.tcs > 0 ? ly.sales/ly.tcs : 0;
+  const dS = ly && ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+  const dT = ly && ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
+  return `
+    <div class="card subcard">
+      <div class="card-title">
+        <span class="name">${label}</span>
+        ${mix != null ? `<span class="rank">${(mix*100).toFixed(1).replace(".",",")}% mix</span>` : ""}
+      </div>
+      <div class="card-rows">
+        <div class="card-row"><span class="lbl">CY Sales</span><span class="val">${fmtEur(cy.sales)}</span></div>
+        <div class="card-row"><span class="lbl">CY TCs</span><span class="val">${fmtNum(cy.tcs)}</span></div>
+        <div class="card-row"><span class="lbl">CY Avg</span><span class="val">${fmtAvg(cyAvg)}</span></div>
+        ${ly ? `<div class="card-row"><span class="lbl">vs LY Sales</span><span class="val">${pctTag(dS)}</span></div>` : ""}
+        ${ly ? `<div class="card-row"><span class="lbl">vs LY TCs</span><span class="val">${pctTag(dT)}</span></div>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+// =====================================================================
+// TAB RENDERERS — all use card layout
+// =====================================================================
+
 function renderOverview(R) {
-  const root = document.getElementById('tab-overview');
-  let typeRows = '';
+  const root = document.getElementById("tab-overview");
+  let html = "";
+
+  // Sales Type breakdown — total
   const typeTotals = new Array(SALESTYPES.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
   for (let si = 0; si < STORES.length; si++) {
     for (let sti = 0; sti < SALESTYPES.length; sti++) {
@@ -1194,39 +1567,37 @@ function renderOverview(R) {
       typeTotals[sti].lyT += R.ly.byST[si][sti].tcs;
     }
   }
+
+  html += `<div class="panel-section">
+    <div class="section-title"><span>By Sales Type</span><span class="meta">${R.from} → ${R.to} · ${R.periodDays} ημ.</span></div>
+    <div class="cards">`;
   for (let sti = 0; sti < SALESTYPES.length; sti++) {
     const t = typeTotals[sti];
     if (t.cyS === 0 && t.lyS === 0) continue;
-    const cyAvg = t.cyT > 0 ? t.cyS/t.cyT : 0;
-    const lyAvg = t.lyT > 0 ? t.lyS/t.lyT : 0;
-    const dS = t.lyS > 0 ? (t.cyS - t.lyS)/t.lyS : null;
-    const dT = t.lyT > 0 ? (t.cyT - t.lyT)/t.lyT : null;
-    const dA = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
     const mix = R.cy.total.sales > 0 ? t.cyS / R.cy.total.sales : 0;
-    typeRows += `<tr>
-      <td>${SALESTYPES[sti]}</td>
-      <td>${fmtEur(t.cyS)}</td><td>${fmtNum(t.cyT)}</td><td>${fmtAvg(cyAvg)}</td>
-      <td>${fmtEur(t.lyS)}</td><td>${fmtNum(t.lyT)}</td><td>${fmtAvg(lyAvg)}</td>
-      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
-      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
-      <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
-      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
-    </tr>`;
+    html += breakdownCard({
+      label: SALESTYPES[sti],
+      cy: { sales: t.cyS, tcs: t.cyT },
+      ly: { sales: t.lyS, tcs: t.lyT },
+      mix
+    });
   }
-  const cyAvg = R.cy.total.tcs > 0 ? R.cy.total.sales/R.cy.total.tcs : 0;
-  const lyAvg = R.ly.total.tcs > 0 ? R.ly.total.sales/R.ly.total.tcs : 0;
-  const dS = R.ly.total.sales > 0 ? (R.cy.total.sales - R.ly.total.sales)/R.ly.total.sales : null;
-  const dT = R.ly.total.tcs > 0 ? (R.cy.total.tcs - R.ly.total.tcs)/R.ly.total.tcs : null;
-  const dA = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
-  typeRows += `<tr class="row-grand">
-    <td>TOTAL KFC</td>
-    <td>${fmtEur(R.cy.total.sales)}</td><td>${fmtNum(R.cy.total.tcs)}</td><td>${fmtAvg(cyAvg)}</td>
-    <td>${fmtEur(R.ly.total.sales)}</td><td>${fmtNum(R.ly.total.tcs)}</td><td>${fmtAvg(lyAvg)}</td>
-    <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
-    <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
-    <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
-    <td>100,0%</td></tr>`;
+  // Total card
+  html += `<div class="card grand">
+    <div class="card-title">
+      <span class="name">TOTAL KFC</span>
+    </div>
+    <div class="card-rows">
+      <div class="card-row"><span class="lbl">CY Sales</span><span class="val">${fmtEur(R.cy.total.sales)}</span></div>
+      <div class="card-row"><span class="lbl">LY Sales</span><span class="val">${fmtEur(R.ly.total.sales)}</span></div>
+      <div class="card-row"><span class="lbl">CY TCs</span><span class="val">${fmtNum(R.cy.total.tcs)}</span></div>
+      <div class="card-row"><span class="lbl">LY TCs</span><span class="val">${fmtNum(R.ly.total.tcs)}</span></div>
+      <div class="card-row"><span class="lbl">Sales vs LY</span><span class="val">${pctTag(R.ly.total.sales > 0 ? (R.cy.total.sales - R.ly.total.sales)/R.ly.total.sales : null)}</span></div>
+    </div>
+  </div>`;
+  html += `</div></div>`;
 
+  // Channel mix
   const chTotals = new Array(CHANNELGROUPS.length).fill(null).map(() => ({cyS:0, cyT:0, lyS:0, lyT:0}));
   for (let si = 0; si < STORES.length; si++) {
     for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
@@ -1236,75 +1607,76 @@ function renderOverview(R) {
       chTotals[ci].lyT += R.ly.byCH[si][ci].tcs;
     }
   }
-  let chRows = '';
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Channel Mix</span></div>
+    <div class="cards">`;
   for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
     const t = chTotals[ci];
     if (t.cyS === 0 && t.lyS === 0) continue;
-    const cAvg = t.cyT > 0 ? t.cyS/t.cyT : 0;
-    const lAvg = t.lyT > 0 ? t.lyS/t.lyT : 0;
-    const dS2 = t.lyS > 0 ? (t.cyS - t.lyS)/t.lyS : null;
-    const dT2 = t.lyT > 0 ? (t.cyT - t.lyT)/t.lyT : null;
-    const dA2 = lAvg > 0 ? (cAvg - lAvg)/lAvg : null;
     const mix = R.cy.total.sales > 0 ? t.cyS / R.cy.total.sales : 0;
-    chRows += `<tr>
-      <td>${CHANNELGROUPS[ci]}</td>
-      <td>${fmtEur(t.cyS)}</td><td>${fmtNum(t.cyT)}</td><td>${fmtAvg(cAvg)}</td>
-      <td>${fmtEur(t.lyS)}</td><td>${fmtNum(t.lyT)}</td><td>${fmtAvg(lAvg)}</td>
-      <td><span class="pct ${pctClass(dS2)}">${fmtPct(dS2)}</span></td>
-      <td><span class="pct ${pctClass(dT2)}">${fmtPct(dT2)}</span></td>
-      <td><span class="pct ${pctClass(dA2)}">${fmtPct(dA2)}</span></td>
-      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
-    </tr>`;
+    html += breakdownCard({
+      label: CHANNELGROUPS[ci],
+      cy: { sales: t.cyS, tcs: t.cyT },
+      ly: { sales: t.lyS, tcs: t.lyT },
+      mix
+    });
   }
+  html += `</div></div>`;
 
-  const moverRows = [];
+  // Top / Bottom movers
+  const moverData = [];
   for (let si = 0; si < STORES.length; si++) {
     const cy = R.cy.byStore[si];
     const ly = R.ly.byStore[si];
     if (cy.sales === 0 && ly.sales === 0) continue;
-    const dS3 = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
-    const b = R.budget.byStore[si];
-    const dB = b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
-    moverRows.push({short: STORE_META[STORES[si]].short, cy: cy.sales, ly: ly.sales, dS: dS3, dB});
+    const dS = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+    if (dS == null) continue;
+    moverData.push({ short: STORE_META[STORES[si]].short, cy, ly, b: R.budget.byStore[si], dS });
   }
-  const best = [...moverRows].filter(m => m.dS !== null).sort((a,b) => b.dS - a.dS).slice(0, 5);
-  const worst = [...moverRows].filter(m => m.dS !== null).sort((a,b) => a.dS - b.dS).slice(0, 5);
-  const renderMovers = arr => arr.map(m => `<tr>
-    <td>${m.short}</td><td>${fmtEurK(m.cy)}</td><td>${fmtEurK(m.ly)}</td>
-    <td><span class="pct ${pctClass(m.dS)}">${fmtPct(m.dS)}</span></td>
-    <td><span class="pct ${pctClass(m.dB)}">${fmtPct(m.dB)}</span></td>
-  </tr>`).join('');
+  const best = [...moverData].sort((a,b)=>b.dS-a.dS).slice(0,5);
+  const worst = [...moverData].sort((a,b)=>a.dS-b.dS).slice(0,5);
 
-  root.innerHTML = `
-    <div class="panel-section">
-      <div class="section-title"><span>Top-Line Performance · By Sales Type</span><span class="meta">${R.from} → ${R.to} · ${R.periodDays} ημέρες</span></div>
-      <div class="scroll-x"><table class="responsive-table">
-        <thead><tr><th>Sales Type</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
-        <tbody>${typeRows}</tbody></table></div>
-    </div>
-    <div class="panel-section">
-      <div class="section-title"><span>Channel Mix</span></div>
-      <div class="scroll-x"><table class="responsive-table">
-        <thead><tr><th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
-        <tbody>${chRows}</tbody></table></div>
-    </div>
-    <div class="grid-2">
-      <div class="panel-section">
-        <div class="section-title"><span>Top Performers · vs LY</span></div>
-        <table class="responsive-table"><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(best)}</tbody></table>
+  html += `<div class="grid-2">`;
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Top 5 Performers · vs LY</span></div>
+    <div class="cards">`;
+  for (const m of best) {
+    html += `<div class="card good">
+      <div class="card-title">
+        <span class="name">${m.short}</span>
+        <span class="rank">${pctTag(m.dS)}</span>
       </div>
-      <div class="panel-section">
-        <div class="section-title"><span>Underperformers · vs LY</span></div>
-        <table class="responsive-table"><thead><tr><th>Store</th><th>CY</th><th>LY</th><th>Δ vs LY</th><th>Δ vs Budget</th></tr></thead><tbody>${renderMovers(worst)}</tbody></table>
+      <div class="card-rows">
+        <div class="card-row"><span class="lbl">CY</span><span class="val">${fmtEurK(m.cy.sales)}</span></div>
+        <div class="card-row"><span class="lbl">LY</span><span class="val">${fmtEurK(m.ly.sales)}</span></div>
       </div>
-    </div>
-  `;
+    </div>`;
+  }
+  html += `</div></div>`;
+
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Bottom 5 · vs LY</span></div>
+    <div class="cards">`;
+  for (const m of worst) {
+    html += `<div class="card accent">
+      <div class="card-title">
+        <span class="name">${m.short}</span>
+        <span class="rank">${pctTag(m.dS)}</span>
+      </div>
+      <div class="card-rows">
+        <div class="card-row"><span class="lbl">CY</span><span class="val">${fmtEurK(m.cy.sales)}</span></div>
+        <div class="card-row"><span class="lbl">LY</span><span class="val">${fmtEurK(m.ly.sales)}</span></div>
+      </div>
+    </div>`;
+  }
+  html += `</div></div>`;
+  html += `</div>`;
+
+  root.innerHTML = html;
 }
 
 function renderByStore(R) {
-  const root = document.getElementById('tab-bystore');
-  let rows = '';
-  let totS=0, totT=0, totLS=0, totLT=0, totBS=0, totBT=0;
+  const root = document.getElementById("tab-bystore");
   const arr = [];
   for (let si = 0; si < STORES.length; si++) {
     const cy = R.cy.byStore[si];
@@ -1313,164 +1685,90 @@ function renderByStore(R) {
     if (cy.sales === 0 && ly.sales === 0 && b.sales === 0) continue;
     arr.push({si, cy, ly, b});
   }
-  arr.sort((a, b_) => b_.cy.sales - a.cy.sales);
-  arr.forEach((r, idx) => {
-    const cyAvg = r.cy.tcs > 0 ? r.cy.sales/r.cy.tcs : 0;
-    const lyAvg = r.ly.tcs > 0 ? r.ly.sales/r.ly.tcs : 0;
-    const bAvg = r.b.tcs > 0 ? r.b.sales/r.b.tcs : 0;
-    const dSL = r.ly.sales > 0 ? (r.cy.sales - r.ly.sales)/r.ly.sales : null;
-    const dTL = r.ly.tcs > 0 ? (r.cy.tcs - r.ly.tcs)/r.ly.tcs : null;
-    const dAL = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
-    const dSB = r.b.sales > 0 ? (r.cy.sales - r.b.sales)/r.b.sales : null;
-    const dTB = r.b.tcs > 0 ? (r.cy.tcs - r.b.tcs)/r.b.tcs : null;
-    const dAB = bAvg > 0 ? (cyAvg - bAvg)/bAvg : null;
-    rows += `<tr class="row-store">
-      <td>${idx+1}. ${STORE_META[STORES[r.si]].short}</td>
-      <td>${fmtEur(r.cy.sales)}</td><td>${fmtNum(r.cy.tcs)}</td><td>${fmtAvg(cyAvg)}</td>
-      <td>${fmtEur(r.b.sales)}</td>
-      <td><span class="pct ${pctClass(dSB)}">${fmtPct(dSB)}</span></td>
-      <td><span class="pct ${pctClass(dTB)}">${fmtPct(dTB)}</span></td>
-      <td><span class="pct ${pctClass(dAB)}">${fmtPct(dAB)}</span></td>
-      <td>${fmtEur(r.ly.sales)}</td>
-      <td><span class="pct ${pctClass(dSL)}">${fmtPct(dSL)}</span></td>
-      <td><span class="pct ${pctClass(dTL)}">${fmtPct(dTL)}</span></td>
-      <td><span class="pct ${pctClass(dAL)}">${fmtPct(dAL)}</span></td>
-    </tr>`;
+  arr.sort((a, b) => b.cy.sales - a.cy.sales);
+
+  let html = `<div class="panel-section">
+    <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to}</span></div>
+    <div class="cards">`;
+
+  // Total
+  let totS=0, totT=0, totLS=0, totLT=0, totBS=0, totBT=0;
+  for (const r of arr) {
     totS += r.cy.sales; totT += r.cy.tcs;
     totLS += r.ly.sales; totLT += r.ly.tcs;
     totBS += r.b.sales; totBT += r.b.tcs;
+  }
+  html += storeCard({
+    name: "TOTAL KFC",
+    cy: {sales: totS, tcs: totT},
+    ly: {sales: totLS, tcs: totLT},
+    b: {sales: totBS, tcs: totBT},
+    accent: "grand"
   });
-  const cyAvg = totT > 0 ? totS/totT : 0;
-  const lyAvg = totLT > 0 ? totLS/totLT : 0;
-  const bAvg = totBT > 0 ? totBS/totBT : 0;
-  const dSL = totLS > 0 ? (totS - totLS)/totLS : null;
-  const dTL = totLT > 0 ? (totT - totLT)/totLT : null;
-  const dAL = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
-  const dSB = totBS > 0 ? (totS - totBS)/totBS : null;
-  const dTB = totBT > 0 ? (totT - totBT)/totBT : null;
-  const dAB = bAvg > 0 ? (cyAvg - bAvg)/bAvg : null;
-  rows += `<tr class="row-grand">
-    <td>TOTAL KFC</td>
-    <td>${fmtEur(totS)}</td><td>${fmtNum(totT)}</td><td>${fmtAvg(cyAvg)}</td>
-    <td>${fmtEur(totBS)}</td>
-    <td><span class="pct ${pctClass(dSB)}">${fmtPct(dSB)}</span></td>
-    <td><span class="pct ${pctClass(dTB)}">${fmtPct(dTB)}</span></td>
-    <td><span class="pct ${pctClass(dAB)}">${fmtPct(dAB)}</span></td>
-    <td>${fmtEur(totLS)}</td>
-    <td><span class="pct ${pctClass(dSL)}">${fmtPct(dSL)}</span></td>
-    <td><span class="pct ${pctClass(dTL)}">${fmtPct(dTL)}</span></td>
-    <td><span class="pct ${pctClass(dAL)}">${fmtPct(dAL)}</span></td>
-  </tr>`;
-  root.innerHTML = `<div class="panel-section">
-    <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="scroll-x"><table class="responsive-table">
-      <thead><tr><th>Store</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>Budget</th><th>Δ S</th><th>Δ T</th><th>Δ A</th><th>LY Sales</th><th>Δ S</th><th>Δ T</th><th>Δ A</th></tr></thead>
-      <tbody>${rows}</tbody></table></div></div>`;
+
+  arr.forEach((r, idx) => {
+    html += storeCard({
+      name: STORE_META[STORES[r.si]].short,
+      rank: "#" + (idx+1),
+      cy: r.cy, ly: r.ly, b: r.b,
+      accent: "primary"
+    });
+  });
+
+  html += `</div></div>`;
+  root.innerHTML = html;
 }
 
 function renderSalesType(R) {
-  const root = document.getElementById('tab-salestype');
-  let rows = '';
-  const arr = [];
-  for (let si = 0; si < STORES.length; si++) {
-    const cy = R.cy.byStore[si];
-    if (cy.sales === 0 && R.ly.byStore[si].sales === 0) continue;
-    arr.push({si, cy: cy.sales});
-  }
-  arr.sort((a, b_) => b_.cy - a.cy);
-  for (const {si} of arr) {
-    const short = STORE_META[STORES[si]].short;
-    const cyTotal = R.cy.byStore[si];
-    const lyTotal = R.ly.byStore[si];
-    const bTotal = R.budget.byStore[si];
-    rows += `<tr class="row-store row-store-header"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px 8px;border-top:1px solid var(--border)">${short}</td></tr>`;
-    for (let sti = 0; sti < SALESTYPES.length; sti++) {
-      const cy = R.cy.byST[si][sti];
-      const ly = R.ly.byST[si][sti];
-      if (cy.sales === 0 && ly.sales === 0) continue;
-      const cyA = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
-      const lyA = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
-      const dS = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
-      const dT = ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
-      const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
-      const mix = cyTotal.sales > 0 ? cy.sales/cyTotal.sales : 0;
-      rows += `<tr class="row-type">
-        <td>${SALESTYPES[sti]}</td>
-        <td>${fmtEur(cy.sales)}</td><td>${fmtNum(cy.tcs)}</td><td>${fmtAvg(cyA)}</td>
-        <td>${fmtEur(ly.sales)}</td><td>${fmtNum(ly.tcs)}</td><td>${fmtAvg(lyA)}</td>
-        <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
-        <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
-        <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
-        <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
-      </tr>`;
-    }
-    const cyA = cyTotal.tcs > 0 ? cyTotal.sales/cyTotal.tcs : 0;
-    const lyA = lyTotal.tcs > 0 ? lyTotal.sales/lyTotal.tcs : 0;
-    const dS = lyTotal.sales > 0 ? (cyTotal.sales - lyTotal.sales)/lyTotal.sales : null;
-    const dT = lyTotal.tcs > 0 ? (cyTotal.tcs - lyTotal.tcs)/lyTotal.tcs : null;
-    const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
-    const dSB = bTotal.sales > 0 ? (cyTotal.sales - bTotal.sales)/bTotal.sales : null;
-    rows += `<tr class="row-total">
-      <td style="padding-left:16px">Total · ${short}</td>
-      <td>${fmtEur(cyTotal.sales)}</td><td>${fmtNum(cyTotal.tcs)}</td><td>${fmtAvg(cyA)}</td>
-      <td>${fmtEur(lyTotal.sales)}</td><td>${fmtNum(lyTotal.tcs)}</td><td>${fmtAvg(lyA)}</td>
-      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
-      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
-      <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
-      <td><span class="pct ${pctClass(dSB)}">B: ${fmtPct(dSB)}</span></td>
-    </tr>`;
-  }
-  root.innerHTML = `<div class="panel-section">
-    <div class="section-title"><span>Per-Store · Sales Type Breakdown</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="scroll-x"><table class="responsive-table">
-      <thead><tr><th>Sales Type</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
-      <tbody>${rows}</tbody></table></div></div>`;
+  renderBreakdownByStore(R, "salestype");
+}
+function renderChannels(R) {
+  renderBreakdownByStore(R, "channels");
 }
 
-function renderChannels(R) {
-  const root = document.getElementById('tab-channels');
-  let rows = '';
+function renderBreakdownByStore(R, mode) {
+  const root = document.getElementById("tab-" + mode);
   const arr = [];
   for (let si = 0; si < STORES.length; si++) {
     const cy = R.cy.byStore[si];
     if (cy.sales === 0 && R.ly.byStore[si].sales === 0) continue;
     arr.push({si, cy: cy.sales});
   }
-  arr.sort((a, b_) => b_.cy - a.cy);
+  arr.sort((a, b) => b.cy - a.cy);
+
+  const labels = mode === "salestype" ? SALESTYPES : CHANNELGROUPS;
+  const dataKey = mode === "salestype" ? "byST" : "byCH";
+  const title = mode === "salestype" ? "Sales Type Breakdown · Per Store" : "Channel Breakdown · Per Store";
+
+  let html = `<div class="panel-section">
+    <div class="section-title"><span>${title}</span><span class="meta">${R.from} → ${R.to}</span></div>`;
+
   for (const {si} of arr) {
     const short = STORE_META[STORES[si]].short;
     const cyTotal = R.cy.byStore[si];
-    rows += `<tr class="row-store row-store-header"><td colspan="11" style="background:var(--bg-2);font-weight:700;padding:8px;border-top:1px solid var(--border)">${short}</td></tr>`;
-    for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
-      const cy = R.cy.byCH[si][ci];
-      const ly = R.ly.byCH[si][ci];
+    html += `<div class="subsection-header">${short} · ${fmtEurK(cyTotal.sales)}</div>`;
+    html += `<div class="cards">`;
+    for (let li = 0; li < labels.length; li++) {
+      const cy = R.cy[dataKey][si][li];
+      const ly = R.ly[dataKey][si][li];
       if (cy.sales === 0 && ly.sales === 0) continue;
-      const cyA = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
-      const lyA = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
-      const dS = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
-      const dT = ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
-      const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
-      const mix = cyTotal.sales > 0 ? cy.sales/cyTotal.sales : 0;
-      rows += `<tr class="row-type">
-        <td>${CHANNELGROUPS[ci]}</td>
-        <td>${fmtEur(cy.sales)}</td><td>${fmtNum(cy.tcs)}</td><td>${fmtAvg(cyA)}</td>
-        <td>${fmtEur(ly.sales)}</td><td>${fmtNum(ly.tcs)}</td><td>${fmtAvg(lyA)}</td>
-        <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
-        <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
-        <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
-        <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
-      </tr>`;
+      const mix = cyTotal.sales > 0 ? cy.sales / cyTotal.sales : 0;
+      html += breakdownCard({
+        label: labels[li],
+        cy: { sales: cy.sales, tcs: cy.tcs },
+        ly: { sales: ly.sales, tcs: ly.tcs },
+        mix
+      });
     }
+    html += `</div>`;
   }
-  root.innerHTML = `<div class="panel-section">
-    <div class="section-title"><span>Per-Store · Channel Breakdown</span><span class="meta">${R.from} → ${R.to}</span></div>
-    <div class="scroll-x"><table class="responsive-table">
-      <thead><tr><th>Channel</th><th>CY Sales</th><th>CY TCs</th><th>CY Avg €</th><th>LY Sales</th><th>LY TCs</th><th>LY Avg €</th><th>Sales Δ</th><th>TCs Δ</th><th>Avg Δ</th><th>Mix %</th></tr></thead>
-      <tbody>${rows}</tbody></table></div></div>`;
+  html += `</div>`;
+
+  root.innerHTML = html;
 }
 
 function renderRankings(R) {
-  const root = document.getElementById('tab-rankings');
+  const root = document.getElementById("tab-rankings");
   const arr = [];
   for (let si = 0; si < STORES.length; si++) {
     const cy = R.cy.byStore[si];
@@ -1484,39 +1782,45 @@ function renderRankings(R) {
       bS: b.sales, bT: b.tcs, bA: b.tcs > 0 ? b.sales/b.tcs : 0,
     });
   }
-  function rankTable(metric, label, fmt) {
-    const sorted = [...arr].sort((a,b_) => b_[metric] - a[metric]);
-    const max = sorted[0] && sorted[0][metric] || 1;
-    return `<div class="panel-section">
+
+  function rankSection(metricKey, label, fmt) {
+    const sorted = [...arr].sort((a,b) => b[metricKey] - a[metricKey]);
+    const max = sorted[0] && sorted[0][metricKey] || 1;
+    let html = `<div class="panel-section">
       <div class="section-title"><span>${label}</span></div>
-      <table class="responsive-table">
-        <thead><tr><th style="width:30px;text-align:center">#</th><th>Store</th><th>${label.split(' ')[0]}</th><th style="width:80px"></th><th>vs LY</th><th>vs Budget</th></tr></thead>
-        <tbody>
-        ${sorted.map((r, idx) => {
-          const dL = metric==='cyS' ? (r.lyS > 0 ? (r.cyS - r.lyS)/r.lyS : null) :
-                    metric==='cyT' ? (r.lyT > 0 ? (r.cyT - r.lyT)/r.lyT : null) :
-                                     (r.lyA > 0 ? (r.cyA - r.lyA)/r.lyA : null);
-          const dB = metric==='cyS' ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
-                    metric==='cyT' ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
-                                     (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
-          const w = (r[metric]/max*100).toFixed(0);
-          return `<tr>
-            <td class="center" style="color:var(--text-2);font-family:var(--mono)">${String(idx+1).padStart(2,'0')}</td>
-            <td>${r.short}</td><td>${fmt(r[metric])}</td>
-            <td><div class="mini-bar"><div style="width:${w}%"></div></div></td>
-            <td><span class="pct ${pctClass(dL)}">${fmtPct(dL)}</span></td>
-            <td><span class="pct ${pctClass(dB)}">${fmtPct(dB)}</span></td>
-          </tr>`;
-        }).join('')}</tbody></table></div>`;
+      <div class="cards">`;
+    sorted.forEach((r, idx) => {
+      const dL = metricKey === "cyS" ? (r.lyS > 0 ? (r.cyS - r.lyS)/r.lyS : null) :
+                 metricKey === "cyT" ? (r.lyT > 0 ? (r.cyT - r.lyT)/r.lyT : null) :
+                                       (r.lyA > 0 ? (r.cyA - r.lyA)/r.lyA : null);
+      const dB = metricKey === "cyS" ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
+                 metricKey === "cyT" ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
+                                       (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
+      const w = (r[metricKey]/max*100).toFixed(0);
+      html += `<div class="card accent">
+        <div class="card-title">
+          <span class="name">${idx+1}. ${r.short}</span>
+          <span class="rank">${fmt(r[metricKey])}</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">vs LY</span><span class="val">${pctTag(dL)}</span></div>
+          <div class="card-row"><span class="lbl">vs Budget</span><span class="val">${pctTag(dB)}</span></div>
+          <div class="card-row" style="margin-top:4px"><div class="mini-bar"><div style="width:${w}%"></div></div></div>
+        </div>
+      </div>`;
+    });
+    html += `</div></div>`;
+    return html;
   }
-  root.innerHTML = `<div class="grid-3">
-    ${rankTable('cyS', 'Net Sales', fmtEurK)}
-    ${rankTable('cyT', 'Transactions', fmtNum)}
-    ${rankTable('cyA', 'Avg Ticket', fmtAvg)}</div>`;
+
+  root.innerHTML =
+    rankSection("cyS", "Net Sales Ranking", fmtEurK) +
+    rankSection("cyT", "Transactions Ranking", fmtNum) +
+    rankSection("cyA", "Avg Ticket Ranking", fmtAvg);
 }
 
 function renderDOW(R) {
-  const root = document.getElementById('tab-dow');
+  const root = document.getElementById("tab-dow");
   const cyByDOW = [0,1,2,3,4,5,6].map(()=>({sales:0, tcs:0, count:0}));
   const lyByDOW = [0,1,2,3,4,5,6].map(()=>({sales:0, tcs:0, count:0}));
   const dates = dateRange(R.from, R.to);
@@ -1529,23 +1833,35 @@ function renderDOW(R) {
     const lt = dailyTotal.get(ld);
     if (lt) { lyByDOW[dow2].sales += lt.sales; lyByDOW[dow2].tcs += lt.tcs; lyByDOW[dow2].count++; }
   }
-  let rows = '';
+
+  let html = `<div class="panel-section">
+    <div class="section-title"><span>Day-of-Week Profile</span><span class="meta">${R.from} → ${R.to}</span></div>
+    <div class="cards">`;
   for (let i = 0; i < 7; i++) {
     const cy = cyByDOW[i], ly = lyByDOW[i];
     if (cy.count === 0 && ly.count === 0) continue;
-    const cyAvg_per_day = cy.count > 0 ? cy.sales / cy.count : 0;
-    const lyAvg_per_day = ly.count > 0 ? ly.sales / ly.count : 0;
-    const dD = lyAvg_per_day > 0 ? (cyAvg_per_day - lyAvg_per_day)/lyAvg_per_day : null;
+    const cyAvgPerDay = cy.count > 0 ? cy.sales / cy.count : 0;
+    const lyAvgPerDay = ly.count > 0 ? ly.sales / ly.count : 0;
+    const dD = lyAvgPerDay > 0 ? (cyAvgPerDay - lyAvgPerDay)/lyAvgPerDay : null;
     const cyTicket = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
     const lyTicket = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
-    rows += `<tr>
-      <td>${dowName(i)}</td>
-      <td>${cy.count}</td><td>${fmtEur(cy.sales)}</td><td>${fmtEur(cyAvg_per_day)}</td><td>${fmtNum(cy.tcs)}</td><td>${fmtAvg(cyTicket)}</td>
-      <td>${ly.count}</td><td>${fmtEur(ly.sales)}</td><td>${fmtEur(lyAvg_per_day)}</td><td>${fmtNum(ly.tcs)}</td><td>${fmtAvg(lyTicket)}</td>
-      <td><span class="pct ${pctClass(dD)}">${fmtPct(dD)}</span></td>
-    </tr>`;
+    html += `<div class="card accent-2">
+      <div class="card-title">
+        <span class="name">${dowName(i)}</span>
+        <span class="rank">${cy.count} ημ.</span>
+      </div>
+      <div class="card-rows">
+        <div class="card-row"><span class="lbl">CY Avg/Day</span><span class="val">${fmtEur(cyAvgPerDay)}</span></div>
+        <div class="card-row"><span class="lbl">LY Avg/Day</span><span class="val">${fmtEur(lyAvgPerDay)}</span></div>
+        <div class="card-row"><span class="lbl">Δ Avg/Day</span><span class="val">${pctTag(dD)}</span></div>
+        <div class="card-row"><span class="lbl">CY Ticket</span><span class="val">${fmtAvg(cyTicket)}</span></div>
+        <div class="card-row"><span class="lbl">LY Ticket</span><span class="val">${fmtAvg(lyTicket)}</span></div>
+      </div>
+    </div>`;
   }
+  html += `</div></div>`;
 
+  // Heatmap (last 30 days)
   const heatDates = dates.slice(-30);
   const stores = [];
   for (let si = 0; si < STORES.length; si++) {
@@ -1566,11 +1882,11 @@ function renderDOW(R) {
     storeSales[si] = s;
   }
   stores.sort((a, b) => storeSales[b] - storeSales[a]);
-  let heatHTML = '';
-  heatHTML += `<div class="heatmap" style="grid-template-columns: 110px repeat(${heatDates.length}, minmax(38px,1fr))">`;
-  heatHTML += `<div class="heat-header">DAY</div>`;
+
+  let heatHTML = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 90px repeat(${heatDates.length}, minmax(34px, 1fr))">`;
+  heatHTML += `<div class="heat-header" style="text-align:left">DAY</div>`;
   for (const d of heatDates) {
-    const [yh, mh, dh] = d.split('-').map(Number);
+    const [yh, mh, dh] = d.split("-").map(Number);
     heatHTML += `<div class="heat-header">${dh}<br><span style="opacity:0.5">${dowName(getDOW(d)).slice(0,2)}</span></div>`;
   }
   for (const si of stores) {
@@ -1582,32 +1898,28 @@ function renderDOW(R) {
       const cyS = ds ? ds[si].sales : 0;
       const lyS = ls ? ls[si].sales : 0;
       const dlt = lyS > 0 ? (cyS - lyS)/lyS : null;
-      let bg = 'transparent', col = 'var(--text-2)';
+      let bg = "var(--bg-2)", col = "var(--text-2)";
       if (dlt !== null) {
         const v = Math.max(-0.5, Math.min(0.5, dlt));
-        if (v > 0) { const o = Math.min(0.6, v*1.2); bg = `rgba(34,197,94,${o.toFixed(2)})`; col = 'var(--text-0)'; }
-        else { const o = Math.min(0.6, -v*1.2); bg = `rgba(239,68,68,${o.toFixed(2)})`; col = 'var(--text-0)'; }
-      } else if (cyS > 0) bg = 'rgba(100,116,139,0.1)';
-      const txt = (dlt === null && cyS === 0) ? '·' : (dlt === null ? '?' : (dlt*100).toFixed(0));
+        if (v > 0) { bg = `rgba(34,197,94,${Math.min(0.6, v*1.2).toFixed(2)})`; col = "var(--text-0)"; }
+        else { bg = `rgba(239,68,68,${Math.min(0.6, -v*1.2).toFixed(2)})`; col = "var(--text-0)"; }
+      } else if (cyS > 0) bg = "rgba(100,116,139,0.1)";
+      const txt = (dlt === null && cyS === 0) ? "·" : (dlt === null ? "?" : (dlt*100).toFixed(0));
       heatHTML += `<div class="heat-cell" style="background:${bg};color:${col}" title="${d} vs ${ld}: CY ${fmtEur(cyS)} / LY ${fmtEur(lyS)}">${txt}</div>`;
     }
   }
-  heatHTML += `</div>`;
-  root.innerHTML = `
-    <div class="panel-section">
-      <div class="section-title"><span>Day-of-Week Profile · Period Aggregation</span><span class="meta">${R.from} → ${R.to}</span></div>
-      <table class="responsive-table">
-        <thead><tr><th>DOW</th><th>CY Days</th><th>CY Sales</th><th>CY Avg/Day</th><th>CY TCs</th><th>CY Avg€</th><th>LY Days</th><th>LY Sales</th><th>LY Avg/Day</th><th>LY TCs</th><th>LY Avg€</th><th>Δ Avg/Day</th></tr></thead>
-        <tbody>${rows}</tbody></table>
-    </div>
-    <div class="panel-section">
-      <div class="section-title"><span>Heatmap · vs LY % per Day per Store</span><span class="meta">last ${heatDates.length} days</span></div>
-      ${heatHTML}
-    </div>`;
+  heatHTML += `</div></div>`;
+
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Heatmap · vs LY % per Day per Store</span><span class="meta">τελευταίες ${heatDates.length} ημέρες · σύρε δεξιά</span></div>
+    ${heatHTML}
+  </div>`;
+
+  root.innerHTML = html;
 }
 
 function renderTrend(R) {
-  const root = document.getElementById('tab-trend');
+  const root = document.getElementById("tab-trend");
   const dates = dateRange(R.from, R.to);
   const series = dates.map(d => {
     const ld = lyDate(d, STATE.ly_mode);
@@ -1619,67 +1931,76 @@ function renderTrend(R) {
   });
   let cumCY = 0, cumLY = 0, cumB = 0;
   const cumSeries = series.map(p => { cumCY += p.cyS; cumLY += p.lyS; cumB += p.bS; return {date:p.date, cumCY, cumLY, cumB}; });
-  const W = 1500, H = 320, PAD = {l:60, r:20, t:20, b:30};
-  const innerW = W - PAD.l - PAD.r, innerH = H - PAD.t - PAD.b;
-  function chart(data, accessors, title, fmt) {
+
+  function chartSVG(data, accessors, fmt) {
+    const W = 700, H = 280, PAD = {l:55, r:15, t:20, b:30};
+    const innerW = W - PAD.l - PAD.r, innerH = H - PAD.t - PAD.b;
     const allVals = [];
     accessors.forEach(a => data.forEach(p => allVals.push(a.fn(p))));
-    const minV = Math.min(...allVals.filter(v => v !== null && !isNaN(v)));
-    const maxV = Math.max(...allVals.filter(v => v !== null && !isNaN(v)));
+    const valids = allVals.filter(v => v !== null && !isNaN(v));
+    const minV = Math.min(...valids);
+    const maxV = Math.max(...valids);
     const range = maxV - minV || 1;
     const yMin = minV - range*0.1, yMax = maxV + range*0.1;
     const xScale = i => PAD.l + (i / (data.length - 1 || 1)) * innerW;
     const yScale = v => PAD.t + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
-    let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%">`;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
     for (let i = 0; i <= 4; i++) {
       const y = PAD.t + innerH * i / 4;
       const v = yMax - (yMax - yMin) * i / 4;
       svg += `<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
-      svg += `<text x="${PAD.l-8}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${fmt(v)}</text>`;
+      svg += `<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${fmt(v)}</text>`;
     }
-    const step = Math.max(1, Math.ceil(data.length/12));
+    const step = Math.max(1, Math.ceil(data.length/10));
     for (let i = 0; i < data.length; i += step) {
       const x = xScale(i);
-      const [yc, mc, dc] = data[i].date.split('-').map(Number);
+      const [yc, mc, dc] = data[i].date.split("-").map(Number);
       svg += `<text x="${x}" y="${H-8}" text-anchor="middle" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${dc}/${mc}</text>`;
     }
     accessors.forEach(a => {
-      const pts = data.map((p, i) => `${xScale(i)},${yScale(a.fn(p))}`).join(' ');
-      svg += `<polyline fill="none" stroke="${a.color}" stroke-width="${a.width||2}" stroke-dasharray="${a.dash||''}" points="${pts}" />`;
+      const pts = data.map((p, i) => `${xScale(i)},${yScale(a.fn(p))}`).join(" ");
+      svg += `<polyline fill="none" stroke="${a.color}" stroke-width="${a.width||2}" stroke-dasharray="${a.dash||""}" points="${pts}" />`;
     });
-    let lx = PAD.l + 20;
+    let lx = PAD.l + 10;
     accessors.forEach(a => {
-      svg += `<rect x="${lx}" y="${PAD.t+8}" width="14" height="3" fill="${a.color}" stroke-dasharray="${a.dash||''}"/>`;
-      svg += `<text x="${lx+18}" y="${PAD.t+12}" fill="var(--text-1)" font-size="11">${a.label}</text>`;
-      lx += 20 + a.label.length * 7 + 20;
+      svg += `<rect x="${lx}" y="${PAD.t+6}" width="14" height="3" fill="${a.color}" stroke-dasharray="${a.dash||""}"/>`;
+      svg += `<text x="${lx+18}" y="${PAD.t+10}" fill="var(--text-1)" font-size="11">${a.label}</text>`;
+      lx += 22 + a.label.length * 7 + 14;
     });
     svg += `</svg>`;
-    return `<div class="chart-wrap"><div class="chart-title">${title}</div>${svg}</div>`;
+    return svg;
   }
+
   const acc1 = [
-    {label:'Actual', fn:p=>p.cyS, color:'#ef4444', width:2.2},
-    {label:'Last Year', fn:p=>p.lyS, color:'#f59e0b', width:1.8, dash:'4 3'},
-    {label:'Budget', fn:p=>p.bS, color:'#22c55e', width:1.8, dash:'2 3'},
+    {label:"Actual", fn:p=>p.cyS, color:"#ef4444", width:2.2},
+    {label:"LY", fn:p=>p.lyS, color:"#f59e0b", width:1.8, dash:"4 3"},
+    {label:"Budget", fn:p=>p.bS, color:"#22c55e", width:1.8, dash:"2 3"},
   ];
   const acc2 = [
-    {label:'Actual (cum)', fn:p=>p.cumCY, color:'#ef4444', width:2.2},
-    {label:'LY (cum)', fn:p=>p.cumLY, color:'#f59e0b', width:1.8, dash:'4 3'},
-    {label:'Budget (cum)', fn:p=>p.cumB, color:'#22c55e', width:1.8, dash:'2 3'},
+    {label:"CY cum", fn:p=>p.cumCY, color:"#ef4444", width:2.2},
+    {label:"LY cum", fn:p=>p.cumLY, color:"#f59e0b", width:1.8, dash:"4 3"},
+    {label:"Bud cum", fn:p=>p.cumB, color:"#22c55e", width:1.8, dash:"2 3"},
   ];
   root.innerHTML = `
     <div class="panel-section">
-      <div class="section-title"><span>Daily Trend · CY vs LY vs Budget (KFC ALL)</span><span class="meta">${R.from} → ${R.to}</span></div>
-      ${chart(series, acc1, 'Daily Net Sales (€)', fmtEurK)}
+      <div class="section-title"><span>Daily Trend</span><span class="meta">${R.from} → ${R.to} · σύρε δεξιά</span></div>
+      <div class="chart-wrap">
+        <div class="chart-title">Daily Net Sales (€)</div>
+        ${chartSVG(series, acc1, fmtEurK)}
+      </div>
     </div>
     <div class="panel-section">
       <div class="section-title"><span>Cumulative Trend</span></div>
-      ${chart(cumSeries, acc2, 'Cumulative Net Sales (€)', fmtEurK)}
+      <div class="chart-wrap">
+        <div class="chart-title">Cumulative Net Sales (€)</div>
+        ${chartSVG(cumSeries, acc2, fmtEurK)}
+      </div>
     </div>`;
 }
 
 function renderStoreDeep(R) {
-  const root = document.getElementById('tab-storedeep');
-  const opts = STORES.map((s,i) => `<option value="${i}" ${i===STATE.selectedStore?'selected':''}>${STORE_META[s].short}</option>`).join('');
+  const root = document.getElementById("tab-storedeep");
+  const opts = STORES.map((s,i) => `<option value="${i}" ${i===STATE.selectedStore?"selected":""}>${STORE_META[s].short}</option>`).join("");
   const si = STATE.selectedStore;
   const storeName = STORES[si];
   const short = STORE_META[storeName].short;
@@ -1690,156 +2011,76 @@ function renderStoreDeep(R) {
   const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
   const lyAvg = ly.tcs > 0 ? ly.sales/ly.tcs : 0;
   const bAvg = b.tcs > 0 ? b.sales/b.tcs : 0;
-  const dSL = ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
-  const dTL = ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
-  const dAL = lyAvg > 0 ? (cyAvg - lyAvg)/lyAvg : null;
-  const dSB = b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
-  const dTB = b.tcs > 0 ? (cy.tcs - b.tcs)/b.tcs : null;
-  const dAB = bAvg > 0 ? (cyAvg - bAvg)/bAvg : null;
   const forecast = b.sales > 0 ? cy.sales * (fb.sales / b.sales) : null;
   const forecastVsBudget = forecast && fb.sales > 0 ? (forecast - fb.sales)/fb.sales : null;
 
-  const dates = dateRange(R.from, R.to);
-  const series = dates.map(d => {
-    const ld = lyDate(d, STATE.ly_mode);
-    const ds = dailyStore.get(d);
-    const ls = dailyStore.get(ld);
-    const cyS = ds ? ds[si].sales : 0;
-    const lyS = ls ? ls[si].sales : 0;
-    const bd = getDayBudget(d, si, STATE.ly_mode).sales;
-    return {date:d, cyS, lyS, bS:bd};
-  });
+  let html = `<div class="store-select-wrap">
+    <span class="control-label">Επιλογή καταστήματος</span>
+    <select id="storeSelect">${opts}</select>
+  </div>`;
 
-  let typeRows = '';
+  html += `<div class="panel-section">
+    <div class="cards">
+      ${storeCard({ name: short + " · MTD", cy, ly, b, accent: "primary" })}
+      <div class="card good">
+        <div class="card-title">
+          <span class="name">Month Forecast</span>
+          <span class="rank">${forecast ? pctTag(forecastVsBudget) : ""}</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Forecast</span><span class="val">${fmtEurK(forecast)}</span></div>
+          <div class="card-row"><span class="lbl">Monthly Budget</span><span class="val">${fmtEurK(fb.sales)}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Sales Type breakdown for this store
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Sales Type Breakdown</span></div>
+    <div class="cards">`;
   for (let sti = 0; sti < SALESTYPES.length; sti++) {
     const cyV = R.cy.byST[si][sti];
     const lyV = R.ly.byST[si][sti];
     if (cyV.sales === 0 && lyV.sales === 0) continue;
-    const cyA = cyV.tcs > 0 ? cyV.sales/cyV.tcs : 0;
-    const lyA = lyV.tcs > 0 ? lyV.sales/lyV.tcs : 0;
-    const dS = lyV.sales > 0 ? (cyV.sales - lyV.sales)/lyV.sales : null;
-    const dT = lyV.tcs > 0 ? (cyV.tcs - lyV.tcs)/lyV.tcs : null;
-    const dA = lyA > 0 ? (cyA - lyA)/lyA : null;
     const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
-    typeRows += `<tr>
-      <td>${SALESTYPES[sti]}</td>
-      <td>${fmtEur(cyV.sales)}</td><td>${fmtNum(cyV.tcs)}</td><td>${fmtAvg(cyA)}</td>
-      <td>${fmtEur(lyV.sales)}</td><td>${fmtNum(lyV.tcs)}</td><td>${fmtAvg(lyA)}</td>
-      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
-      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
-      <td><span class="pct ${pctClass(dA)}">${fmtPct(dA)}</span></td>
-      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
-    </tr>`;
+    html += breakdownCard({
+      label: SALESTYPES[sti],
+      cy: { sales: cyV.sales, tcs: cyV.tcs },
+      ly: { sales: lyV.sales, tcs: lyV.tcs },
+      mix
+    });
   }
-  let chRows = '';
+  html += `</div></div>`;
+
+  // Channel breakdown
+  html += `<div class="panel-section">
+    <div class="section-title"><span>Channel Breakdown</span></div>
+    <div class="cards">`;
   for (let ci = 0; ci < CHANNELGROUPS.length; ci++) {
     const cyV = R.cy.byCH[si][ci];
     const lyV = R.ly.byCH[si][ci];
     if (cyV.sales === 0 && lyV.sales === 0) continue;
-    const cyA = cyV.tcs > 0 ? cyV.sales/cyV.tcs : 0;
-    const lyA = lyV.tcs > 0 ? lyV.sales/lyV.tcs : 0;
-    const dS = lyV.sales > 0 ? (cyV.sales - lyV.sales)/lyV.sales : null;
-    const dT = lyV.tcs > 0 ? (cyV.tcs - lyV.tcs)/lyV.tcs : null;
     const mix = cy.sales > 0 ? cyV.sales/cy.sales : 0;
-    chRows += `<tr>
-      <td>${CHANNELGROUPS[ci]}</td>
-      <td>${fmtEur(cyV.sales)}</td><td>${fmtNum(cyV.tcs)}</td><td>${fmtAvg(cyA)}</td>
-      <td>${fmtEur(lyV.sales)}</td><td>${fmtNum(lyV.tcs)}</td><td>${fmtAvg(lyA)}</td>
-      <td><span class="pct ${pctClass(dS)}">${fmtPct(dS)}</span></td>
-      <td><span class="pct ${pctClass(dT)}">${fmtPct(dT)}</span></td>
-      <td>${(mix*100).toFixed(1).replace('.',',')}%</td>
-    </tr>`;
+    html += breakdownCard({
+      label: CHANNELGROUPS[ci],
+      cy: { sales: cyV.sales, tcs: cyV.tcs },
+      ly: { sales: lyV.sales, tcs: lyV.tcs },
+      mix
+    });
   }
+  html += `</div></div>`;
 
-  const W = 1500, H = 280, PAD = {l:60, r:20, t:20, b:30};
-  const innerW = W - PAD.l - PAD.r, innerH = H - PAD.t - PAD.b;
-  const allVals = [];
-  series.forEach(p => { allVals.push(p.cyS, p.lyS, p.bS); });
-  const minV = Math.min(...allVals.filter(v => !isNaN(v)));
-  const maxV = Math.max(...allVals.filter(v => !isNaN(v)));
-  const range = maxV - minV || 1;
-  const yMin = minV - range*0.1, yMax = maxV + range*0.1;
-  const xScale = i => PAD.l + (i / (series.length - 1 || 1)) * innerW;
-  const yScale = v => PAD.t + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
-  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%">`;
-  for (let i = 0; i <= 4; i++) {
-    const y = PAD.t + innerH * i / 4;
-    const v = yMax - (yMax - yMin) * i / 4;
-    svg += `<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
-    svg += `<text x="${PAD.l-8}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${fmtEurK(v)}</text>`;
-  }
-  const step = Math.max(1, Math.ceil(series.length/12));
-  for (let i = 0; i < series.length; i += step) {
-    const x = xScale(i);
-    const [yc, mc, dc] = series[i].date.split('-').map(Number);
-    svg += `<text x="${x}" y="${H-8}" text-anchor="middle" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${dc}/${mc}</text>`;
-  }
-  const colors = [['Actual','#ef4444','cyS','2.2',''],['LY','#f59e0b','lyS','1.8','4 3'],['Budget','#22c55e','bS','1.8','2 3']];
-  for (const [lbl,col,k,w,d] of colors) {
-    const pts = series.map((p, i) => `${xScale(i)},${yScale(p[k])}`).join(' ');
-    svg += `<polyline fill="none" stroke="${col}" stroke-width="${w}" stroke-dasharray="${d}" points="${pts}" />`;
-  }
-  let lx = PAD.l + 20;
-  for (const [lbl,col,k,w,d] of colors) {
-    svg += `<rect x="${lx}" y="${PAD.t+8}" width="14" height="3" fill="${col}" stroke-dasharray="${d}"/>`;
-    svg += `<text x="${lx+18}" y="${PAD.t+12}" fill="var(--text-1)" font-size="11">${lbl}</text>`;
-    lx += 20 + lbl.length * 7 + 20;
-  }
-  svg += `</svg>`;
-
-  root.innerHTML = `
-    <div class="panel-section">
-      <div class="section-title"><span>Store Deep-Dive</span><span><select id="storeSelect" style="font-size:11px">${opts}</select></span></div>
-      <div class="kpi-row kpi-row-deepdive" style="margin-top:12px;margin-bottom:0">
-        <div class="kpi-card primary"><div class="accent-line"></div>
-          <div class="kpi-label">Net Sales</div><div class="kpi-value">${fmtEurK(cy.sales)}</div>
-          <div class="kpi-sub">
-            <span class="versus">vs Budget</span><span class="delta ${pctClass(dSB)}">${fmtPct(dSB)}</span>
-            <span class="versus">vs LY</span><span class="delta ${pctClass(dSL)}">${fmtPct(dSL)}</span>
-          </div></div>
-        <div class="kpi-card secondary"><div class="accent-line"></div>
-          <div class="kpi-label">TCs</div><div class="kpi-value">${fmtNum(cy.tcs)}</div>
-          <div class="kpi-sub">
-            <span class="versus">vs Budget</span><span class="delta ${pctClass(dTB)}">${fmtPct(dTB)}</span>
-            <span class="versus">vs LY</span><span class="delta ${pctClass(dTL)}">${fmtPct(dTL)}</span>
-          </div></div>
-        <div class="kpi-card tertiary"><div class="accent-line"></div>
-          <div class="kpi-label">Avg Ticket</div><div class="kpi-value">${fmtAvg(cyAvg)}</div>
-          <div class="kpi-sub">
-            <span class="versus">vs Budget</span><span class="delta ${pctClass(dAB)}">${fmtPct(dAB)}</span>
-            <span class="versus">vs LY</span><span class="delta ${pctClass(dAL)}">${fmtPct(dAL)}</span>
-          </div></div>
-        <div class="kpi-card primary"><div class="accent-line"></div>
-          <div class="kpi-label">Month Forecast</div><div class="kpi-value">${fmtEurK(forecast)}</div>
-          <div class="kpi-sub"><span class="versus">vs Monthly Budget</span><span class="delta ${pctClass(forecastVsBudget)}">${fmtPct(forecastVsBudget)}</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="panel-section">
-      <div class="section-title"><span>Daily Trend · ${short}</span></div>
-      <div class="chart-wrap"><div class="chart-title">CY vs LY vs Budget (€)</div>${svg}</div>
-    </div>
-    <div class="grid-2">
-      <div class="panel-section">
-        <div class="section-title"><span>Sales Type Breakdown</span></div>
-        <div class="scroll-x"><table class="responsive-table">
-          <thead><tr><th>Type</th><th>CY S</th><th>CY T</th><th>CY Avg</th><th>LY S</th><th>LY T</th><th>LY Avg</th><th>ΔS</th><th>ΔT</th><th>ΔA</th><th>Mix</th></tr></thead>
-          <tbody>${typeRows}</tbody></table></div>
-      </div>
-      <div class="panel-section">
-        <div class="section-title"><span>Channel Breakdown</span></div>
-        <div class="scroll-x"><table class="responsive-table">
-          <thead><tr><th>Channel</th><th>CY S</th><th>CY T</th><th>CY Avg</th><th>LY S</th><th>LY T</th><th>LY Avg</th><th>ΔS</th><th>ΔT</th><th>Mix</th></tr></thead>
-          <tbody>${chRows}</tbody></table></div>
-      </div>
-    </div>
-  `;
-  document.getElementById('storeSelect').addEventListener('change', e => {
+  root.innerHTML = html;
+  document.getElementById("storeSelect").addEventListener("change", e => {
     STATE.selectedStore = parseInt(e.target.value);
     renderActive();
   });
 }
 
+// =====================================================================
+// MAIN DISPATCH
+// =====================================================================
 let _cachedR = null;
 function renderActive() {
   if (!_cachedR) _cachedR = compute();
@@ -1855,91 +2096,41 @@ function renderActive() {
 }
 function refresh() { _cachedR = null; renderActive(); }
 
-document.querySelectorAll('#viewBtns button').forEach(b => b.addEventListener('click', e => {
-  document.querySelectorAll('#viewBtns button').forEach(x => x.classList.remove('active'));
-  e.target.classList.add('active');
+// =====================================================================
+// EVENT LISTENERS
+// =====================================================================
+document.querySelectorAll("#viewBtns button").forEach(b => b.addEventListener("click", e => {
+  document.querySelectorAll("#viewBtns button").forEach(x => x.classList.remove("active"));
+  e.target.classList.add("active");
   STATE.view = e.target.dataset.view;
-  document.getElementById('customWrap').style.display = (STATE.view === 'CUSTOM') ? 'flex' : 'none';
-  document.getElementById('dateAsOfWrap').style.display = (STATE.view === 'CUSTOM') ? 'none' : 'flex';
   refresh();
 }));
-document.querySelectorAll('#lyBtns button').forEach(b => b.addEventListener('click', e => {
-  document.querySelectorAll('#lyBtns button').forEach(x => x.classList.remove('active'));
-  e.target.classList.add('active');
+document.querySelectorAll("#lyBtns button").forEach(b => b.addEventListener("click", e => {
+  document.querySelectorAll("#lyBtns button").forEach(x => x.classList.remove("active"));
+  e.target.classList.add("active");
   STATE.ly_mode = e.target.dataset.ly;
   refresh();
 }));
-document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', e => {
-  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
-  e.target.classList.add('active');
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", e => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(x => x.classList.remove("active"));
+  e.target.classList.add("active");
   const tab = e.target.dataset.tab;
-  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById("tab-" + tab).classList.add("active");
   STATE.activeTab = tab;
   renderActive();
 }));
-document.getElementById('asOfDate').addEventListener('change', e => { STATE.asOf = e.target.value; refresh(); });
-document.getElementById('customFrom').addEventListener('change', e => { STATE.customFrom = e.target.value; refresh(); });
-document.getElementById('customTo').addEventListener('change', e => { STATE.customTo = e.target.value; refresh(); });
+document.getElementById("asOfDate").addEventListener("change", e => {
+  STATE.asOf = e.target.value;
+  refresh();
+});
 
-document.getElementById('asOfDate').value = LATEST;
-document.getElementById('asOfDate').min = FIRST;
-document.getElementById('asOfDate').max = LATEST;
-document.getElementById('customFrom').value = LATEST.slice(0,7) + '-01';
-document.getElementById('customTo').value = LATEST;
+document.getElementById("asOfDate").value = LATEST;
+document.getElementById("asOfDate").min = FIRST;
+document.getElementById("asOfDate").max = LATEST;
 
 renderActive();
 }
 </script>
-
-<script>
-// Auto-add data-label to td cells based on thead, for mobile card layout.
-// Runs on a MutationObserver so it works after every table re-render.
-(function() {
-  function applyDataLabels(table) {
-    if (!table || !table.classList.contains('responsive-table')) return;
-    const headers = [];
-    const ths = table.querySelectorAll('thead th');
-    ths.forEach(th => headers.push((th.textContent || '').trim()));
-    if (headers.length === 0) return;
-    const rows = table.querySelectorAll('tbody tr');
-    rows.forEach(tr => {
-      // Skip rows that are full-width (colspan >= number of columns)
-      const tds = tr.children;
-      if (tds.length === 1 && tds[0].hasAttribute('colspan')) return;
-      for (let i = 0; i < tds.length; i++) {
-        const lbl = headers[i] || '';
-        if (lbl) tds[i].setAttribute('data-label', lbl);
-      }
-    });
-  }
-
-  function applyAll() {
-    document.querySelectorAll('table.responsive-table').forEach(applyDataLabels);
-  }
-
-  // Initial apply (after DOMContentLoaded if not already)
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', applyAll);
-  } else {
-    applyAll();
-  }
-
-  // Re-apply whenever a tab content changes (we re-render on user interaction)
-  const target = document.querySelector('.panel') || document.body;
-  if (target && typeof MutationObserver !== 'undefined') {
-    const observer = new MutationObserver((mutations) => {
-      // Throttle: only run once per batch
-      let needsRun = false;
-      for (const m of mutations) {
-        if (m.addedNodes && m.addedNodes.length) { needsRun = true; break; }
-      }
-      if (needsRun) applyAll();
-    });
-    observer.observe(target, { childList: true, subtree: true });
-  }
-})();
-</script>
-
 </body>
 </html>
