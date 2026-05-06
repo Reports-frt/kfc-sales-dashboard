@@ -133,18 +133,59 @@ body {
   background: var(--bg-1);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 12px;
+  padding: 14px 16px;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
-.control-group { display: flex; flex-direction: column; gap: 6px; }
-.control-label { font-family: var(--mono); font-size: 9px; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; }
-.btn-group { display: flex; background: var(--bg-2); border-radius: 6px; padding: 2px; gap: 1px; flex-wrap: wrap; }
-.btn-group button { flex: 1; min-width: 0; background: transparent; color: var(--text-1); border: none; padding: 8px 6px; font-size: 11px; font-weight: 500; cursor: pointer; border-radius: 4px; font-family: var(--sans); transition: background 0.15s ease; white-space: nowrap; }
-.btn-group button:active { background: var(--bg-3); }
-.btn-group button.active { background: var(--accent); color: white; font-weight: 600; }
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+.control-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.btn-group {
+  display: inline-flex;
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 3px;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+}
+.btn-group button {
+  background: transparent;
+  color: var(--text-1);
+  border: none;
+  padding: 7px 14px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  font-family: var(--sans);
+  transition: all 0.12s ease;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.btn-group button:hover:not(.active) { background: var(--bg-3); color: var(--text-0); }
+.btn-group button:active { transform: scale(0.97); }
+.btn-group button.active {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(228,0,43,0.25);
+}
 input[type="date"], select { background: var(--bg-2); color: var(--text-0); border: 1px solid var(--border); padding: 8px 10px; border-radius: 6px; font-size: 13px; font-family: var(--sans); width: 100%; }
 input[type="date"]:focus, select:focus { outline: none; border-color: var(--accent); }
 
@@ -299,9 +340,26 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
   .brand-text h1 { font-size: 18px; }
   .brand-mark { width: 40px; height: 40px; font-size: 14px; }
 
-  /* Controls in single row */
-  .controls { padding: 12px 14px; flex-direction: row; flex-wrap: wrap; gap: 14px; align-items: center; }
-  .control-group { flex-direction: row; align-items: center; gap: 8px; }
+  /* Controls: each group on its own "card-like" segment with clear spacing */
+  .controls {
+    padding: 14px 18px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 22px 28px;
+    align-items: flex-end;
+  }
+  .control-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    flex: 0 0 auto;
+  }
+  /* Vertical separators between groups */
+  .control-group + .control-group {
+    padding-left: 28px;
+    border-left: 1px solid var(--border-soft);
+    margin-left: 0;
+  }
   .control-row > * { flex: 0 0 auto; min-width: 130px; }
 
   /* 6 KPI cards in one row */
@@ -403,7 +461,319 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
 .store-select-wrap { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .store-select-wrap select { width: 100%; font-size: 14px; padding: 10px 12px; }
 @media (min-width: 1024px) { .store-select-wrap { max-width: 360px; } }
+
+/* =================================================================
+   HOURLY TAB — VISUAL UPGRADES
+   ================================================================= */
+
+/* Quick stats banner at top of hourly tab */
+.hourly-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+@media (min-width: 768px) {
+  .hourly-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+}
+.hstat {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px 14px;
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+.hstat .hstat-label {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  color: var(--text-2);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hstat .hstat-value {
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-0);
+  line-height: 1.2;
+}
+.hstat .hstat-sub {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-1);
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+.hstat.peak { border-left-color: var(--accent); }
+.hstat.delivery { border-left-color: var(--accent-2); }
+.hstat.dinein { border-left-color: var(--good); }
+.hstat.zone { border-left-color: #a855f7; }
+
+/* Section headers in hourly: bigger, with icon + number */
+.h-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 22px 0 12px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.h-section-head:first-child { margin-top: 0; }
+.h-section-head .num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  letter-spacing: 1.5px;
+  font-weight: 600;
+  background: var(--bg-2);
+  padding: 3px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border-soft);
+}
+.h-section-head .title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-0);
+  letter-spacing: -0.2px;
+}
+.h-section-head .meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .h-section-head { flex-wrap: wrap; gap: 6px; }
+  .h-section-head .meta { margin-left: 0; flex-basis: 100%; }
+}
+
+/* Better chart container */
+.chart-card {
+  background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 14px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (min-width: 1024px) {
+  .chart-card { padding: 18px 20px; }
+}
+.chart-card svg { display: block; min-width: 100%; height: auto; max-width: 100%; }
+.chart-card.scroll svg { min-width: 700px; }
+
+/* Channel legend (consistent colors across hourly) */
+.ch-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  padding: 10px 0 0 0;
+  margin-top: 8px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 10.5px;
+  font-family: var(--mono);
+}
+.ch-legend .item { display: flex; align-items: center; gap: 5px; color: var(--text-1); }
+.ch-legend .swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* Better heatmap styling */
+.heatmap-wrap {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+.heatmap {
+  display: grid;
+  gap: 1px;
+  background: var(--border-soft);
+  min-width: max-content;
+}
+.heat-cell {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  padding: 5px 6px;
+  text-align: right;
+  background: var(--bg-2);
+  transition: transform 0.15s;
+  cursor: default;
+}
+.heat-cell:hover { transform: scale(1.15); z-index: 5; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+.heat-label {
+  padding: 5px 10px;
+  font-size: 10.5px;
+  color: var(--text-1);
+  text-align: left;
+  font-weight: 500;
+  background: var(--bg-3);
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  white-space: nowrap;
+}
+.heat-header {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  padding: 6px 4px;
+  text-align: center;
+  background: var(--bg-3);
+  font-weight: 600;
+}
+
+/* Time-zone "pills" — for the new section */
+.tz-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+@media (min-width: 768px) {
+  .tz-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+}
+.tz-card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
+}
+.tz-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--tz-color, var(--accent));
+}
+.tz-card .tz-range {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-1);
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.tz-card .tz-label {
+  font-size: 11px;
+  color: var(--text-2);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.tz-card .tz-value {
+  font-size: 17px;
+  font-weight: 700;
+  margin-top: 8px;
+  color: var(--text-0);
+  font-variant-numeric: tabular-nums;
+}
+.tz-card .tz-share {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  margin-top: 3px;
+}
+.tz-card .tz-bar {
+  margin-top: 8px;
+  height: 4px;
+  background: var(--bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tz-card .tz-bar > div { height: 100%; background: var(--tz-color, var(--accent)); transition: width 0.3s; }
+
+/* Channel-stacked-bar chart (custom) */
+.stack-rows { display: flex; flex-direction: column; gap: 4px; }
+.stack-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+}
+.stack-row .stack-label {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-1);
+  font-weight: 600;
+  text-align: right;
+}
+.stack-row .stack-bar {
+  display: flex;
+  height: 22px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+  min-width: 0;
+}
+.stack-row .stack-seg {
+  height: 100%;
+  position: relative;
+  transition: opacity 0.15s;
+}
+.stack-row .stack-seg:hover { opacity: 0.85; }
+.stack-row .stack-total {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-1);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 600px) {
+  .stack-row { grid-template-columns: 42px 1fr 72px; gap: 6px; }
+}
+
+/* Mini delta bars for hour vs LY */
+.hour-delta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 6px;
+  padding: 6px 0;
+}
+.hour-delta {
+  background: var(--bg-2);
+  border-radius: 6px;
+  padding: 8px 4px;
+  text-align: center;
+  border: 1px solid var(--border-soft);
+  transition: transform 0.15s;
+}
+.hour-delta:hover { transform: translateY(-2px); }
+.hour-delta .h-time {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.hour-delta .h-pct {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.hour-delta.pos { border-color: rgba(34,197,94,0.3); }
+.hour-delta.pos .h-pct { color: var(--good); }
+.hour-delta.neg { border-color: rgba(239,68,68,0.3); }
+.hour-delta.neg .h-pct { color: var(--bad); }
+.hour-delta.flat .h-pct { color: var(--text-2); }
+
 </style>
+
 </head>
 <body>
 
@@ -1038,6 +1408,12 @@ const STATE = {
   maturity: "all",        // all | same | new
   storeType: "all",       // all | "In Line" | "Mall Food Court" | etc
   channelView: "type",    // "type" (View A) or "salestype" (View B)
+  // Per-tab sort state: each entry is { col: 'sales'|'tcs'|'avg'|'vsly'|'vsbud', dir: 'desc'|'asc' }
+  sort: {
+    bystore:   { col: 'sales', dir: 'desc' },
+    channels:  { col: 'sales', dir: 'desc' },
+    rankings:  { col: 'sales', dir: 'desc' },
+  },
 };
 
 function compute() {
@@ -1449,7 +1825,7 @@ function renderOverview(R) {
 }
 
 // =====================================================================
-// BY STORE TAB
+// BY STORE TAB — sortable columns
 // =====================================================================
 function renderByStore(R) {
   const root = document.getElementById("tab-bystore");
@@ -1461,9 +1837,27 @@ function renderByStore(R) {
     const ly = R.ly.byStore[si];
     const b = R.budget.byStore[si];
     if (cy.sales === 0 && ly.sales === 0 && b.sales === 0) continue;
-    arr.push({si, cy, ly, b});
+    arr.push({
+      si, short: STORE_META[STORES[si]].short, cy, ly, b,
+      cyA: cy.tcs > 0 ? cy.sales/cy.tcs : null,
+      vsly_s: ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null,
+      vsly_t: ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null,
+      vsbud_s: b.sales > 0 ? (cy.sales - b.sales)/b.sales : null,
+      vsbud_t: b.tcs > 0 ? (cy.tcs - b.tcs)/b.tcs : null,
+    });
   }
-  arr.sort((a, b) => b.cy.sales - a.cy.sales);
+
+  const accessors = {
+    sales:    r => r.cy.sales,
+    tcs:      r => r.cy.tcs,
+    avg:      r => r.cyA,
+    vsly:     r => r.vsly_s,
+    vsly_tcs: r => r.vsly_t,
+    vsbud:    r => r.vsbud_s,
+    vsbud_tcs:r => r.vsbud_t,
+  };
+  const sortState = STATE.sort.bystore;
+  const sorted = applySort(arr, sortState, accessors);
 
   // Total
   let totS=0, totT=0, totLS=0, totLT=0, totBS=0, totBT=0;
@@ -1473,14 +1867,35 @@ function renderByStore(R) {
     totBS += r.b.sales; totBT += r.b.tcs;
   }
 
-  let html = `<div class="panel-section">
-    <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to} · ${arr.length} stores</span></div>`;
+  let html = `<div class="filter-row" style="margin-bottom: 14px">
+    <div class="filter-group">
+      <span class="label">Active filters</span>
+      <div class="chip-row">
+        <span class="chip ${STATE.maturity !== 'all' ? 'active' : ''}">Maturity: ${STATE.maturity === 'all' ? 'Όλα' : (STATE.maturity === 'same' ? 'Same' : 'New')}</span>
+        <span class="chip ${STATE.storeType !== 'all' ? 'active' : ''}">Store Type: ${STATE.storeType === 'all' ? 'Όλα' : STATE.storeType}</span>
+        <span class="chip">Sort: ${sortState.col} ${sortState.dir === 'asc' ? '↑' : '↓'}</span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-section">
+    <div class="section-title"><span>Per-Store · Actual vs Budget vs LY</span><span class="meta">${R.from} → ${R.to} · ${arr.length} stores · κλικ στις στήλες για ταξινόμηση</span></div>`;
 
   if (desktop) {
-    html += `<table class="desktop-table">${tableHead_StoresFull()}<tbody>`;
-    html += `<tr class="row-grand">${storeRow_D("TOTAL", {sales: totS, tcs: totT}, {sales: totLS, tcs: totLT}, {sales: totBS, tcs: totBT})}</tr>`;
-    arr.forEach((r) => {
-      html += `<tr>${storeRow_D(STORE_META[STORES[r.si]].short, r.cy, r.ly, r.b)}</tr>`;
+    html += `<table class="desktop-table"><thead><tr>
+      <th>Store</th>
+      ${sortHeader('bystore', 'sales',     'CY Sales')}
+      ${sortHeader('bystore', 'tcs',       'CY TCs')}
+      ${sortHeader('bystore', 'avg',       'CY Avg')}
+      <th>Budget</th>
+      ${sortHeader('bystore', 'vsbud',     'Sales vs B')}
+      ${sortHeader('bystore', 'vsbud_tcs', 'TCs vs B')}
+      <th>LY Sales</th>
+      ${sortHeader('bystore', 'vsly',      'Sales vs LY')}
+      ${sortHeader('bystore', 'vsly_tcs',  'TCs vs LY')}
+    </tr></thead><tbody>`;
+    html += `<tr class="row-grand">${storeRow_DLite("TOTAL", {sales: totS, tcs: totT}, {sales: totLS, tcs: totLT}, {sales: totBS, tcs: totBT})}</tr>`;
+    sorted.forEach(r => {
+      html += `<tr>${storeRow_DLite(r.short, r.cy, r.ly, r.b)}</tr>`;
     });
     html += `</tbody></table>`;
   } else {
@@ -1492,9 +1907,9 @@ function renderByStore(R) {
       b: {sales: totBS, tcs: totBT},
       accent: "grand"
     });
-    arr.forEach((r, idx) => {
+    sorted.forEach((r, idx) => {
       html += storeCard_M({
-        name: STORE_META[STORES[r.si]].short,
+        name: r.short,
         rank: "#" + (idx+1),
         cy: r.cy, ly: r.ly, b: r.b,
         accent: "primary"
@@ -1504,6 +1919,26 @@ function renderByStore(R) {
   }
   html += `</div>`;
   root.innerHTML = html;
+  attachSortHandlers(root, () => renderByStore(R));
+}
+
+// 10-column variant matching the new sortable header
+function storeRow_DLite(name, cy, ly, b) {
+  const cyAvg = cy.tcs > 0 ? cy.sales/cy.tcs : 0;
+  const dSL = ly && ly.sales > 0 ? (cy.sales - ly.sales)/ly.sales : null;
+  const dTL = ly && ly.tcs > 0 ? (cy.tcs - ly.tcs)/ly.tcs : null;
+  const dSB = b && b.sales > 0 ? (cy.sales - b.sales)/b.sales : null;
+  const dTB = b && b.tcs > 0 ? (cy.tcs - b.tcs)/b.tcs : null;
+  return `<td>${name}</td>
+    <td>${fmtEur(cy.sales)}</td>
+    <td>${fmtNum(cy.tcs)}</td>
+    <td>${fmtAvg(cyAvg)}</td>
+    <td>${b ? fmtEur(b.sales) : "—"}</td>
+    <td>${pctTag(dSB)}</td>
+    <td>${pctTag(dTB)}</td>
+    <td>${ly ? fmtEur(ly.sales) : "—"}</td>
+    <td>${pctTag(dSL)}</td>
+    <td>${pctTag(dTL)}</td>`;
 }
 
 
@@ -1511,7 +1946,192 @@ function renderByStore(R) {
 // BY SALES TYPE / BY CHANNEL — per-store breakdown
 // =====================================================================
 function renderSalesType(R) { renderBreakdown(R, "salestype"); }
-function renderChannels(R) { renderBreakdown(R, "channels"); }
+// =====================================================================
+// SHARED — sortable header helper
+// =====================================================================
+function sortHeader(stateKey, col, label) {
+  const s = STATE.sort[stateKey] || {};
+  const arrow = s.col === col ? (s.dir === 'asc' ? ' ↑' : ' ↓') : '';
+  return `<th class="sortable" data-sort-key="${stateKey}" data-sort-col="${col}" style="cursor: pointer; user-select: none;">${label}${arrow}</th>`;
+}
+
+function attachSortHandlers(root, onChange) {
+  root.querySelectorAll('th.sortable').forEach(th => {
+    th.addEventListener('click', e => {
+      const k = th.dataset.sortKey;
+      const c = th.dataset.sortCol;
+      if (!STATE.sort[k]) STATE.sort[k] = { col: c, dir: 'desc' };
+      if (STATE.sort[k].col === c) {
+        STATE.sort[k].dir = STATE.sort[k].dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        STATE.sort[k].col = c;
+        STATE.sort[k].dir = 'desc';
+      }
+      onChange();
+    });
+  });
+}
+
+function applySort(arr, sortState, accessors) {
+  const { col, dir } = sortState;
+  const acc = accessors[col];
+  if (!acc) return arr;
+  const sign = dir === 'asc' ? 1 : -1;
+  return arr.slice().sort((a, b) => {
+    const va = acc(a), vb = acc(b);
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;   // nulls always at bottom
+    if (vb == null) return -1;
+    return (va - vb) * sign;
+  });
+}
+
+// =====================================================================
+// BY CHANNEL TAB — split per channel, each section shows all stores
+// =====================================================================
+function renderChannels(R) {
+  const root = document.getElementById('tab-channels');
+  const desktop = isDesktop();
+
+  // Build per-channel × per-store metrics
+  // For each channel, for each store: cy, ly, ranks
+  const channelData = CHANNELS.map((chName, ci) => {
+    const stores = [];
+    let chCY = 0, chLY = 0, chCYTcs = 0, chLYTcs = 0;
+    for (let si = 0; si < STORES.length; si++) {
+      if (R.storeFilter && !R.storeFilter.has(si)) continue;
+      const cyV = R.cy.byCH[si][ci];
+      const lyV = R.ly.byCH[si][ci];
+      if (cyV.sales === 0 && lyV.sales === 0) continue;
+      stores.push({
+        si,
+        short: STORE_META[STORES[si]].short,
+        cyS: cyV.sales,
+        cyT: cyV.tcs,
+        cyA: cyV.tcs > 0 ? cyV.sales / cyV.tcs : null,
+        lyS: lyV.sales,
+        lyT: lyV.tcs,
+        lyA: lyV.tcs > 0 ? lyV.sales / lyV.tcs : null,
+      });
+      chCY += cyV.sales; chCYTcs += cyV.tcs;
+      chLY += lyV.sales; chLYTcs += lyV.tcs;
+    }
+    return { name: chName, idx: ci, stores, chCY, chLY, chCYTcs, chLYTcs };
+  });
+
+  // Sort channels by CY total desc (always)
+  channelData.sort((a, b) => b.chCY - a.chCY);
+
+  let html = `<div class="filter-row" style="margin-bottom: 14px">
+    <div class="filter-group">
+      <span class="label">Active filters</span>
+      <div class="chip-row">
+        <span class="chip ${STATE.maturity !== 'all' ? 'active' : ''}">Maturity: ${STATE.maturity === 'all' ? 'Όλα' : (STATE.maturity === 'same' ? 'Same' : 'New')}</span>
+        <span class="chip ${STATE.storeType !== 'all' ? 'active' : ''}">Store Type: ${STATE.storeType === 'all' ? 'Όλα' : STATE.storeType}</span>
+        <span class="chip">Sort: ${STATE.sort.channels.col} ${STATE.sort.channels.dir === 'asc' ? '↑' : '↓'}</span>
+      </div>
+    </div>
+  </div>`;
+
+  // Define accessors for sorting
+  const accessors = {
+    sales: r => r.cyS,
+    tcs:   r => r.cyT,
+    avg:   r => r.cyA,
+    vsly:  r => r.lyS > 0 ? (r.cyS - r.lyS) / r.lyS : null,
+  };
+
+  channelData.forEach((cd, idx) => {
+    if (cd.stores.length === 0) return;
+    const sortState = STATE.sort.channels;
+    const sorted = applySort(cd.stores, sortState, accessors);
+    const chAvg = cd.chCYTcs > 0 ? cd.chCY / cd.chCYTcs : 0;
+    const chDS = cd.chLY > 0 ? (cd.chCY - cd.chLY) / cd.chLY : null;
+    const chDT = cd.chLYTcs > 0 ? (cd.chCYTcs - cd.chLYTcs) / cd.chLYTcs : null;
+    const chColor = (typeof CHANNEL_COLORS !== 'undefined' && CHANNEL_COLORS[cd.name]) || '#ef4444';
+
+    html += `<div class="ch-section" style="margin-bottom: 28px;">
+      <div class="ch-section-head" style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; background: var(--bg-2); border-radius: 8px 8px 0 0; border: 1px solid var(--border-soft); border-bottom: none; border-left: 4px solid ${chColor};">
+        <div style="font-size: 14px; font-weight: 700; letter-spacing: 0.3px;">${cd.name}</div>
+        <div style="margin-left: auto; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--text-1);">
+            <span style="color: var(--text-2)">Total:</span> <span style="font-weight: 700; color: var(--text-0)">${fmtEurK(cd.chCY)}</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--text-1);">
+            <span style="color: var(--text-2)">TCs:</span> <span style="font-weight: 700; color: var(--text-0)">${fmtNum(cd.chCYTcs)}</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 11px; color: var(--text-1);">
+            <span style="color: var(--text-2)">Avg:</span> <span style="font-weight: 700; color: var(--text-0)">${fmtAvg(chAvg)}</span>
+          </div>
+          <div style="font-family: var(--mono); font-size: 11px;">
+            <span style="color: var(--text-2)">vs LY:</span> ${pctTag(chDS)}
+          </div>
+        </div>
+      </div>`;
+
+    if (desktop) {
+      html += `<table class="desktop-table" style="border-radius: 0 0 8px 8px;"><thead><tr>
+        <th>#</th>
+        <th>Store</th>
+        ${sortHeader('channels', 'sales', 'CY Sales')}
+        ${sortHeader('channels', 'tcs',   'CY TCs')}
+        ${sortHeader('channels', 'avg',   'CY Avg')}
+        <th>LY Sales</th>
+        <th>LY TCs</th>
+        ${sortHeader('channels', 'vsly',  'vs LY (Sales)')}
+        <th>vs LY (TCs)</th>
+        <th>Channel Mix</th>
+      </tr></thead><tbody>`;
+      sorted.forEach((s, rk) => {
+        const dS = s.lyS > 0 ? (s.cyS - s.lyS) / s.lyS : null;
+        const dT = s.lyT > 0 ? (s.cyT - s.lyT) / s.lyT : null;
+        const mix = cd.chCY > 0 ? s.cyS / cd.chCY : 0;
+        html += `<tr>
+          <td style="color: var(--text-2); font-family: var(--mono); font-size: 10px;">${rk+1}</td>
+          <td>${s.short}</td>
+          <td>${fmtEur(s.cyS)}</td>
+          <td>${fmtNum(s.cyT)}</td>
+          <td>${s.cyA != null ? fmtAvg(s.cyA) : '—'}</td>
+          <td>${fmtEur(s.lyS)}</td>
+          <td>${fmtNum(s.lyT)}</td>
+          <td>${pctTag(dS)}</td>
+          <td>${pctTag(dT)}</td>
+          <td>${(mix*100).toFixed(1).replace('.', ',')}%</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+    } else {
+      // Mobile: cards
+      html += `<div style="background: var(--bg-2); border: 1px solid var(--border-soft); border-top: none; border-radius: 0 0 8px 8px; padding: 10px;">
+        <div class="cards">`;
+      sorted.forEach((s, rk) => {
+        const dS = s.lyS > 0 ? (s.cyS - s.lyS) / s.lyS : null;
+        const dT = s.lyT > 0 ? (s.cyT - s.lyT) / s.lyT : null;
+        const mix = cd.chCY > 0 ? s.cyS / cd.chCY : 0;
+        html += `<div class="card accent">
+          <div class="card-title">
+            <span class="name">${rk+1}. ${s.short}</span>
+            <span class="rank">${(mix*100).toFixed(1).replace('.', ',')}% mix</span>
+          </div>
+          <div class="card-rows">
+            <div class="card-row"><span class="lbl">CY Sales</span><span class="val">${fmtEur(s.cyS)}</span></div>
+            <div class="card-row"><span class="lbl">CY TCs</span><span class="val">${fmtNum(s.cyT)}</span></div>
+            <div class="card-row"><span class="lbl">CY Avg</span><span class="val">${s.cyA != null ? fmtAvg(s.cyA) : '—'}</span></div>
+            <div class="card-row"><span class="lbl">LY Sales</span><span class="val">${fmtEur(s.lyS)}</span></div>
+            <div class="card-row"><span class="lbl">vs LY (Sales)</span><span class="val">${pctTag(dS)}</span></div>
+            <div class="card-row"><span class="lbl">vs LY (TCs)</span><span class="val">${pctTag(dT)}</span></div>
+          </div>
+        </div>`;
+      });
+      html += `</div></div>`;
+    }
+    html += `</div>`;
+  });
+
+  root.innerHTML = html;
+  attachSortHandlers(root, () => renderChannels(R));
+}
+
 
 function renderBreakdown(R, mode) {
   const root = document.getElementById("tab-" + mode);
@@ -1670,7 +2290,7 @@ function renderBreakdown(R, mode) {
 }
 
 // =====================================================================
-// RANKINGS TAB
+// RANKINGS TAB — sortable + active filters chip
 // =====================================================================
 function renderRankings(R) {
   const root = document.getElementById("tab-rankings");
@@ -1684,15 +2304,57 @@ function renderRankings(R) {
     if (cy.sales === 0 && ly.sales === 0 && b.sales === 0) continue;
     arr.push({
       si, short: STORE_META[STORES[si]].short,
-      cyS: cy.sales, cyT: cy.tcs, cyA: cy.tcs > 0 ? cy.sales/cy.tcs : 0,
-      lyS: ly.sales, lyT: ly.tcs, lyA: ly.tcs > 0 ? ly.sales/ly.tcs : 0,
-      bS: b.sales, bT: b.tcs, bA: b.tcs > 0 ? b.sales/b.tcs : 0,
+      cyS: cy.sales, cyT: cy.tcs, cyA: cy.tcs > 0 ? cy.sales/cy.tcs : null,
+      lyS: ly.sales, lyT: ly.tcs, lyA: ly.tcs > 0 ? ly.sales/ly.tcs : null,
+      bS: b.sales, bT: b.tcs, bA: b.tcs > 0 ? b.sales/b.tcs : null,
     });
   }
 
+  const sortState = STATE.sort.rankings;
+
+  let html = `<div class="filter-row" style="margin-bottom: 14px">
+    <div class="filter-group">
+      <span class="label">Active filters</span>
+      <div class="chip-row">
+        <span class="chip ${STATE.maturity !== 'all' ? 'active' : ''}">Maturity: ${STATE.maturity === 'all' ? 'Όλα' : (STATE.maturity === 'same' ? 'Same' : 'New')}</span>
+        <span class="chip ${STATE.storeType !== 'all' ? 'active' : ''}">Store Type: ${STATE.storeType === 'all' ? 'Όλα' : STATE.storeType}</span>
+        <span class="chip">${arr.length} stores</span>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="label">Sort by metric (κοινό για όλους τους πίνακες)</span>
+      <div class="chip-row" id="rankSortChips">
+        <span class="chip ${sortState.col === 'sales' ? 'active' : ''}" data-rk-col="sales">Sales</span>
+        <span class="chip ${sortState.col === 'tcs' ? 'active' : ''}" data-rk-col="tcs">Trx</span>
+        <span class="chip ${sortState.col === 'avg' ? 'active' : ''}" data-rk-col="avg">Avg Ticket</span>
+        <span class="chip ${sortState.col === 'vsly' ? 'active' : ''}" data-rk-col="vsly">vs LY %</span>
+        <span class="chip ${sortState.col === 'vsbud' ? 'active' : ''}" data-rk-col="vsbud">vs Budget %</span>
+        <span class="chip" id="rankSortDir" style="background: var(--bg-3); border-color: var(--border);">Direction: ${sortState.dir === 'asc' ? '↑ Ascending' : '↓ Descending'}</span>
+      </div>
+    </div>
+  </div>`;
+
   function rankSection(metricKey, label, fmt) {
-    const sorted = [...arr].sort((a,b) => b[metricKey] - a[metricKey]);
-    const max = sorted[0] && sorted[0][metricKey] || 1;
+    const accessors = {
+      sales: r => r.cyS,
+      tcs:   r => r.cyT,
+      avg:   r => r.cyA,
+      vsly:  r => {
+        const k = metricKey === 'cyS' ? 'lyS' : metricKey === 'cyT' ? 'lyT' : 'lyA';
+        const cur = metricKey === 'cyS' ? 'cyS' : metricKey === 'cyT' ? 'cyT' : 'cyA';
+        return r[k] > 0 ? (r[cur] - r[k]) / r[k] : null;
+      },
+      vsbud: r => {
+        const k = metricKey === 'cyS' ? 'bS' : metricKey === 'cyT' ? 'bT' : 'bA';
+        const cur = metricKey === 'cyS' ? 'cyS' : metricKey === 'cyT' ? 'cyT' : 'cyA';
+        return r[k] > 0 ? (r[cur] - r[k]) / r[k] : null;
+      },
+    };
+    // Always sort by the metric of THIS section, not the global; but use direction from state
+    // Actually use sort by global col + direction so chip clicks change all 3 tables consistently
+    const sorted = applySort(arr, sortState, accessors);
+    const max = sorted[0] ? Math.abs(accessors[sortState.col](sorted[0]) || 0) : 1;
+
     let html = `<div class="panel-section">
       <div class="section-title"><span>${label}</span></div>`;
     if (desktop) {
@@ -1704,8 +2366,9 @@ function renderRankings(R) {
         const dB = metricKey === "cyS" ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
                    metricKey === "cyT" ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
                                          (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
-        const w = (r[metricKey]/max*100).toFixed(0);
-        html += `<tr><td>${idx+1}</td><td>${r.short}</td><td>${fmt(r[metricKey])}</td><td>${pctTag(dL)}</td><td>${pctTag(dB)}</td><td style="min-width: 80px"><div class="mini-bar"><div style="width:${w}%"></div></div></td></tr>`;
+        const v = r[metricKey];
+        const w = max > 0 && v != null ? Math.min(100, Math.abs(v)/max*100).toFixed(0) : 0;
+        html += `<tr><td>${idx+1}</td><td>${r.short}</td><td>${v != null ? fmt(v) : '—'}</td><td>${pctTag(dL)}</td><td>${pctTag(dB)}</td><td style="min-width: 80px"><div class="mini-bar"><div style="width:${w}%"></div></div></td></tr>`;
       });
       html += `</tbody></table>`;
     } else {
@@ -1717,9 +2380,10 @@ function renderRankings(R) {
         const dB = metricKey === "cyS" ? (r.bS > 0 ? (r.cyS - r.bS)/r.bS : null) :
                    metricKey === "cyT" ? (r.bT > 0 ? (r.cyT - r.bT)/r.bT : null) :
                                          (r.bA > 0 ? (r.cyA - r.bA)/r.bA : null);
-        const w = (r[metricKey]/max*100).toFixed(0);
+        const v = r[metricKey];
+        const w = max > 0 && v != null ? Math.min(100, Math.abs(v)/max*100).toFixed(0) : 0;
         html += `<div class="card accent">
-          <div class="card-title"><span class="name">${idx+1}. ${r.short}</span><span class="rank">${fmt(r[metricKey])}</span></div>
+          <div class="card-title"><span class="name">${idx+1}. ${r.short}</span><span class="rank">${v != null ? fmt(v) : '—'}</span></div>
           <div class="card-rows">
             <div class="card-row"><span class="lbl">vs LY</span><span class="val">${pctTag(dL)}</span></div>
             <div class="card-row"><span class="lbl">vs Budget</span><span class="val">${pctTag(dB)}</span></div>
@@ -1732,13 +2396,25 @@ function renderRankings(R) {
     return html;
   }
 
-  root.innerHTML =
-    rankSection("cyS", "Net Sales Ranking", fmtEurK) +
-    rankSection("cyT", "Transactions Ranking", fmtNum) +
-    rankSection("cyA", "Avg Ticket Ranking", fmtAvg);
+  html += rankSection("cyS", "Net Sales Ranking", fmtEurK) +
+          rankSection("cyT", "Transactions Ranking", fmtNum) +
+          rankSection("cyA", "Avg Ticket Ranking", fmtAvg);
+
+  root.innerHTML = html;
+
+  // Hook up chips
+  root.querySelectorAll('#rankSortChips .chip[data-rk-col]').forEach(c => {
+    c.addEventListener('click', e => {
+      STATE.sort.rankings.col = e.target.dataset.rkCol;
+      renderRankings(R);
+    });
+  });
+  const dirChip = root.querySelector('#rankSortDir');
+  if (dirChip) dirChip.addEventListener('click', () => {
+    STATE.sort.rankings.dir = STATE.sort.rankings.dir === 'asc' ? 'desc' : 'asc';
+    renderRankings(R);
+  });
 }
-
-
 // =====================================================================
 // DAY-OF-WEEK TAB
 // =====================================================================
@@ -2111,18 +2787,41 @@ function renderStoreDeep(R) {
 }
 
 // =====================================================================
-// HOURLY TAB
+// HOURLY TAB — visually upgraded
 // =====================================================================
+const CHANNEL_COLORS = {
+  'KIOSK':     '#ef4444',
+  'STORE':     '#f97316',
+  'MOBILE':    '#a855f7',
+  'WEB SITE':  '#8b5cf6',
+  'DRIVETHRU': '#22c55e',
+  'E-FOOD GO': '#3b82f6',
+  'WOLT':      '#06b6d4',
+  'BOX':       '#eab308',
+};
+
+const TIME_ZONES = [
+  { range: '05:00–12:00', label: 'Morning',   from: 5,  to: 12, color: '#3b82f6' },
+  { range: '13:00–15:00', label: 'Lunch',     from: 13, to: 15, color: '#ef4444' },
+  { range: '16:00–18:00', label: 'Afternoon', from: 16, to: 18, color: '#f97316' },
+  { range: '19:00–21:00', label: 'Dinner',    from: 19, to: 21, color: '#a855f7' },
+  { range: '22:00–04:00', label: 'Late',      from: 22, to: 4,  color: '#06b6d4' },
+];
+function hourInZone(h, z) {
+  if (z.from <= z.to) return h >= z.from && h <= z.to;
+  return h >= z.from || h <= z.to;  // wraps midnight
+}
+
 function renderHourly(R) {
   const root = document.getElementById('tab-hourly');
   const desktop = isDesktop();
-  
+
   if (!HOURLY) {
     root.innerHTML = `<div class="panel-section">
       <div class="section-title"><span>Hourly Profile</span></div>
-      <p style="color: var(--text-2); padding: 20px; text-align: center;">
+      <p style="color: var(--text-2); padding: 24px; text-align: center; font-size: 13px;">
         Δεν υπάρχουν hourly δεδομένα διαθέσιμα.<br>
-        <span style="font-size: 11px">Στείλε το αρχείο "Sales Analysis by Time and Day" από Targit για να ενεργοποιηθεί αυτό το tab.</span>
+        <span style="font-size: 11px">Στείλε το αρχείο "Sales Analysis by Time and Day" από Targit.</span>
       </p>
     </div>`;
     return;
@@ -2133,13 +2832,7 @@ function renderHourly(R) {
   const cyYear = Math.max(...years);
   const lyYear = years.length > 1 ? years[years.findIndex(y => y === cyYear) - 1] : null;
 
-  let html = "";
-
-  // ---- Section 1: Hour profile chain-wide (hour x year totals) ----
-  // Stack bar / line chart
-  const SVG_W = 700, SVG_H = 280, PAD = {l:55, r:15, t:25, b:30};
-  const innerW = SVG_W - PAD.l - PAD.r, innerH = SVG_H - PAD.t - PAD.b;
-  
+  // ---- Pre-compute key metrics ----
   const cyByHour = hours.map(h => {
     let s = 0;
     for (let si = 0; si < STORES.length; si++) {
@@ -2159,47 +2852,176 @@ function renderHourly(R) {
     return s;
   }) : null;
 
+  const totalCY = cyByHour.reduce((a,b) => a+b, 0);
+  const totalLY = lyByHour ? lyByHour.reduce((a,b) => a+b, 0) : 0;
+
+  // Peak hour
+  let peakIdx = 0, peakV = 0;
+  cyByHour.forEach((v, i) => { if (v > peakV) { peakV = v; peakIdx = i; } });
+  const peakHour = hours[peakIdx];
+  const peakShare = totalCY > 0 ? peakV / totalCY : 0;
+
+  // Channel mix totals
+  const chTotals = new Array(CHANNELS.length).fill(0);
+  hours.forEach(h => {
+    const arr = hourlyByYearChHour[cyYear][h];
+    if (arr) for (let ci = 0; ci < CHANNELS.length; ci++) chTotals[ci] += arr[ci];
+  });
+  const chSum = chTotals.reduce((a,b)=>a+b, 0);
+  const dineinShare = chSum > 0 ? chTotals[CHANNELS.indexOf('KIOSK')] / chSum : 0;
+  const dlvIdx = ['E-FOOD GO', 'WOLT', 'BOX'].map(c => CHANNELS.indexOf(c)).filter(i => i >= 0);
+  const dlvShare = chSum > 0 ? dlvIdx.reduce((a,i) => a + chTotals[i], 0) / chSum : 0;
+
+  // Time zone totals
+  const tzTotals = TIME_ZONES.map(z => ({
+    ...z,
+    sales: hours.filter(h => hourInZone(h, z)).reduce((a, h) => {
+      const idx = hours.indexOf(h);
+      return a + (idx >= 0 ? cyByHour[idx] : 0);
+    }, 0)
+  }));
+  const tzSum = tzTotals.reduce((a,t)=>a+t.sales, 0);
+  const topZone = tzTotals.slice().sort((a,b)=>b.sales-a.sales)[0];
+
+  let html = "";
+
+  // ============================================================
+  // QUICK STATS BANNER
+  // ============================================================
+  html += `<div class="hourly-stats">
+    <div class="hstat peak">
+      <div class="hstat-label">Peak Hour</div>
+      <div class="hstat-value">${String(peakHour).padStart(2,'0')}:00</div>
+      <div class="hstat-sub">${(peakShare*100).toFixed(1).replace('.',',')}% του ημερήσιου · ${fmtEurK(peakV)}</div>
+    </div>
+    <div class="hstat dinein">
+      <div class="hstat-label">Dine-in (KIOSK) Share</div>
+      <div class="hstat-value">${(dineinShare*100).toFixed(1).replace('.',',')}%</div>
+      <div class="hstat-sub">${fmtEurK(chTotals[CHANNELS.indexOf('KIOSK')] || 0)}</div>
+    </div>
+    <div class="hstat delivery">
+      <div class="hstat-label">Delivery Share</div>
+      <div class="hstat-value">${(dlvShare*100).toFixed(1).replace('.',',')}%</div>
+      <div class="hstat-sub">E-FOOD GO + WOLT + BOX</div>
+    </div>
+    <div class="hstat zone">
+      <div class="hstat-label">Top Time Zone</div>
+      <div class="hstat-value">${topZone.label}</div>
+      <div class="hstat-sub">${topZone.range} · ${tzSum > 0 ? (topZone.sales/tzSum*100).toFixed(1).replace('.',',') : 0}%</div>
+    </div>
+  </div>`;
+
+  // ============================================================
+  // SECTION 1 — HOUR PROFILE CHART (CY vs LY line)
+  // ============================================================
+  const SVG_W = desktop ? 1100 : 700;
+  const SVG_H = 280;
+  const PAD = {l: 60, r: 20, t: 30, b: 32};
+  const innerW = SVG_W - PAD.l - PAD.r;
+  const innerH = SVG_H - PAD.t - PAD.b;
+
   const allVals = cyByHour.concat(lyByHour || []);
-  const maxV = Math.max(...allVals, 1) * 1.1;
+  const maxV = Math.max(...allVals, 1) * 1.12;
   const xScale = i => PAD.l + (i / (hours.length - 1 || 1)) * innerW;
   const yScale = v => PAD.t + innerH - (v / maxV) * innerH;
 
-  let svg = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg">`;
-  // Grid
+  let svg = `<svg viewBox="0 0 ${SVG_W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
+  svg += `<defs><linearGradient id="cyGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef4444" stop-opacity="0.25"/><stop offset="100%" stop-color="#ef4444" stop-opacity="0"/></linearGradient></defs>`;
   for (let i = 0; i <= 4; i++) {
     const y = PAD.t + innerH * i / 4;
-    const v = maxV - (maxV) * i / 4;
+    const v = maxV - maxV * i / 4;
     svg += `<line x1="${PAD.l}" y1="${y}" x2="${SVG_W - PAD.r}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
-    svg += `<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${fmtEurK(v)}</text>`;
+    svg += `<text x="${PAD.l-8}" y="${y+4}" text-anchor="end" fill="var(--text-2)" font-size="10" font-family="var(--mono)">${fmtEurK(v)}</text>`;
   }
-  // X-axis labels
   for (let i = 0; i < hours.length; i++) {
     if (i % 2 === 0 || hours.length <= 12) {
       const x = xScale(i);
-      svg += `<text x="${x}" y="${SVG_H-10}" text-anchor="middle" fill="var(--text-2)" font-size="9" font-family="var(--mono)">${String(hours[i]).padStart(2,'0')}h</text>`;
+      svg += `<text x="${x}" y="${SVG_H-12}" text-anchor="middle" fill="var(--text-2)" font-size="10" font-family="var(--mono)">${String(hours[i]).padStart(2,'0')}h</text>`;
     }
   }
-  // LY line (if exists)
+  // CY area fill
+  let areaPts = `${xScale(0)},${PAD.t + innerH}`;
+  cyByHour.forEach((v, i) => { areaPts += ` ${xScale(i)},${yScale(v)}`; });
+  areaPts += ` ${xScale(hours.length-1)},${PAD.t + innerH}`;
+  svg += `<polygon fill="url(#cyGrad)" points="${areaPts}" />`;
+  // LY line
   if (lyByHour) {
     const ptsLy = lyByHour.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
-    svg += `<polyline fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="4 3" points="${ptsLy}" />`;
+    svg += `<polyline fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="5 4" points="${ptsLy}" />`;
   }
   // CY line
   const ptsCy = cyByHour.map((v, i) => `${xScale(i)},${yScale(v)}`).join(' ');
-  svg += `<polyline fill="none" stroke="#ef4444" stroke-width="2.2" points="${ptsCy}" />`;
+  svg += `<polyline fill="none" stroke="#ef4444" stroke-width="2.4" points="${ptsCy}" />`;
+  // CY dots
+  cyByHour.forEach((v, i) => {
+    if (i === peakIdx) {
+      svg += `<circle cx="${xScale(i)}" cy="${yScale(v)}" r="5" fill="#ef4444" stroke="white" stroke-width="2"/>`;
+      svg += `<text x="${xScale(i)}" y="${yScale(v) - 12}" text-anchor="middle" fill="var(--text-0)" font-size="11" font-weight="700">peak</text>`;
+    }
+  });
   // Legend
-  svg += `<rect x="${PAD.l+10}" y="${PAD.t+5}" width="14" height="3" fill="#ef4444"/><text x="${PAD.l+30}" y="${PAD.t+9}" fill="var(--text-1)" font-size="11">CY ${cyYear}</text>`;
+  svg += `<g transform="translate(${PAD.l + 14}, ${PAD.t + 6})">`;
+  svg += `<rect x="0" y="0" width="14" height="3" fill="#ef4444"/><text x="20" y="4" fill="var(--text-1)" font-size="11">CY ${cyYear}</text>`;
   if (lyByHour) {
-    svg += `<rect x="${PAD.l+90}" y="${PAD.t+5}" width="14" height="3" fill="#f59e0b" stroke-dasharray="4 3"/><text x="${PAD.l+110}" y="${PAD.t+9}" fill="var(--text-1)" font-size="11">LY ${lyYear}</text>`;
+    svg += `<rect x="80" y="0" width="14" height="3" fill="#f59e0b"/><text x="100" y="4" fill="var(--text-1)" font-size="11">LY ${lyYear}</text>`;
   }
-  svg += `</svg>`;
+  svg += `</g></svg>`;
 
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Hour Profile · Chain Total</span><span class="meta">Sales by hour, summed across all selected stores</span></div>
-    <div class="chart-wrap"><div class="chart-title">Total sales per hour (€)</div>${svg}</div>
-  </div>`;
+  html += `<div class="h-section-head">
+    <span class="num">01</span>
+    <span class="title">Hour Profile</span>
+    <span class="meta">CY ${cyYear} ${lyYear ? '· vs LY ' + lyYear : ''}</span>
+  </div>
+  <div class="chart-card">${svg}</div>`;
 
-  // ---- Section 2: Heatmap Store × Hour for current year ----
+  // ============================================================
+  // SECTION 2 — TIME ZONES BREAKDOWN
+  // ============================================================
+  html += `<div class="h-section-head">
+    <span class="num">02</span>
+    <span class="title">Time Zones</span>
+    <span class="meta">5 ζώνες ωραρίου</span>
+  </div>
+  <div class="tz-grid">`;
+  tzTotals.forEach(t => {
+    const share = tzSum > 0 ? t.sales / tzSum : 0;
+    html += `<div class="tz-card" style="--tz-color: ${t.color}">
+      <div class="tz-range">${t.range}</div>
+      <div class="tz-label">${t.label}</div>
+      <div class="tz-value">${fmtEurK(t.sales)}</div>
+      <div class="tz-share">${(share*100).toFixed(1).replace('.',',')}% του συνόλου</div>
+      <div class="tz-bar"><div style="width:${(share*100).toFixed(1)}%"></div></div>
+    </div>`;
+  });
+  html += `</div>`;
+
+  // ============================================================
+  // SECTION 3 — HOUR vs LY DELTAS
+  // ============================================================
+  if (lyByHour) {
+    html += `<div class="h-section-head">
+      <span class="num">03</span>
+      <span class="title">Hour vs LY</span>
+      <span class="meta">% μεταβολή ανά ώρα</span>
+    </div>
+    <div class="hour-delta-grid">`;
+    hours.forEach((h, i) => {
+      const cy = cyByHour[i];
+      const ly = lyByHour[i];
+      const d = ly > 0 ? (cy - ly) / ly : null;
+      const cls = d == null ? 'flat' : (d > 0.005 ? 'pos' : (d < -0.005 ? 'neg' : 'flat'));
+      const txt = d == null ? '—' : (d > 0 ? '+' : '') + (d*100).toFixed(0) + '%';
+      html += `<div class="hour-delta ${cls}" title="${String(h).padStart(2,'0')}:00 · CY ${fmtEur(cy)} / LY ${fmtEur(ly)}">
+        <div class="h-time">${String(h).padStart(2,'0')}h</div>
+        <div class="h-pct">${txt}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ============================================================
+  // SECTION 4 — STORE × HOUR HEATMAP
+  // ============================================================
   const stores = [];
   for (let si = 0; si < STORES.length; si++) {
     if (R.storeFilter && !R.storeFilter.has(si)) continue;
@@ -2212,7 +3034,6 @@ function renderHourly(R) {
   }
   stores.sort((a, b) => b.total - a.total);
 
-  // Find max value across all cells (for color scaling)
   let maxCell = 0;
   for (const s of stores) {
     for (const h of hours) {
@@ -2221,7 +3042,7 @@ function renderHourly(R) {
     }
   }
 
-  let heatHTML = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 110px repeat(${hours.length}, minmax(38px, 1fr))">`;
+  let heatHTML = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 130px repeat(${hours.length}, minmax(40px, 1fr))">`;
   heatHTML += `<div class="heat-header" style="text-align:left">STORE</div>`;
   for (const h of hours) {
     heatHTML += `<div class="heat-header">${String(h).padStart(2,'0')}h</div>`;
@@ -2231,25 +3052,26 @@ function renderHourly(R) {
     for (const h of hours) {
       const cell = hourlyByYearStoreHour[cyYear][s.si][h];
       const v = cell ? cell.sales : 0;
-      const intensity = maxCell > 0 ? Math.min(0.9, v / maxCell) : 0;
+      const intensity = maxCell > 0 ? Math.min(0.92, v / maxCell) : 0;
       let bg = 'var(--bg-2)';
-      let col = v === 0 ? 'var(--text-2)' : 'var(--text-0)';
-      if (v > 0) {
-        bg = `rgba(228,0,43,${intensity.toFixed(2)})`;
-      }
+      let col = v === 0 ? 'var(--text-2)' : (intensity > 0.5 ? 'white' : 'var(--text-0)');
+      if (v > 0) bg = `rgba(228,0,43,${intensity.toFixed(2)})`;
       const txt = v === 0 ? '·' : (v >= 1000 ? Math.round(v/1000) + 'K' : Math.round(v));
       heatHTML += `<div class="heat-cell" style="background:${bg};color:${col}" title="${STORE_META[STORES[s.si]].short} · ${String(h).padStart(2,'0')}:00 · ${fmtEur(v)}">${txt}</div>`;
     }
   }
   heatHTML += `</div></div>`;
 
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Heatmap · Store × Hour (${cyYear})</span><span class="meta">σύρε δεξιά αν χρειαστεί · Total sales per hour per store</span></div>
-    ${heatHTML}
-  </div>`;
+  html += `<div class="h-section-head">
+    <span class="num">04</span>
+    <span class="title">Heatmap · Store × Hour</span>
+    <span class="meta">${cyYear} · ${stores.length} stores · σύρε δεξιά</span>
+  </div>
+  ${heatHTML}`;
 
-  // ---- Section 3: DOW × Hour heatmap (chain-wide) ----
-  const dowHourMax = {};
+  // ============================================================
+  // SECTION 5 — DOW × HOUR PATTERN HEATMAP
+  // ============================================================
   let maxDH = 0;
   for (let dow = 0; dow < 7; dow++) {
     for (const h of hours) {
@@ -2257,7 +3079,7 @@ function renderHourly(R) {
       if (v && v > maxDH) maxDH = v;
     }
   }
-  let dowHtml = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 110px repeat(${hours.length}, minmax(38px, 1fr))">`;
+  let dowHtml = `<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 130px repeat(${hours.length}, minmax(40px, 1fr))">`;
   dowHtml += `<div class="heat-header" style="text-align:left">DAY</div>`;
   for (const h of hours) {
     dowHtml += `<div class="heat-header">${String(h).padStart(2,'0')}h</div>`;
@@ -2266,71 +3088,77 @@ function renderHourly(R) {
     dowHtml += `<div class="heat-label">${dowName(dow)}</div>`;
     for (const h of hours) {
       const v = (hourlyByYearDowHour[cyYear] && hourlyByYearDowHour[cyYear][dow] && hourlyByYearDowHour[cyYear][dow][h]) || 0;
-      const intensity = maxDH > 0 ? Math.min(0.9, v / maxDH) : 0;
+      const intensity = maxDH > 0 ? Math.min(0.92, v / maxDH) : 0;
       let bg = v > 0 ? `rgba(228,0,43,${intensity.toFixed(2)})` : 'var(--bg-2)';
-      const col = v === 0 ? 'var(--text-2)' : 'var(--text-0)';
+      const col = v === 0 ? 'var(--text-2)' : (intensity > 0.5 ? 'white' : 'var(--text-0)');
       const txt = v === 0 ? '·' : (v >= 1000 ? Math.round(v/1000) + 'K' : Math.round(v));
       dowHtml += `<div class="heat-cell" style="background:${bg};color:${col}" title="${dowName(dow)} · ${String(h).padStart(2,'0')}:00 · ${fmtEur(v)}">${txt}</div>`;
     }
   }
   dowHtml += `</div></div>`;
-  html += `<div class="panel-section">
-    <div class="section-title"><span>Pattern · Day-of-Week × Hour (${cyYear})</span><span class="meta">Όλη η αλυσίδα · ποια ώρα δουλεύεις πιο πολύ ανά ημέρα</span></div>
-    ${dowHtml}
+  html += `<div class="h-section-head">
+    <span class="num">05</span>
+    <span class="title">Pattern · Day-of-Week × Hour</span>
+    <span class="meta">${cyYear} · όλη η αλυσίδα</span>
+  </div>
+  ${dowHtml}`;
+
+  // ============================================================
+  // SECTION 6 — CHANNEL MIX PER HOUR (stacked bar style)
+  // ============================================================
+  html += `<div class="h-section-head">
+    <span class="num">06</span>
+    <span class="title">Channel Mix per Hour</span>
+    <span class="meta">${cyYear} · stacked breakdown</span>
+  </div>
+  <div class="chart-card">
+    <div class="stack-rows">`;
+
+  // Find max hour total for relative bar widths
+  let maxHourTotal = 0;
+  hours.forEach(h => {
+    const arr = hourlyByYearChHour[cyYear][h];
+    if (arr) {
+      let t = 0; for (const v of arr) t += v;
+      if (t > maxHourTotal) maxHourTotal = t;
+    }
+  });
+
+  hours.forEach(h => {
+    const arr = hourlyByYearChHour[cyYear][h];
+    if (!arr) return;
+    let total = 0;
+    for (const v of arr) total += v;
+    if (total === 0) return;
+    const widthPct = maxHourTotal > 0 ? (total / maxHourTotal) * 100 : 0;
+    html += `<div class="stack-row">
+      <div class="stack-label">${String(h).padStart(2,'0')}h</div>
+      <div class="stack-bar" style="width: ${widthPct.toFixed(1)}%; min-width: 2px;">`;
+    for (let ci = 0; ci < CHANNELS.length; ci++) {
+      const v = arr[ci];
+      if (v === 0) continue;
+      const segPct = total > 0 ? (v / total) * 100 : 0;
+      const ch = CHANNELS[ci];
+      const color = CHANNEL_COLORS[ch] || '#6b7689';
+      html += `<div class="stack-seg" style="width: ${segPct.toFixed(2)}%; background: ${color};" title="${ch} · ${(segPct).toFixed(1).replace('.',',')}% · ${fmtEurK(v)}"></div>`;
+    }
+    html += `</div>
+      <div class="stack-total">${fmtEurK(total)}</div>
+    </div>`;
+  });
+
+  html += `</div>
+    <div class="ch-legend">`;
+  for (const ch of CHANNELS) {
+    const color = CHANNEL_COLORS[ch] || '#6b7689';
+    html += `<div class="item"><span class="swatch" style="background:${color}"></span>${ch}</div>`;
+  }
+  html += `</div>
   </div>`;
 
-  // ---- Section 4: Channel × Hour mix (chain-wide) ----
-  // For each hour, what % of sales is each channel?
-  const ch = CHANNELS;
-  if (desktop) {
-    let chHtml = `<table class="desktop-table"><thead><tr><th>Hour</th>`;
-    for (const c of ch) chHtml += `<th>${c}</th>`;
-    chHtml += `<th>Total</th></tr></thead><tbody>`;
-    for (const h of hours) {
-      let total = 0;
-      const arr = hourlyByYearChHour[cyYear][h];
-      for (const v of arr) total += v;
-      if (total === 0) continue;
-      chHtml += `<tr><td>${String(h).padStart(2,'0')}:00</td>`;
-      for (let ci = 0; ci < ch.length; ci++) {
-        const v = arr[ci];
-        const mix = total > 0 ? v / total : 0;
-        chHtml += `<td>${(mix*100).toFixed(1).replace('.', ',')}%<br><span style="opacity:0.5; font-size:10px">${fmtEurK(v)}</span></td>`;
-      }
-      chHtml += `<td>${fmtEurK(total)}</td></tr>`;
-    }
-    chHtml += `</tbody></table>`;
-    html += `<div class="panel-section">
-      <div class="section-title"><span>Channel Mix per Hour (${cyYear})</span><span class="meta">Πώς αλλάζει το mix στις διαφορετικές ώρες</span></div>
-      ${chHtml}
-    </div>`;
-  } else {
-    // Mobile: cards per peak hour
-    let chHtml = `<div class="cards">`;
-    for (const h of hours) {
-      let total = 0;
-      const arr = hourlyByYearChHour[cyYear][h];
-      for (const v of arr) total += v;
-      if (total === 0) continue;
-      chHtml += `<div class="card accent">
-        <div class="card-title"><span class="name">${String(h).padStart(2,'0')}:00</span><span class="rank">${fmtEurK(total)}</span></div>
-        <div class="card-rows">`;
-      const top3 = arr.map((v, i) => ({v, ch: ch[i]})).sort((a,b)=>b.v-a.v).slice(0, 4);
-      for (const t of top3) {
-        if (t.v === 0) continue;
-        const mix = total > 0 ? t.v / total : 0;
-        chHtml += `<div class="card-row"><span class="lbl">${t.ch}</span><span class="val">${(mix*100).toFixed(1).replace('.', ',')}%</span></div>`;
-      }
-      chHtml += `</div></div>`;
-    }
-    chHtml += `</div>`;
-    html += `<div class="panel-section">
-      <div class="section-title"><span>Channel Mix per Hour (${cyYear})</span></div>
-      ${chHtml}
-    </div>`;
-  }
-
-  // ---- Section 5: Peak hours per store ----
+  // ============================================================
+  // SECTION 7 — PEAK / QUIET HOURS PER STORE
+  // ============================================================
   if (desktop) {
     let peakHtml = `<table class="desktop-table"><thead><tr>
       <th>Store</th><th>Peak Hour</th><th>Peak Sales</th><th>% of Day</th><th>Quiet Hour</th><th>Total</th>
@@ -2355,10 +3183,12 @@ function renderHourly(R) {
       </tr>`;
     }
     peakHtml += `</tbody></table>`;
-    html += `<div class="panel-section">
-      <div class="section-title"><span>Peak / Quiet Hours per Store (${cyYear})</span><span class="meta">Πότε ξεσπάει η ζήτηση ανά κατάστημα</span></div>
-      ${peakHtml}
-    </div>`;
+    html += `<div class="h-section-head">
+      <span class="num">07</span>
+      <span class="title">Peak / Quiet Hours per Store</span>
+      <span class="meta">${cyYear}</span>
+    </div>
+    ${peakHtml}`;
   } else {
     let peakHtml = `<div class="cards">`;
     for (const s of stores) {
@@ -2379,10 +3209,12 @@ function renderHourly(R) {
         </div></div>`;
     }
     peakHtml += `</div>`;
-    html += `<div class="panel-section">
-      <div class="section-title"><span>Peak Hours per Store (${cyYear})</span></div>
-      ${peakHtml}
-    </div>`;
+    html += `<div class="h-section-head">
+      <span class="num">07</span>
+      <span class="title">Peak Hours per Store</span>
+      <span class="meta">${cyYear}</span>
+    </div>
+    ${peakHtml}`;
   }
 
   root.innerHTML = html;
