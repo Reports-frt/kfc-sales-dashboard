@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>KFC Greece — Sales Command Centre</title>
+
+<!-- PWA: Manifest, theme colors, icons -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e4002b">
+<meta name="background-color" content="#0a0e14">
+
+<!-- iOS Safari support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KFC Sales">
+<link rel="apple-touch-icon" href="icon-180.png">
+
+<!-- Standard favicon -->
+<link rel="icon" type="image/png" href="favicon.png">
+
+<!-- Description for "Add to Home Screen" -->
+<meta name="description" content="KFC Greece Sales Command Centre — Real-time sales analytics dashboard">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
@@ -905,6 +922,33 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
 </div>
 
 <script>
+// =====================================================================
+// SERVICE WORKER REGISTRATION (PWA)
+// =====================================================================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => {
+        // Service worker registered successfully
+        // Listen for updates
+        reg.addEventListener('updatefound', () => {
+          const newSW = reg.installing;
+          newSW.addEventListener('statechange', () => {
+            if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available — silent reload would be aggressive,
+              // so just log it. Next page load will pick up the new version.
+              console.log('[PWA] New version available; will activate on next load');
+            }
+          });
+        });
+      })
+      .catch(err => {
+        // Service worker registration failed; not fatal, app still works
+        console.warn('[PWA] Service worker registration failed:', err);
+      });
+  });
+}
+
 // =====================================================================
 // PASSWORD GATE
 // =====================================================================
