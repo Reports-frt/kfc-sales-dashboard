@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>KFC Greece — Food Cost Hub</title>
+
+<!-- PWA -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#e4002b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KFC Food">
+<link rel="apple-touch-icon" href="../icon-180.png">
+<link rel="icon" type="image/png" href="../favicon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg-0: #0a0e14;
+  --bg-1: #11161e;
+  --bg-2: #1a212c;
+  --bg-3: #232b38;
+  --border: #2d3748;
+  --border-soft: #1f2733;
+  --text-0: #e8edf5;
+  --text-1: #aab4c5;
+  --text-2: #6b7689;
+  --accent: #ef4444;
+  --accent-2: #f97316;
+  --good: #22c55e;
+  --good-soft: rgba(34,197,94,0.12);
+  --bad: #ef4444;
+  --bad-soft: rgba(239,68,68,0.12);
+  --warn: #f59e0b;
+  --warn-soft: rgba(245,158,11,0.12);
+  --neutral: #64748b;
+  --kfc: #e4002b;
+  --mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  --sans: 'Inter Tight', -apple-system, system-ui, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg-0);
+  color: var(--text-0);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* =====================================================================
+   PASSWORD GATE
+   ===================================================================== */
+#pwScreen {
+  position: fixed; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-0);
+  z-index: 1000;
+}
+.pw-box {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 32px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.6);
+}
+.pw-box h1 {
+  font-size: 24px;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+  color: var(--kfc);
+}
+.pw-box .sub {
+  font-size: 11px;
+  color: var(--text-2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.pw-box input {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--bg-0);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-0);
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-align: center;
+  outline: none;
+}
+.pw-box input:focus { border-color: var(--kfc); }
+.pw-box button {
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px;
+  background: var(--kfc);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.pw-box button:hover { background: #c40026; }
+.pw-error {
+  color: var(--bad);
+  font-size: 11px;
+  margin-top: 8px;
+  min-height: 14px;
+  font-family: var(--mono);
+}
+
+/* =====================================================================
+   APP LAYOUT
+   ===================================================================== */
+.app {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 14px 20px 60px;
+}
+
+@media (min-width: 1024px) {
+  .app { padding: 18px 28px 80px; }
+}
+
+/* Top bar — branding + cross-nav */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0 16px 0;
+  border-bottom: 1px solid var(--border-soft);
+  margin-bottom: 18px;
+}
+.topbar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+}
+.topbar .brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px; height: 34px;
+  background: var(--kfc);
+  border-radius: 7px;
+  color: white;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+.topbar .brand-text { line-height: 1.1; }
+.topbar .brand-text .sub {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.hub-switch {
+  margin-left: auto;
+  display: inline-flex;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+.hub-switch a {
+  padding: 6px 12px;
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--text-1);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.15s;
+}
+.hub-switch a:hover { color: var(--text-0); background: var(--bg-3); }
+.hub-switch a.active {
+  background: var(--kfc);
+  color: white;
+}
+@media (max-width: 600px) {
+  .topbar .brand-text .sub { display: none; }
+  .hub-switch a { padding: 6px 10px; font-size: 11px; }
+}
+
+/* Header KPI strip */
+.header-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 30px;
+  padding: 12px 0;
+  margin-bottom: 16px;
+}
+.header-info .info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.header-info .label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.header-info .value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.2px;
+}
+
+/* Filter row */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 22px;
+  padding: 10px 14px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.filter-group .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.btn-group {
+  display: inline-flex;
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+.btn-group button {
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-1);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn-group button:hover { color: var(--text-0); background: var(--bg-3); }
+.btn-group button.active {
+  background: var(--kfc);
+  color: white;
+  box-shadow: 0 1px 4px rgba(228,0,43,0.3);
+}
+
+select.period-select, select.store-select {
+  padding: 6px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--text-0);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+select.period-select:focus, select.store-select:focus { border-color: var(--kfc); }
+
+/* KPI cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+@media (min-width: 768px) {
+  .kpi-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+}
+@media (min-width: 1280px) {
+  .kpi-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+.kpi {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 14px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi.theoretical { border-left-color: #3b82f6; }
+.kpi.actual      { border-left-color: var(--accent); }
+.kpi.variance.good    { border-left-color: var(--good); }
+.kpi.variance.warn    { border-left-color: var(--warn); }
+.kpi.variance.bad     { border-left-color: var(--bad); }
+.kpi.waste       { border-left-color: #a855f7; }
+.kpi.fc-pct      { border-left-color: var(--accent-2); }
+
+.kpi .label {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--text-2);
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kpi .value {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.kpi .sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-1);
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tabs .tab {
+  padding: 11px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-2);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tabs .tab:hover { color: var(--text-0); }
+.tabs .tab.active {
+  color: var(--text-0);
+  border-bottom-color: var(--kfc);
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* Section heads */
+.section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 8px 0 14px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.section-title span:first-child {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+.section-title .meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  margin-left: auto;
+}
+
+.panel-section { margin-bottom: 28px; }
+
+/* Tables */
+.dt-wrap {
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.dt {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: max-content;
+}
+.dt thead th {
+  background: var(--bg-2);
+  color: var(--text-1);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.dt thead th:first-child,
+.dt tbody td:first-child { text-align: left; }
+.dt thead th.sortable { cursor: pointer; user-select: none; }
+.dt thead th.sortable:hover { color: var(--text-0); }
+.dt tbody td {
+  padding: 9px 12px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--border-soft);
+  white-space: nowrap;
+}
+.dt tbody tr:hover td { background: var(--bg-2); }
+.dt tbody tr.row-grand td {
+  background: var(--bg-3);
+  font-weight: 700;
+  border-bottom: 2px solid var(--border);
+}
+.dt .pct-pos { color: var(--good); font-weight: 600; }
+.dt .pct-neg { color: var(--bad); font-weight: 600; }
+.dt .pct-flat { color: var(--text-2); }
+.dt .var-good {
+  display: inline-block;
+  padding: 2px 7px;
+  background: var(--good-soft);
+  color: var(--good);
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+.dt .var-warn {
+  display: inline-block;
+  padding: 2px 7px;
+  background: var(--warn-soft);
+  color: var(--warn);
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+.dt .var-bad {
+  display: inline-block;
+  padding: 2px 7px;
+  background: var(--bad-soft);
+  color: var(--bad);
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
+/* Mobile cards */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 11px 13px;
+}
+.card.good  { border-left-color: var(--good); }
+.card.warn  { border-left-color: var(--warn); }
+.card.bad   { border-left-color: var(--bad); }
+.card.grand { background: var(--bg-3); border-left-color: var(--text-0); }
+.card .card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 7px;
+}
+.card .name {
+  font-weight: 700;
+  font-size: 13px;
+}
+.card .rank {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-1);
+}
+.card .card-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.card .card-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+.card .lbl { color: var(--text-2); font-family: var(--mono); letter-spacing: 0.4px; }
+.card .val {
+  color: var(--text-0);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Trend chart */
+.chart-card {
+  background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 14px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (min-width: 1024px) {
+  .chart-card { padding: 18px 20px; }
+}
+.chart-card svg { display: block; min-width: 100%; height: auto; max-width: 100%; }
+
+/* Heatmap */
+.heatmap-wrap {
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.heatmap {
+  display: grid;
+  gap: 1px;
+  background: var(--border-soft);
+  min-width: max-content;
+}
+.heat-cell {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: right;
+  background: var(--bg-2);
+  cursor: default;
+}
+.heat-label {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--text-1);
+  background: var(--bg-3);
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  white-space: nowrap;
+}
+.heat-header {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-2);
+  letter-spacing: 0.5px;
+  padding: 7px 4px;
+  text-align: center;
+  background: var(--bg-3);
+  font-weight: 600;
+}
+
+/* Loading state */
+#loadingOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-0);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+#loadingOverlay .msg {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-1);
+  letter-spacing: 1px;
+}
+#loadingOverlay .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--kfc);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Highlight chips for active filters */
+.chip-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-family: var(--mono);
+  color: var(--text-1);
+  letter-spacing: 0.3px;
+}
+.chip.active {
+  background: rgba(228,0,43,0.15);
+  border-color: var(--kfc);
+  color: #ffb3b8;
+}
+
+/* Insight banner */
+.insight {
+  background: linear-gradient(135deg, rgba(34,197,94,0.05) 0%, rgba(34,197,94,0.02) 100%);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-left: 3px solid var(--good);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.insight.warn {
+  background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(245,158,11,0.02) 100%);
+  border-color: rgba(245,158,11,0.2);
+  border-left-color: var(--warn);
+}
+.insight.bad {
+  background: linear-gradient(135deg, rgba(239,68,68,0.05) 0%, rgba(239,68,68,0.02) 100%);
+  border-color: rgba(239,68,68,0.2);
+  border-left-color: var(--bad);
+}
+.insight .ins-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  color: var(--text-2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.insight .ins-text {
+  font-size: 13px;
+  color: var(--text-0);
+  line-height: 1.5;
+}
+.insight strong { color: var(--text-0); font-weight: 700; }
+
+/* Mini bar */
+.mini-bar {
+  height: 5px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mini-bar > div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-2), var(--kfc));
+  transition: width 0.3s;
+}
+
+/* No-data placeholder */
+.no-data {
+  padding: 30px 20px;
+  text-align: center;
+  color: var(--text-2);
+  font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<!-- Password Gate -->
+<div id="pwScreen">
+  <div class="pw-box">
+    <h1>KFC</h1>
+    <div class="sub">Food Cost Hub</div>
+    <input id="pwInput" type="password" autocomplete="off" placeholder="••••••••" />
+    <button id="pwSubmit">Είσοδος</button>
+    <div id="pwError" class="pw-error"></div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <div class="msg" id="loadingMsg">Φόρτωση δεδομένων…</div>
+</div>
+
+<!-- App -->
+<div class="app" id="appRoot" style="display:none">
+
+  <!-- Top bar with branding + hub switch -->
+  <div class="topbar">
+    <div class="brand">
+      <span class="brand-mark">KFC</span>
+      <span class="brand-text">
+        Food Cost Hub
+        <span class="sub">KFC GREECE — COST INTELLIGENCE</span>
+      </span>
+    </div>
+    <div class="hub-switch">
+      <a href="../index.html">Sales</a>
+      <a href="./" class="active">Food Cost</a>
+    </div>
+  </div>
+
+  <!-- Header info -->
+  <div class="header-info">
+    <div class="info-item">
+      <span class="label">Latest Period</span>
+      <span class="value" id="latestPeriod">—</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Periods Covered</span>
+      <span class="value" id="periodsCount">—</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Stores</span>
+      <span class="value" id="storesCount">—</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Categories</span>
+      <span class="value" id="catsCount">—</span>
+    </div>
+  </div>
+
+  <!-- Filter row -->
+  <div class="filter-row">
+    <div class="filter-group">
+      <span class="label">Period</span>
+      <select id="periodSelect" class="period-select"></select>
+    </div>
+    <div class="filter-group">
+      <span class="label">Cost View</span>
+      <div class="btn-group" id="viewBtns">
+        <button class="active" data-view="pure_food">Pure Food</button>
+        <button data-view="total">Total Cost</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="label">Store Filter</span>
+      <select id="storeSelect" class="store-select">
+        <option value="ALL">Όλα τα stores</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- KPI banner -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="variance">Variance Analysis</button>
+    <button class="tab" data-tab="categories">Categories</button>
+    <button class="tab" data-tab="waste">ΦΥΡΕΣ Detail</button>
+    <button class="tab" data-tab="trend">Trend</button>
+  </div>
+
+  <div class="tab-content active" id="tab-overview"></div>
+  <div class="tab-content" id="tab-variance"></div>
+  <div class="tab-content" id="tab-categories"></div>
+  <div class="tab-content" id="tab-waste"></div>
+  <div class="tab-content" id="tab-trend"></div>
+
+</div>
+
+<script>
+// =====================================================================
+// PASSWORD GATE (same hash as sales)
+// =====================================================================
+const __PW_HASH__ = "901a59ce290f1a8ac51ac15eff692276dd83bf6bb39155af3fbc204086fd041f";
+
+async function sha256(text) {
+  const buf = new TextEncoder().encode(text);
+  const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hashBuf))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+(function checkSession() {
+  const ok = sessionStorage.getItem('kfc_auth') === '1';
+  if (ok) {
+    document.getElementById('pwScreen').style.display = 'none';
+    bootApp();
+  }
+})();
+
+document.getElementById('pwSubmit').addEventListener('click', async () => {
+  const v = document.getElementById('pwInput').value;
+  const h = await sha256(v);
+  if (h === __PW_HASH__) {
+    sessionStorage.setItem('kfc_auth', '1');
+    document.getElementById('pwScreen').style.display = 'none';
+    bootApp();
+  } else {
+    document.getElementById('pwError').textContent = 'Λάθος κωδικός';
+  }
+});
+document.getElementById('pwInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('pwSubmit').click();
+});
+
+// =====================================================================
+// FORMATTERS
+// =====================================================================
+function fmtEur(v) {
+  if (v == null || isNaN(v)) return '—';
+  return '€' + Math.round(v).toLocaleString('el-GR');
+}
+function fmtEurK(v) {
+  if (v == null || isNaN(v)) return '—';
+  const abs = Math.abs(v);
+  const sign = v < 0 ? '-' : '';
+  if (abs >= 1000000) return sign + '€' + (abs/1000000).toFixed(2).replace('.', ',') + 'M';
+  if (abs >= 1000)    return sign + '€' + (abs/1000).toFixed(1).replace('.', ',') + 'K';
+  return sign + '€' + Math.round(abs);
+}
+function fmtPct(v, digits = 1) {
+  if (v == null || isNaN(v)) return '—';
+  return (v >= 0 ? '+' : '') + v.toFixed(digits).replace('.', ',') + '%';
+}
+function pctTag(v) {
+  if (v == null || isNaN(v)) return '<span class="pct-flat">—</span>';
+  const cls = v > 0.001 ? 'pct-pos' : (v < -0.001 ? 'pct-neg' : 'pct-flat');
+  const sign = v > 0 ? '+' : '';
+  return `<span class="${cls}">${sign}${(v*100).toFixed(1).replace('.', ',')}%</span>`;
+}
+function varTag(absVal, totalVal) {
+  if (totalVal == null || totalVal === 0 || isNaN(totalVal)) return '<span class="var-warn">—</span>';
+  const pct = (absVal / totalVal) * 100;
+  const cls = pct < 3 ? 'var-good' : (pct < 7 ? 'var-warn' : 'var-bad');
+  return `<span class="${cls}">${pct >= 0 ? '+' : ''}${pct.toFixed(1).replace('.', ',')}%</span>`;
+}
+function varClass(pct) {
+  if (pct < 3) return 'good';
+  if (pct < 7) return 'warn';
+  return 'bad';
+}
+function isDesktop() { return window.innerWidth >= 1024; }
+function periodLabel(year, month) {
+  const months = ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιούν','Ιούλ','Αύγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  return months[month-1] + ' ' + year;
+}
+
+// =====================================================================
+// APP STATE
+// =====================================================================
+const STATE = {
+  view: 'pure_food',     // 'pure_food' | 'total'
+  period: null,           // 'YYYY-MM'
+  storeFilter: 'ALL',     // 'ALL' or specific store name
+  activeTab: 'overview',
+};
+
+let DATA = null;
+
+// =====================================================================
+// BOOT
+// =====================================================================
+async function bootApp() {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  try {
+    const resp = await fetch('food_data.json');
+    DATA = await resp.json();
+  } catch (err) {
+    document.getElementById('loadingMsg').textContent = 'Σφάλμα φόρτωσης: ' + err.message;
+    return;
+  }
+
+  // Init defaults
+  STATE.period = DATA.meta.latest_period;
+
+  // Populate UI
+  initHeader();
+  initFilters();
+  initTabs();
+  render();
+
+  document.getElementById('loadingOverlay').style.display = 'none';
+  document.getElementById('appRoot').style.display = '';
+}
+
+function initHeader() {
+  document.getElementById('latestPeriod').textContent = periodLabel(
+    parseInt(DATA.meta.latest_period.slice(0,4)),
+    parseInt(DATA.meta.latest_period.slice(5,7))
+  );
+  document.getElementById('periodsCount').textContent = DATA.meta.periods.length;
+  document.getElementById('storesCount').textContent = DATA.meta.kfc_stores.length;
+  document.getElementById('catsCount').textContent = DATA.meta.categories.length;
+}
+
+function initFilters() {
+  // Period dropdown (descending order — most recent first)
+  const sel = document.getElementById('periodSelect');
+  const periodsDesc = DATA.meta.periods.slice().reverse();
+  for (const p of periodsDesc) {
+    const opt = document.createElement('option');
+    opt.value = p;
+    const y = parseInt(p.slice(0,4));
+    const m = parseInt(p.slice(5,7));
+    opt.textContent = periodLabel(y, m);
+    sel.appendChild(opt);
+  }
+  sel.value = STATE.period;
+  sel.addEventListener('change', e => {
+    STATE.period = e.target.value;
+    render();
+  });
+
+  // Store select
+  const ssel = document.getElementById('storeSelect');
+  const stores = DATA.meta.kfc_stores.slice().sort();
+  for (const s of stores) {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    ssel.appendChild(opt);
+  }
+  ssel.addEventListener('change', e => {
+    STATE.storeFilter = e.target.value;
+    render();
+  });
+
+  // View toggle
+  document.querySelectorAll('#viewBtns button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      STATE.view = btn.dataset.view;
+      document.querySelectorAll('#viewBtns button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+}
+
+function initTabs() {
+  document.querySelectorAll('.tabs .tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      STATE.activeTab = btn.dataset.tab;
+      document.querySelectorAll('.tabs .tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      document.getElementById('tab-' + STATE.activeTab).classList.add('active');
+      render();  // re-render to fill new tab
+    });
+  });
+}
+
+// =====================================================================
+// DATA HELPERS
+// =====================================================================
+function getPeriodRecords(period, storeFilter='ALL') {
+  const [y, m] = period.split('-').map(Number);
+  let recs = DATA.monthly.filter(r => r.year === y && r.month === m);
+  if (storeFilter !== 'ALL') {
+    recs = recs.filter(r => r.store === storeFilter);
+  }
+  return recs;
+}
+
+function aggregateRecords(records) {
+  const view = STATE.view;
+  let ideal = 0, actual = 0, variance = 0, waste = 0;
+  let byCategory = {};
+  let byReason = {};
+
+  for (const r of records) {
+    ideal    += r[view].ideal_cost;
+    actual   += r[view].total_cost;
+    variance += r[view].other_cost;
+    waste    += r.waste.cost;
+    // Categories
+    for (const [cat, vals] of Object.entries(r.by_category)) {
+      if (!byCategory[cat]) byCategory[cat] = {ideal: 0, actual: 0, variance: 0};
+      byCategory[cat].ideal    += vals.ideal_cost;
+      byCategory[cat].actual   += vals.total_cost;
+      byCategory[cat].variance += vals.other_cost;
+    }
+    // Reasons
+    for (const [reason, val] of Object.entries(r.by_reason)) {
+      byReason[reason] = (byReason[reason] || 0) + val;
+    }
+  }
+  return { ideal, actual, variance, waste, byCategory, byReason };
+}
+
+function getStoreData(period, storeName) {
+  const [y, m] = period.split('-').map(Number);
+  return DATA.monthly.find(r => r.year === y && r.month === m && r.store === storeName);
+}
+
+// =====================================================================
+// RENDER (master)
+// =====================================================================
+function render() {
+  const records = getPeriodRecords(STATE.period, STATE.storeFilter);
+
+  // Render KPIs
+  renderKPIs(records);
+
+  // Render active tab
+  switch (STATE.activeTab) {
+    case 'overview':   renderOverview(records); break;
+    case 'variance':   renderVariance(records); break;
+    case 'categories': renderCategories(records); break;
+    case 'waste':      renderWaste(records); break;
+    case 'trend':      renderTrend(); break;
+  }
+}
+
+// =====================================================================
+// KPI BANNER
+// =====================================================================
+function renderKPIs(records) {
+  const agg = aggregateRecords(records);
+  const variancePct = agg.ideal !== 0 ? (agg.variance / agg.ideal) * 100 : 0;
+  const wastePct = agg.actual !== 0 ? (agg.waste / agg.actual) * 100 : 0;
+  const varCls = varClass(variancePct);
+
+  const html = `
+    <div class="kpi theoretical">
+      <div class="label">Theoretical Cost (Ideal)</div>
+      <div class="value">${fmtEurK(agg.ideal)}</div>
+      <div class="sub">βάσει recipes × sales mix</div>
+    </div>
+    <div class="kpi actual">
+      <div class="label">Actual Cost</div>
+      <div class="value">${fmtEurK(agg.actual)}</div>
+      <div class="sub">από ERP closes</div>
+    </div>
+    <div class="kpi variance ${varCls}">
+      <div class="label">Variance</div>
+      <div class="value">${fmtEurK(agg.variance)}</div>
+      <div class="sub">${variancePct >= 0 ? '+' : ''}${variancePct.toFixed(1).replace('.', ',')}% vs ideal</div>
+    </div>
+    <div class="kpi waste">
+      <div class="label">Waste (ΦΥΡΑ)</div>
+      <div class="value">${fmtEurK(agg.waste)}</div>
+      <div class="sub">${wastePct.toFixed(1).replace('.', ',')}% of actual cost</div>
+    </div>
+    <div class="kpi fc-pct">
+      <div class="label">View</div>
+      <div class="value" style="font-size:14px;line-height:1.4">${STATE.view === 'pure_food' ? 'Pure Food' : 'Total Cost'}</div>
+      <div class="sub">${STATE.view === 'pure_food' ? 'ΑΥΛΕΣ + ΕΜΠΟΡΕΥΜΑΤΑ' : '+ packaging, services'}</div>
+    </div>
+  `;
+  document.getElementById('kpiRow').innerHTML = html;
+}
+
+// =====================================================================
+// TAB: OVERVIEW
+// =====================================================================
+function renderOverview(records) {
+  const root = document.getElementById('tab-overview');
+  const desktop = isDesktop();
+
+  // Per-store breakdown with variance ranking
+  const rows = records.map(r => {
+    const v = r[STATE.view];
+    const variancePct = v.ideal_cost !== 0 ? (v.other_cost / v.ideal_cost) * 100 : 0;
+    return {
+      store: r.store,
+      ideal: v.ideal_cost,
+      actual: v.total_cost,
+      variance: v.other_cost,
+      variancePct,
+      waste: r.waste.cost,
+    };
+  }).filter(r => r.ideal > 100); // exclude empty
+
+  rows.sort((a, b) => a.variancePct - b.variancePct);
+
+  // Insights
+  let insightsHtml = '';
+  if (rows.length > 0) {
+    const best = rows[0];
+    const worst = rows[rows.length - 1];
+    insightsHtml = `
+      <div class="insight">
+        <div class="ins-label">★ Top Performer</div>
+        <div class="ins-text"><strong>${best.store}</strong> έχει variance <strong>${fmtPct(best.variancePct)}</strong> — ${best.variancePct < 1 ? 'εξαιρετικός έλεγχος food cost' : 'καλά ευθυγραμμισμένο με theoretical'}.</div>
+      </div>
+      <div class="insight ${worst.variancePct > 7 ? 'bad' : 'warn'}">
+        <div class="ins-label">⚠ Highest Variance</div>
+        <div class="ins-text"><strong>${worst.store}</strong> έχει <strong>${fmtPct(worst.variancePct)}</strong> variance (€${Math.round(worst.variance).toLocaleString('el-GR')} πάνω από theoretical) — αξίζει drilldown στο Variance Analysis tab.</div>
+      </div>
+    `;
+  }
+
+  let body = `
+    ${insightsHtml}
+    <div class="panel-section">
+      <div class="section-title">
+        <span>Variance Ranking — All Stores</span>
+        <span class="meta">${rows.length} stores · ${periodLabel(parseInt(STATE.period.slice(0,4)), parseInt(STATE.period.slice(5,7)))}</span>
+      </div>
+  `;
+
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>#</th>
+      <th>Store</th>
+      <th>Theoretical</th>
+      <th>Actual</th>
+      <th>Variance €</th>
+      <th>Variance %</th>
+      <th>Waste (ΦΥΡΑ)</th>
+    </tr></thead><tbody>`;
+
+    rows.forEach((r, i) => {
+      body += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${r.store}</strong></td>
+        <td>${fmtEur(r.ideal)}</td>
+        <td>${fmtEur(r.actual)}</td>
+        <td>${r.variance > 0 ? '+' : ''}${fmtEur(r.variance)}</td>
+        <td>${varTag(r.variance, r.ideal)}</td>
+        <td>${fmtEur(r.waste)}</td>
+      </tr>`;
+    });
+    body += `</tbody></table></div>`;
+  } else {
+    body += `<div class="cards">`;
+    rows.forEach((r, i) => {
+      const cls = varClass(r.variancePct);
+      body += `<div class="card ${cls}">
+        <div class="card-title">
+          <span class="name">${i+1}. ${r.store}</span>
+          <span class="rank">${varTag(r.variance, r.ideal)}</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Theoretical</span><span class="val">${fmtEur(r.ideal)}</span></div>
+          <div class="card-row"><span class="lbl">Actual</span><span class="val">${fmtEur(r.actual)}</span></div>
+          <div class="card-row"><span class="lbl">Variance €</span><span class="val">${r.variance > 0 ? '+' : ''}${fmtEur(r.variance)}</span></div>
+          <div class="card-row"><span class="lbl">Waste</span><span class="val">${fmtEur(r.waste)}</span></div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+  body += `</div>`;
+
+  root.innerHTML = body;
+}
+
+// =====================================================================
+// TAB: VARIANCE ANALYSIS — Top variance ingredients per store
+// =====================================================================
+function renderVariance(records) {
+  const root = document.getElementById('tab-variance');
+  const desktop = isDesktop();
+
+  // For each store, get the top 20 variance ingredients (from food_data.json's top_variances_latest)
+  // BUT — top_variances_latest is only for the latest period. Show note if user picks an earlier period.
+  const isLatest = STATE.period === DATA.meta.latest_period;
+
+  let body = '';
+
+  if (!isLatest) {
+    body += `<div class="insight warn">
+      <div class="ins-label">ℹ Note</div>
+      <div class="ins-text">Το ingredient-level variance breakdown είναι διαθέσιμο μόνο για τον <strong>τελευταίο μήνα (${periodLabel(parseInt(DATA.meta.latest_period.slice(0,4)), parseInt(DATA.meta.latest_period.slice(5,7)))})</strong>. Άλλαξε στον τελευταίο μήνα για να δεις drilldown.</div>
+    </div>`;
+  }
+
+  // Stores to render
+  let stores = STATE.storeFilter === 'ALL'
+    ? Object.keys(DATA.top_variances_latest).sort()
+    : [STATE.storeFilter];
+
+  if (!isLatest) {
+    stores = []; // hide drilldown for non-latest
+  }
+
+  if (stores.length === 0 && isLatest) {
+    body += `<div class="no-data">Δεν υπάρχουν δεδομένα variance για το επιλεγμένο φίλτρο.</div>`;
+  }
+
+  for (const store of stores) {
+    const items = DATA.top_variances_latest[store] || [];
+    if (items.length === 0) continue;
+
+    // Total variance for this store
+    const totalVariance = items.reduce((s, x) => s + x.other_cost, 0);
+
+    body += `<div class="panel-section">
+      <div class="section-title">
+        <span>${store}</span>
+        <span class="meta">Top ${items.length} ingredients · Total variance: ${fmtEur(totalVariance)}</span>
+      </div>`;
+
+    if (desktop) {
+      body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+        <th>#</th>
+        <th>Ingredient</th>
+        <th>Category</th>
+        <th>Theoretical</th>
+        <th>Actual</th>
+        <th>Variance €</th>
+        <th>% of total</th>
+      </tr></thead><tbody>`;
+
+      const maxAbs = Math.max(...items.map(it => Math.abs(it.other_cost)));
+      items.forEach((it, i) => {
+        const sharePct = totalVariance !== 0 ? (it.other_cost / totalVariance * 100) : 0;
+        body += `<tr>
+          <td>${i+1}</td>
+          <td>${it.desc}</td>
+          <td><span style="font-family:var(--mono);font-size:10.5px;color:var(--text-1)">${it.category}</span></td>
+          <td>${fmtEur(it.ideal_cost)}</td>
+          <td>${fmtEur(it.total_cost)}</td>
+          <td>${it.other_cost > 0 ? '+' : ''}${fmtEur(it.other_cost)}</td>
+          <td>${sharePct.toFixed(1).replace('.', ',')}%</td>
+        </tr>`;
+      });
+      body += `</tbody></table></div>`;
+    } else {
+      body += `<div class="cards">`;
+      items.slice(0, 10).forEach((it, i) => {
+        body += `<div class="card warn">
+          <div class="card-title">
+            <span class="name" style="font-size:12px">${i+1}. ${it.desc}</span>
+          </div>
+          <div class="card-rows">
+            <div class="card-row"><span class="lbl">Category</span><span class="val">${it.category}</span></div>
+            <div class="card-row"><span class="lbl">Theoretical</span><span class="val">${fmtEur(it.ideal_cost)}</span></div>
+            <div class="card-row"><span class="lbl">Actual</span><span class="val">${fmtEur(it.total_cost)}</span></div>
+            <div class="card-row"><span class="lbl">Variance</span><span class="val">${it.other_cost > 0 ? '+' : ''}${fmtEur(it.other_cost)}</span></div>
+          </div>
+        </div>`;
+      });
+      body += `</div>`;
+    }
+    body += `</div>`;
+  }
+
+  root.innerHTML = body;
+}
+
+// =====================================================================
+// TAB: CATEGORIES
+// =====================================================================
+function renderCategories(records) {
+  const root = document.getElementById('tab-categories');
+  const desktop = isDesktop();
+  const agg = aggregateRecords(records);
+
+  // Sort categories by actual cost desc
+  const cats = Object.entries(agg.byCategory)
+    .map(([cat, vals]) => ({
+      cat,
+      ideal: vals.ideal,
+      actual: vals.actual,
+      variance: vals.variance,
+      variancePct: vals.ideal !== 0 ? (vals.variance / vals.ideal * 100) : 0,
+    }))
+    .filter(c => c.ideal > 100)
+    .sort((a, b) => b.actual - a.actual);
+
+  const totalActual = cats.reduce((s, c) => s + c.actual, 0);
+
+  let body = `
+    <div class="panel-section">
+      <div class="section-title">
+        <span>Cost by Category</span>
+        <span class="meta">${cats.length} categories · ${periodLabel(parseInt(STATE.period.slice(0,4)), parseInt(STATE.period.slice(5,7)))}${STATE.storeFilter !== 'ALL' ? ' · ' + STATE.storeFilter : ''}</span>
+      </div>
+  `;
+
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>#</th>
+      <th>Category</th>
+      <th>Theoretical</th>
+      <th>Actual</th>
+      <th>Variance €</th>
+      <th>Variance %</th>
+      <th>Mix %</th>
+      <th></th>
+    </tr></thead><tbody>`;
+
+    cats.forEach((c, i) => {
+      const mixPct = totalActual ? (c.actual / totalActual * 100) : 0;
+      body += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${c.cat}</strong></td>
+        <td>${fmtEur(c.ideal)}</td>
+        <td>${fmtEur(c.actual)}</td>
+        <td>${c.variance > 0 ? '+' : ''}${fmtEur(c.variance)}</td>
+        <td>${varTag(c.variance, c.ideal)}</td>
+        <td>${mixPct.toFixed(1).replace('.', ',')}%</td>
+        <td style="min-width:120px"><div class="mini-bar"><div style="width:${mixPct.toFixed(0)}%"></div></div></td>
+      </tr>`;
+    });
+    body += `</tbody></table></div>`;
+  } else {
+    body += `<div class="cards">`;
+    cats.forEach((c, i) => {
+      const mixPct = totalActual ? (c.actual / totalActual * 100) : 0;
+      const cls = varClass(Math.abs(c.variancePct));
+      body += `<div class="card ${cls}">
+        <div class="card-title">
+          <span class="name">${c.cat}</span>
+          <span class="rank">${mixPct.toFixed(1).replace('.', ',')}% mix</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Theoretical</span><span class="val">${fmtEur(c.ideal)}</span></div>
+          <div class="card-row"><span class="lbl">Actual</span><span class="val">${fmtEur(c.actual)}</span></div>
+          <div class="card-row"><span class="lbl">Variance</span><span class="val">${varTag(c.variance, c.ideal)}</span></div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+  body += `</div>`;
+
+  root.innerHTML = body;
+}
+
+// =====================================================================
+// TAB: WASTE (ΦΥΡΕΣ)
+// =====================================================================
+function renderWaste(records) {
+  const root = document.getElementById('tab-waste');
+  const desktop = isDesktop();
+
+  // Per-store waste analysis
+  const rows = records.map(r => {
+    const v = r[STATE.view];
+    return {
+      store: r.store,
+      actual: v.total_cost,
+      waste: r.waste.cost,
+      wastePct: v.total_cost !== 0 ? (r.waste.cost / v.total_cost * 100) : 0,
+    };
+  }).filter(r => r.actual > 100);
+
+  rows.sort((a, b) => b.wastePct - a.wastePct);
+
+  const totalWaste = rows.reduce((s, r) => s + r.waste, 0);
+  const totalActual = rows.reduce((s, r) => s + r.actual, 0);
+  const overallPct = totalActual !== 0 ? (totalWaste / totalActual * 100) : 0;
+
+  let body = `
+    <div class="insight ${overallPct > 3 ? 'warn' : ''}">
+      <div class="ins-label">Total Waste Summary</div>
+      <div class="ins-text">Συνολική φύρα: <strong>${fmtEur(totalWaste)}</strong> (${overallPct.toFixed(1).replace('.', ',')}% του actual cost) σε ${rows.length} stores για ${periodLabel(parseInt(STATE.period.slice(0,4)), parseInt(STATE.period.slice(5,7)))}.</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-title">
+        <span>Waste Ranking — Stores</span>
+        <span class="meta">${rows.length} stores · sorted by waste %</span>
+      </div>
+  `;
+
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>#</th>
+      <th>Store</th>
+      <th>Actual Cost</th>
+      <th>Waste €</th>
+      <th>Waste %</th>
+      <th></th>
+    </tr></thead><tbody>`;
+
+    const maxPct = Math.max(...rows.map(r => r.wastePct));
+    rows.forEach((r, i) => {
+      const cls = r.wastePct < 1.5 ? 'var-good' : (r.wastePct < 3 ? 'var-warn' : 'var-bad');
+      const barW = maxPct > 0 ? (r.wastePct / maxPct * 100).toFixed(0) : 0;
+      body += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${r.store}</strong></td>
+        <td>${fmtEur(r.actual)}</td>
+        <td>${fmtEur(r.waste)}</td>
+        <td><span class="${cls}">${r.wastePct.toFixed(1).replace('.', ',')}%</span></td>
+        <td style="min-width:120px"><div class="mini-bar"><div style="width:${barW}%"></div></div></td>
+      </tr>`;
+    });
+    body += `</tbody></table></div>`;
+  } else {
+    body += `<div class="cards">`;
+    rows.forEach((r, i) => {
+      const cls = r.wastePct < 1.5 ? 'good' : (r.wastePct < 3 ? 'warn' : 'bad');
+      body += `<div class="card ${cls}">
+        <div class="card-title">
+          <span class="name">${i+1}. ${r.store}</span>
+          <span class="rank">${r.wastePct.toFixed(1).replace('.', ',')}%</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Actual Cost</span><span class="val">${fmtEur(r.actual)}</span></div>
+          <div class="card-row"><span class="lbl">Waste</span><span class="val">${fmtEur(r.waste)}</span></div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+  body += `</div>`;
+
+  root.innerHTML = body;
+}
+
+// =====================================================================
+// TAB: TREND (5-year history)
+// =====================================================================
+function renderTrend() {
+  const root = document.getElementById('tab-trend');
+  const desktop = isDesktop();
+
+  // Get all months × selected store(s)
+  const periodKeys = DATA.meta.periods;
+
+  // Build trend data
+  const series = periodKeys.map(p => {
+    const [y, m] = p.split('-').map(Number);
+    let recs = DATA.monthly.filter(r => r.year === y && r.month === m);
+    if (STATE.storeFilter !== 'ALL') {
+      recs = recs.filter(r => r.store === STATE.storeFilter);
+    }
+    let ideal = 0, actual = 0;
+    for (const r of recs) {
+      ideal += r[STATE.view].ideal_cost;
+      actual += r[STATE.view].total_cost;
+    }
+    const variancePct = ideal !== 0 ? (actual - ideal) / ideal * 100 : 0;
+    return { period: p, year: y, month: m, ideal, actual, variancePct };
+  });
+
+  // Build SVG line chart
+  const W = desktop ? 1200 : 700;
+  const H = 360;
+  const PAD = { l: 60, r: 30, t: 30, b: 50 };
+  const innerW = W - PAD.l - PAD.r;
+  const innerH = H - PAD.t - PAD.b;
+
+  const allVals = series.flatMap(s => [s.ideal, s.actual]).filter(v => v > 0);
+  const maxV = Math.max(...allVals, 1) * 1.05;
+  const xScale = i => PAD.l + (i / (series.length - 1 || 1)) * innerW;
+  const yScale = v => PAD.t + innerH - (v / maxV) * innerH;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
+
+  // Gridlines (4)
+  for (let i = 0; i <= 4; i++) {
+    const y = PAD.t + (innerH * i / 4);
+    const v = maxV - (maxV * i / 4);
+    svg += `<line x1="${PAD.l}" y1="${y}" x2="${W - PAD.r}" y2="${y}" stroke="var(--border-soft)" stroke-width="1"/>`;
+    svg += `<text x="${PAD.l - 8}" y="${y + 4}" text-anchor="end" fill="var(--text-2)" font-size="10" font-family="var(--mono)">${fmtEurK(v)}</text>`;
+  }
+
+  // X labels (every 6 months)
+  series.forEach((s, i) => {
+    if (i % 6 === 0 || i === series.length - 1) {
+      const x = xScale(i);
+      svg += `<text x="${x}" y="${H - 28}" text-anchor="middle" fill="var(--text-2)" font-size="10" font-family="var(--mono)">${s.year}-${String(s.month).padStart(2,'0')}</text>`;
+    }
+  });
+
+  // Theoretical area (blue)
+  let idealPath = `M ${xScale(0)} ${yScale(series[0].ideal)}`;
+  series.forEach((s, i) => {
+    if (i > 0) idealPath += ` L ${xScale(i)} ${yScale(s.ideal)}`;
+  });
+  svg += `<path d="${idealPath}" stroke="#3b82f6" stroke-width="2" fill="none"/>`;
+
+  // Actual line (red)
+  let actualPath = `M ${xScale(0)} ${yScale(series[0].actual)}`;
+  series.forEach((s, i) => {
+    if (i > 0) actualPath += ` L ${xScale(i)} ${yScale(s.actual)}`;
+  });
+  svg += `<path d="${actualPath}" stroke="${'#ef4444'}" stroke-width="2.4" fill="none"/>`;
+
+  // Dots on actual
+  series.forEach((s, i) => {
+    if (s.period === STATE.period) {
+      svg += `<circle cx="${xScale(i)}" cy="${yScale(s.actual)}" r="5" fill="#ef4444" stroke="white" stroke-width="2"/>`;
+      svg += `<text x="${xScale(i)}" y="${yScale(s.actual) - 12}" text-anchor="middle" fill="var(--text-0)" font-size="10" font-weight="700">selected</text>`;
+    }
+  });
+
+  // Legend
+  svg += `<g transform="translate(${PAD.l + 14}, ${PAD.t + 6})">
+    <rect x="0" y="0" width="14" height="3" fill="#3b82f6"/>
+    <text x="20" y="4" fill="var(--text-1)" font-size="11">Theoretical</text>
+    <rect x="100" y="0" width="14" height="3" fill="#ef4444"/>
+    <text x="120" y="4" fill="var(--text-1)" font-size="11">Actual</text>
+  </g>`;
+  svg += `</svg>`;
+
+  // Variance heatmap — months × y-axis (24 months)
+  const recentMonths = series.slice(-24);
+  let heatHtml = '<div class="heatmap-wrap"><div class="heatmap" style="grid-template-columns: 90px repeat(' + recentMonths.length + ', minmax(38px, 1fr));">';
+  heatHtml += `<div class="heat-header" style="text-align:left">VARIANCE %</div>`;
+  for (const s of recentMonths) {
+    heatHtml += `<div class="heat-header">${s.year - 2000}/${String(s.month).padStart(2,'0')}</div>`;
+  }
+  heatHtml += `<div class="heat-label">vs Theoretical</div>`;
+  for (const s of recentMonths) {
+    const pct = s.variancePct;
+    let bg = 'var(--bg-2)';
+    let col = 'var(--text-1)';
+    if (Math.abs(pct) > 0.1) {
+      const intensity = Math.min(0.85, Math.abs(pct) / 15);
+      if (pct > 0) {
+        bg = `rgba(239,68,68,${intensity.toFixed(2)})`;
+        col = intensity > 0.5 ? 'white' : 'var(--text-0)';
+      } else {
+        bg = `rgba(34,197,94,${intensity.toFixed(2)})`;
+        col = intensity > 0.5 ? 'white' : 'var(--text-0)';
+      }
+    }
+    const txt = isFinite(pct) ? (pct >= 0 ? '+' : '') + pct.toFixed(0) + '%' : '·';
+    heatHtml += `<div class="heat-cell" style="background:${bg};color:${col}" title="${s.year}-${String(s.month).padStart(2,'0')}: ${pct.toFixed(1)}%">${txt}</div>`;
+  }
+  heatHtml += `</div></div>`;
+
+  const totalPeriods = series.length;
+  const validVar = series.filter(s => s.ideal > 100).map(s => s.variancePct);
+  const avgVar = validVar.length ? validVar.reduce((a,b) => a+b, 0) / validVar.length : 0;
+
+  let body = `
+    <div class="insight">
+      <div class="ins-label">${STATE.storeFilter === 'ALL' ? 'Chain-Wide Trend' : STATE.storeFilter + ' Trend'}</div>
+      <div class="ins-text">${totalPeriods} μήνες ιστορικού (${series[0].year}-${String(series[0].month).padStart(2,'0')} → ${series[totalPeriods-1].year}-${String(series[totalPeriods-1].month).padStart(2,'0')}). Μέση variance: <strong>${avgVar.toFixed(1).replace('.', ',')}%</strong>.</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-title">
+        <span>Theoretical vs Actual — Time Series</span>
+        <span class="meta">${STATE.view === 'pure_food' ? 'Pure Food' : 'Total Cost'} · ${STATE.storeFilter === 'ALL' ? 'all stores' : STATE.storeFilter}</span>
+      </div>
+      <div class="chart-card">${svg}</div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-title">
+        <span>Variance Heatmap (last 24 months)</span>
+        <span class="meta">πράσινο = κάτω από theoretical · κόκκινο = πάνω</span>
+      </div>
+      ${heatHtml}
+    </div>
+  `;
+
+  root.innerHTML = body;
+}
+
+// Re-render on resize
+window.addEventListener('resize', () => {
+  if (DATA) render();
+});
+</script>
+
+<!-- Service Worker (PWA) -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('../service-worker.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>

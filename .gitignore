@@ -1,0 +1,10 @@
+cd C:\Users\IT\Documents\GitHub\kfc-sales-dashboard
+@"
+# Sensitive: never commit
+_work/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+"@ | Out-File -FilePath .gitignore -Encoding utf8
