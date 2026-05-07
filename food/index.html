@@ -142,9 +142,20 @@ html, body {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 0 16px 0;
-  border-bottom: 1px solid var(--border-soft);
-  margin-bottom: 18px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  background: linear-gradient(180deg, rgba(228,0,43,0.1) 0%, var(--bg-1) 100%);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.topbar::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--kfc), var(--accent-2));
 }
 .topbar .brand {
   display: flex;
@@ -321,7 +332,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   border: 1px solid var(--border-soft);
   border-left: 3px solid var(--accent);
   border-radius: 8px;
-  padding: 12px 14px;
+  padding: 14px 16px;
   position: relative;
   overflow: hidden;
 }
@@ -338,21 +349,21 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
 
 .kpi .label {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 9.5px;
   color: var(--text-2);
   letter-spacing: 1.3px;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .kpi .value {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-  letter-spacing: -0.5px;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
 }
 .kpi .sub {
   font-family: var(--mono);
@@ -825,6 +836,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
     <button class="tab" data-tab="categories">Categories</button>
     <button class="tab" data-tab="waste">WASTE Detail</button>
     <button class="tab" data-tab="trend">Trend</button>
+    <button class="tab" data-tab="forecast">Forecast</button>
   </div>
 
   <div class="tab-content active" id="tab-overview"></div>
@@ -832,6 +844,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   <div class="tab-content" id="tab-categories"></div>
   <div class="tab-content" id="tab-waste"></div>
   <div class="tab-content" id="tab-trend"></div>
+  <div class="tab-content" id="tab-forecast"></div>
 
 </div>
 
@@ -936,6 +949,16 @@ async function bootApp() {
   } catch (err) {
     document.getElementById('loadingMsg').textContent = 'Σφάλμα φόρτωσης: ' + err.message;
     return;
+  }
+  // Try to fetch sales data for forecast (optional — fallback gracefully if missing)
+  try {
+    const resp2 = await fetch('../data.json');
+    if (resp2.ok) {
+      DATA.sales = await resp2.json();
+      buildSalesByMonthIndex();
+    }
+  } catch (err) {
+    console.warn('Sales data not available — forecast will be limited');
   }
 
   // Init defaults
@@ -1078,6 +1101,7 @@ function render() {
     case 'categories': renderCategories(records); break;
     case 'waste':      renderWaste(records); break;
     case 'trend':      renderTrend(); break;
+    case 'forecast':   renderForecast(); break;
   }
 }
 
@@ -1620,6 +1644,263 @@ function renderTrend() {
   root.innerHTML = body;
 }
 
+
+// =====================================================================
+// FORECAST FEATURE
+// =====================================================================
+
+// Mapping food store names → sales store names (different conventions)
+const FOOD_TO_SALES_STORE = {
+  'ΓΛΥΦΑΔΑ': 'KFC GLYFADA',
+  'ΠΕΙΡΑΙΑΣ': 'KFC PIRAEUS',
+  'ΡΕΝΤΗΣ': 'KFC VILLAGE',
+  'ΠΑΓΚΡΑΤΙ': 'KFC PAGRATI',
+  'ΜΑΡΟΥΣΙ': 'KFC MALL',
+  'COSMOS': 'KFC COSMOS',
+  'ESCAPE': 'KFC ESCAPE ILION',
+  'ΚΗΦΙΣΙΑ': 'KFC KIFISIA',
+  'RIVER': 'KFC RIVER WEST',
+  'ΘΩΝ': 'KFC THON',
+  'METROMALL': 'KFC METROMALL',
+  'ΣΥΝΤΑΓΜΑ': 'KFC SYNTAGMA',
+  'SMART PARK': 'KFC SMART PARK',
+  'ONE SALONICA': 'KFC ONE SALONICA',
+  'ΑΡΙΣΤΟΤΕΛΟΥΣ': 'KFC ΘΕΣΣΑΛΟΝΙΚΗΣ-ΑΡΙΣΤΟΤΕΛΟΥΣ',
+  'Ν. ΣΜΥΡΝΗ': 'KFC N. SMYRNI',
+  'ΧΑΛΑΝΔΡΙ': 'KFC HALANDRI',
+  'ΦΙΛΑΔΕΛΦΕΙΑ': 'KFC N. PHILADELPHIA',
+  'ΓΕΡΑΚΑΣ': 'KFC GERAKAS',
+  'ΜΕΤΑΜΟΡΦΩΣΗ': 'KFC METAMORFOSI',
+  'ΠΑΤΡΑ': 'KFC PATRA',
+  'ΛΑΡΙΣΑ': 'KFC LARISA',
+};
+
+let SALES_BY_MONTH = {};   // [foodStoreName][YYYY-MM] = sales €
+
+function buildSalesByMonthIndex() {
+  if (!DATA.sales || !DATA.sales.records_st) return;
+  const stores = DATA.sales.meta.stores;
+  const tmp = {};  // [salesStoreName][YYYY-MM] = sales
+  for (const rec of DATA.sales.records_st) {
+    const [date, storeIdx, _stIdx, sales, _tcs] = rec;
+    const salesStore = stores[storeIdx];
+    const ym = date.slice(0, 7);
+    if (!tmp[salesStore]) tmp[salesStore] = {};
+    tmp[salesStore][ym] = (tmp[salesStore][ym] || 0) + sales;
+  }
+  // Map to food store names
+  for (const [foodStore, salesStore] of Object.entries(FOOD_TO_SALES_STORE)) {
+    SALES_BY_MONTH[foodStore] = tmp[salesStore] || {};
+  }
+}
+
+function getMonthlySales(foodStore, year, month) {
+  const ym = `${year}-${String(month).padStart(2,'0')}`;
+  return SALES_BY_MONTH[foodStore]?.[ym] || 0;
+}
+
+function getMonthlyBudget(foodStore, year, month) {
+  // budget keys are in salesStore names
+  const salesStore = FOOD_TO_SALES_STORE[foodStore];
+  if (!salesStore || !DATA.sales?.budget) return 0;
+  return DATA.sales.budget[salesStore]?.[String(month)]?.Sales || 0;
+}
+
+// Compute rolling FC% per store using last N months (skipping months with no data)
+function computeRollingFCpct(foodStore, asOfYear, asOfMonth, monthsBack=6) {
+  const samples = [];
+  let y = asOfYear, m = asOfMonth;
+  while (samples.length < monthsBack) {
+    const sales = getMonthlySales(foodStore, y, m);
+    const cost = getMonthlyFoodCost(foodStore, y, m);
+    if (sales > 100 && cost > 100) {
+      samples.push({y, m, sales, cost, fcPct: cost / sales});
+    }
+    m--;
+    if (m === 0) { m = 12; y--; }
+    if (y < 2022) break;
+  }
+  if (samples.length === 0) return null;
+  const avg = samples.reduce((s, x) => s + x.fcPct, 0) / samples.length;
+  return { avgPct: avg, samples };
+}
+
+function getMonthlyFoodCost(foodStore, year, month) {
+  const r = DATA.monthly.find(x => x.store === foodStore && x.year === year && x.month === month);
+  return r ? r[STATE.view].total_cost : 0;
+}
+
+// =====================================================================
+// FORECAST RENDER
+// =====================================================================
+function renderForecast() {
+  const root = document.getElementById('tab-forecast');
+  const desktop = isDesktop();
+
+  // Check sales data is available
+  if (!DATA.sales) {
+    root.innerHTML = `<div class="insight bad">
+      <div class="ins-label">⚠ Sales data not available</div>
+      <div class="ins-text">Το forecast feature χρειάζεται και sales data, αλλά δεν φόρτωσε. Πιθανώς πρόβλημα με το \`../data.json\`.</div>
+    </div>`;
+    return;
+  }
+
+  // Determine "next month" from latest food cost period
+  const [lyStr, lmStr] = DATA.meta.latest_period.split('-');
+  let ly = parseInt(lyStr), lm = parseInt(lmStr);
+  let fy = ly, fm = lm + 1;
+  if (fm > 12) { fm = 1; fy++; }
+  const forecastPeriodLabel = periodLabel(fy, fm);
+
+  // Build per-store forecast
+  const stores = STATE.storeFilter === 'ALL' ? DATA.meta.kfc_stores : [STATE.storeFilter];
+  const rows = [];
+  let totalForecast = 0, totalBudgetSales = 0, sumFCPct = 0, validStores = 0;
+
+  for (const store of stores) {
+    const fcInfo = computeRollingFCpct(store, ly, lm, 6);
+    const budgetSales = getMonthlyBudget(store, fy, fm);
+    if (!fcInfo || budgetSales < 100) continue;
+    const forecastCost = budgetSales * fcInfo.avgPct;
+    rows.push({
+      store, fcPct: fcInfo.avgPct, samples: fcInfo.samples.length,
+      budgetSales, forecastCost,
+    });
+    totalForecast += forecastCost;
+    totalBudgetSales += budgetSales;
+    sumFCPct += fcInfo.avgPct;
+    validStores++;
+  }
+  rows.sort((a, b) => b.forecastCost - a.forecastCost);
+
+  const avgFC = validStores ? sumFCPct / validStores : 0;
+  const blendedFC = totalBudgetSales ? totalForecast / totalBudgetSales : 0;
+
+  // === Insight banner ===
+  let body = `
+    <div class="insight">
+      <div class="ins-label">★ ${forecastPeriodLabel} Forecast</div>
+      <div class="ins-text">
+        Βάσει rolling 6-month historical FC% × sales budget για ${forecastPeriodLabel}:
+        <br>Predicted total food cost: <strong>${fmtEur(totalForecast)}</strong>
+        (${(blendedFC*100).toFixed(1).replace('.', ',')}% του budget) ·
+        Total budget sales: <strong>${fmtEur(totalBudgetSales)}</strong>
+      </div>
+    </div>
+  `;
+
+  // === Per-store forecast table ===
+  body += `<div class="panel-section">
+    <div class="section-title">
+      <span>Per-Store Forecast — ${forecastPeriodLabel}</span>
+      <span class="meta">${rows.length} stores · sorted by predicted cost</span>
+      <button class="btn-export" onclick="exportTable('forecast')">↓ Excel</button>
+    </div>`;
+
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>#</th><th>Store</th>
+      <th>Budget Sales</th>
+      <th>Avg FC% (6mo)</th>
+      <th>Predicted Cost</th>
+      <th>Sample size</th>
+    </tr></thead><tbody>`;
+    rows.forEach((r, i) => {
+      body += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${r.store}</strong></td>
+        <td>${fmtEur(r.budgetSales)}</td>
+        <td>${(r.fcPct*100).toFixed(1).replace('.', ',')}%</td>
+        <td><strong>${fmtEur(r.forecastCost)}</strong></td>
+        <td><span style="color:var(--text-2);font-family:var(--mono);font-size:11px">${r.samples} mo</span></td>
+      </tr>`;
+    });
+    body += `</tbody></table></div>`;
+  } else {
+    body += `<div class="cards">`;
+    rows.forEach((r, i) => {
+      body += `<div class="card">
+        <div class="card-title">
+          <span class="name">${i+1}. ${r.store}</span>
+          <span class="rank">${(r.fcPct*100).toFixed(1).replace('.', ',')}%</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Budget Sales</span><span class="val">${fmtEur(r.budgetSales)}</span></div>
+          <div class="card-row"><span class="lbl">Predicted Cost</span><span class="val">${fmtEur(r.forecastCost)}</span></div>
+          <div class="card-row"><span class="lbl">Based on</span><span class="val">${r.samples} months</span></div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+  body += `</div>`;
+
+  // === Sensitivity Analysis ===
+  body += `<div class="panel-section">
+    <div class="section-title">
+      <span>Sensitivity Analysis</span>
+      <span class="meta">τι αν αλλάξουν οι πωλήσεις</span>
+    </div>`;
+
+  const scenarios = [-10, -5, 0, 5, 10];
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>Scenario</th><th>Sales Δ</th>
+      <th>Predicted Sales</th><th>Predicted Cost</th>
+      <th>Δ vs Base</th>
+    </tr></thead><tbody>`;
+    for (const s of scenarios) {
+      const adjSales = totalBudgetSales * (1 + s/100);
+      const adjCost = adjSales * blendedFC;
+      const delta = adjCost - totalForecast;
+      const cls = s < 0 ? 'pct-neg' : (s > 0 ? 'pct-pos' : 'pct-flat');
+      body += `<tr>
+        <td><strong>${s === 0 ? 'Base case' : (s > 0 ? `Optimistic +${s}%` : `Pessimistic ${s}%`)}</strong></td>
+        <td><span class="${cls}">${s > 0 ? '+' : ''}${s}%</span></td>
+        <td>${fmtEur(adjSales)}</td>
+        <td>${fmtEur(adjCost)}</td>
+        <td>${delta > 0 ? '+' : ''}${fmtEur(delta)}</td>
+      </tr>`;
+    }
+    body += `</tbody></table></div>`;
+  } else {
+    body += `<div class="cards">`;
+    for (const s of scenarios) {
+      const adjSales = totalBudgetSales * (1 + s/100);
+      const adjCost = adjSales * blendedFC;
+      const delta = adjCost - totalForecast;
+      body += `<div class="card">
+        <div class="card-title">
+          <span class="name">${s === 0 ? 'Base case' : (s > 0 ? `+${s}% sales` : `${s}% sales`)}</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Predicted Sales</span><span class="val">${fmtEur(adjSales)}</span></div>
+          <div class="card-row"><span class="lbl">Predicted Cost</span><span class="val">${fmtEur(adjCost)}</span></div>
+          <div class="card-row"><span class="lbl">Δ vs Base</span><span class="val">${delta > 0 ? '+' : ''}${fmtEur(delta)}</span></div>
+        </div>
+      </div>`;
+    }
+    body += `</div>`;
+  }
+  body += `</div>`;
+
+  // === Methodology footer ===
+  body += `<div class="insight" style="margin-top:14px">
+    <div class="ins-label">Πώς υπολογίζεται</div>
+    <div class="ins-text">
+      <strong>1.</strong> Παίρνουμε το rolling 6-month average FC% (Actual Cost / Actual Sales) για κάθε store, βάσει ιστορικών δεδομένων.
+      <strong>2.</strong> Πολλαπλασιάζουμε με το <strong>budget sales</strong> για ${forecastPeriodLabel}.
+      <strong>3.</strong> Αυτό είναι το predicted food cost.
+      <br><br>
+      <strong>Καλύτερη πρόβλεψη όταν:</strong> το store έχει σταθερό FC% (όχι μεγάλη μεταβολή τους τελευταίους μήνες).
+      <strong>Λιγότερο αξιόπιστη όταν:</strong> νέα stores με <6 μήνες ιστορικό, ή stores με μεγάλη μεταβλητότητα.
+    </div>
+  </div>`;
+
+  root.innerHTML = body;
+}
+
 // =====================================================================
 // EXCEL EXPORT
 // =====================================================================
@@ -1714,6 +1995,35 @@ function exportTable(tabName, contextStore) {
     }).filter(r => r.actual > 100).sort((a,b) => b.wastePct - a.wastePct);
     rows.forEach((r,i) => aoa.push([
       i+1, r.store, r.actual, r.gap, r.waste, r.wastePct/100, r.deviation
+    ]));
+  }
+  else if (tabName === 'forecast') {
+    sheetName = 'Forecast';
+    // Reuse the logic from renderForecast
+    const [lyStr, lmStr] = DATA.meta.latest_period.split('-');
+    let ly = parseInt(lyStr), lm = parseInt(lmStr);
+    let fy = ly, fm = lm + 1;
+    if (fm > 12) { fm = 1; fy++; }
+    const forecastPeriod = `${fy}-${String(fm).padStart(2,'0')}`;
+    filenameSuffix = 'Forecast_' + forecastPeriod;
+    aoa.push(['Forecast for', forecastPeriod, 'Based on', 'Rolling 6-month FC%', 'View', viewLabel]);
+    aoa.push([]);
+    aoa.push(['#','Store','Budget Sales','Avg FC% (6mo)','Predicted Cost','Sample months']);
+    
+    const stores = STATE.storeFilter === 'ALL' ? DATA.meta.kfc_stores : [STATE.storeFilter];
+    const rows = [];
+    for (const store of stores) {
+      const fcInfo = computeRollingFCpct(store, ly, lm, 6);
+      const budgetSales = getMonthlyBudget(store, fy, fm);
+      if (!fcInfo || budgetSales < 100) continue;
+      rows.push({
+        store, fcPct: fcInfo.avgPct, samples: fcInfo.samples.length,
+        budgetSales, forecastCost: budgetSales * fcInfo.avgPct,
+      });
+    }
+    rows.sort((a, b) => b.forecastCost - a.forecastCost);
+    rows.forEach((r,i) => aoa.push([
+      i+1, r.store, r.budgetSales, r.fcPct, r.forecastCost, r.samples
     ]));
   }
   else if (tabName === 'trend') {
