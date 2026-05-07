@@ -192,6 +192,145 @@ body {
   gap: 7px;
   min-width: 0;
 }
+.custom-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.custom-range input[type="date"] {
+  padding: 6px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--text-0);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  width: 130px;
+}
+.custom-range input[type="date"]:focus { border-color: var(--kfc); }
+.custom-range .range-sep { color: var(--text-2); font-family: var(--mono); }
+
+.multi-select { position: relative; min-width: 220px; }
+.ms-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--text-0);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+.ms-trigger:hover { border-color: var(--kfc); }
+.ms-trigger.open { border-color: var(--kfc); }
+.ms-summary {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 8px;
+}
+.ms-arrow {
+  color: var(--text-2);
+  font-size: 10px;
+  transition: transform 0.15s;
+}
+.ms-trigger.open .ms-arrow { transform: rotate(180deg); }
+
+.ms-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  box-shadow: 0 14px 38px rgba(0,0,0,.55);
+  max-height: 380px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ms-search-row {
+  padding: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.ms-search {
+  width: 100%;
+  padding: 6px 10px;
+  background: var(--bg-1);
+  border: 1px solid var(--border-soft);
+  border-radius: 5px;
+  color: var(--text-0);
+  font-family: var(--sans);
+  font-size: 12px;
+  outline: none;
+}
+.ms-search:focus { border-color: var(--kfc); }
+
+.ms-actions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.ms-actions button {
+  flex: 1;
+  padding: 5px 8px;
+  background: var(--bg-3);
+  border: 1px solid var(--border-soft);
+  border-radius: 4px;
+  color: var(--text-1);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.ms-actions button:hover { background: var(--kfc); color: white; border-color: var(--kfc); }
+
+.ms-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+.ms-item {
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+}
+.ms-item:hover { background: var(--bg-3); }
+.ms-item input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+  accent-color: var(--kfc);
+}
+.ms-item .ms-name { flex: 1; color: var(--text-0); }
+.ms-item .ms-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-2);
+}
+.ms-item.hidden { display: none; }
+
 .control-label {
   font-family: var(--mono);
   font-size: 9px;
@@ -887,9 +1026,12 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
         <button data-view="MTD" class="active">MTD</button>
         <button data-view="QTD">QTD</button>
         <button data-view="YTD">YTD</button>
+        <button data-view="WEEK">Week</button>
+        <button data-view="LASTWEEK">Last Week</button>
         <button data-view="LAST7">7d</button>
         <button data-view="LAST30">30d</button>
         <button data-view="DAY">Day</button>
+        <button data-view="CUSTOM">Custom</button>
       </div>
     </div>
     <div class="control-group" id="dateAsOfWrap">
@@ -919,6 +1061,33 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
         <button data-type="In Line Mall">Mall</button>
         <button data-type="Mall Food Court">Food Court</button>
         <button data-type="Drive Through">Drive Thru</button>
+      </div>
+    </div>
+    <div class="control-group" id="customRangeWrap" style="display:none">
+      <span class="control-label">Custom Range</span>
+      <div class="custom-range">
+        <input type="date" id="customFromDate" />
+        <span class="range-sep">→</span>
+        <input type="date" id="customToDate" />
+      </div>
+    </div>
+    <div class="control-group" style="flex:1; min-width:240px">
+      <span class="control-label">Stores</span>
+      <div class="multi-select" id="storesMultiSel">
+        <button class="ms-trigger" id="msTrigger" type="button">
+          <span class="ms-summary" id="msSummary">Όλα τα stores</span>
+          <span class="ms-arrow">▾</span>
+        </button>
+        <div class="ms-dropdown" id="msDropdown" hidden>
+          <div class="ms-search-row">
+            <input type="text" class="ms-search" id="msSearch" placeholder="Αναζήτηση…" />
+          </div>
+          <div class="ms-actions">
+            <button type="button" id="msSelectAll">Επιλογή όλων</button>
+            <button type="button" id="msClearAll">Καμία</button>
+          </div>
+          <div class="ms-list" id="msList"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1354,6 +1523,21 @@ function resolvePeriod(view, asOf) {
   else if (view === "LAST7") { from = dateStrAdd(asOf, -6); to = asOf; }
   else if (view === "LAST30") { from = dateStrAdd(asOf, -29); to = asOf; }
   else if (view === "DAY") { from = asOf; to = asOf; }
+  else if (view === "WEEK") {
+    // Current week containing asOf — Mon to Sun (but cap at asOf)
+    const dow = (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;  // 0=Mon
+    from = dateStrAdd(asOf, -dow); to = asOf;
+  }
+  else if (view === "LASTWEEK") {
+    // Previous full week (Mon-Sun)
+    const dow = (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;
+    to = dateStrAdd(asOf, -dow - 1);  // last Sunday before this Mon
+    from = dateStrAdd(to, -6);         // 7 days back
+  }
+  else if (view === "CUSTOM") {
+    from = STATE.customFrom || asOf;
+    to = STATE.customTo || asOf;
+  }
   return [from, to];
 }
 
@@ -1361,7 +1545,7 @@ function resolvePeriod(view, asOf) {
 // AGGREGATION (with optional per-store filter)
 // =====================================================================
 function buildStoreFilter() {
-  // Returns a Set of store indices that pass the maturity + storeType filters
+  // Returns a Set of store indices that pass maturity + storeType + multi-select filters
   const include = new Set();
   for (let si = 0; si < STORES.length; si++) {
     const meta = STORE_META[STORES[si]] || {};
@@ -1372,6 +1556,8 @@ function buildStoreFilter() {
     if (STATE.maturity === 'new' && !isNew) continue;
     // Store type filter
     if (STATE.storeType !== 'all' && stype !== STATE.storeType) continue;
+    // Multi-select store filter
+    if (STATE.storeSelection !== null && !STATE.storeSelection.has(si)) continue;
     include.add(si);
   }
   return include;
@@ -1480,11 +1666,14 @@ function fullMonthBudget(monthStr, storeFilter) {
 const STATE = {
   view: "MTD",
   asOf: LATEST,
+  customFrom: null,   // for view='CUSTOM'
+  customTo: null,
   ly_mode: "364",
   activeTab: "overview",
   selectedStore: 0,
   maturity: "all",        // all | same | new
   storeType: "all",       // all | "In Line" | "Mall Food Court" | etc
+  storeSelection: null,   // null = all stores, or Set of store indices
   channelView: "type",    // "type" (View A) or "salestype" (View B)
   // Per-tab sort state: each entry is { col: 'sales'|'tcs'|'avg'|'vsly'|'vsbud', dir: 'desc'|'asc' }
   sort: {
@@ -3323,8 +3512,134 @@ document.querySelectorAll("#viewBtns button").forEach(b => b.addEventListener("c
   document.querySelectorAll("#viewBtns button").forEach(x => x.classList.remove("active"));
   e.target.classList.add("active");
   STATE.view = e.target.dataset.view;
+  // Show/hide custom range pickers
+  const customWrap = document.getElementById("customRangeWrap");
+  const asOfWrap = document.getElementById("dateAsOfWrap");
+  if (STATE.view === "CUSTOM") {
+    customWrap.style.display = "";
+    asOfWrap.style.display = "none";
+    // Initialize with sensible defaults
+    if (!STATE.customFrom) STATE.customFrom = LATEST.slice(0,7) + "-01";
+    if (!STATE.customTo)   STATE.customTo = LATEST;
+    document.getElementById("customFromDate").value = STATE.customFrom;
+    document.getElementById("customToDate").value = STATE.customTo;
+  } else {
+    customWrap.style.display = "none";
+    asOfWrap.style.display = "";
+  }
   refresh();
 }));
+
+// Custom range date pickers
+document.getElementById("customFromDate").addEventListener("change", e => {
+  STATE.customFrom = e.target.value;
+  if (STATE.view === "CUSTOM") refresh();
+});
+document.getElementById("customToDate").addEventListener("change", e => {
+  STATE.customTo = e.target.value;
+  if (STATE.view === "CUSTOM") refresh();
+});
+
+// =====================================================================
+// MULTI-STORE SELECT
+// =====================================================================
+function initMultiStoreSelect() {
+  const list = document.getElementById("msList");
+  // Sort stores alphabetically by short name
+  const sortedStores = STORES.map((s, i) => ({
+    idx: i,
+    full: s,
+    short: (STORE_META[s]?.short || s).replace(/^KFC\s*-?\s*/i, ""),
+    type: STORE_META[s]?.store_type || "",
+  })).sort((a, b) => a.short.localeCompare(b.short, "el"));
+  
+  list.innerHTML = sortedStores.map(s => `
+    <label class="ms-item" data-store="${s.short.toLowerCase()}">
+      <input type="checkbox" data-idx="${s.idx}" checked />
+      <span class="ms-name">${s.short}</span>
+      <span class="ms-tag">${s.type ? s.type.replace("In Line ", "").substring(0, 4) : ""}</span>
+    </label>
+  `).join("");
+  
+  function updateSummary() {
+    const checked = list.querySelectorAll('input[type="checkbox"]:checked').length;
+    const total = list.querySelectorAll('input[type="checkbox"]').length;
+    const summary = document.getElementById("msSummary");
+    if (checked === total) {
+      summary.textContent = `Όλα τα stores (${total})`;
+      STATE.storeSelection = null;  // null = all
+    } else if (checked === 0) {
+      summary.textContent = "Κανένα store";
+      STATE.storeSelection = new Set();
+    } else if (checked === 1) {
+      const lbl = list.querySelector('input[type="checkbox"]:checked').parentElement.querySelector(".ms-name").textContent;
+      summary.textContent = lbl;
+      STATE.storeSelection = new Set([parseInt(list.querySelector('input[type="checkbox"]:checked').dataset.idx)]);
+    } else {
+      const firstName = list.querySelector('input[type="checkbox"]:checked').parentElement.querySelector(".ms-name").textContent;
+      summary.textContent = `${firstName} +${checked - 1}`;
+      const selected = new Set();
+      list.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => selected.add(parseInt(cb.dataset.idx)));
+      STATE.storeSelection = selected;
+    }
+  }
+  
+  list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener("change", () => {
+      updateSummary();
+      refresh();
+    });
+  });
+  
+  // Toggle dropdown
+  const trigger = document.getElementById("msTrigger");
+  const dropdown = document.getElementById("msDropdown");
+  trigger.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = !dropdown.hasAttribute("hidden");
+    if (isOpen) {
+      dropdown.setAttribute("hidden", "");
+      trigger.classList.remove("open");
+    } else {
+      dropdown.removeAttribute("hidden");
+      trigger.classList.add("open");
+      document.getElementById("msSearch").focus();
+    }
+  });
+  document.addEventListener("click", e => {
+    if (!document.getElementById("storesMultiSel").contains(e.target)) {
+      dropdown.setAttribute("hidden", "");
+      trigger.classList.remove("open");
+    }
+  });
+  
+  // Search
+  document.getElementById("msSearch").addEventListener("input", e => {
+    const q = e.target.value.toLowerCase().trim();
+    list.querySelectorAll(".ms-item").forEach(item => {
+      const matches = !q || item.dataset.store.includes(q);
+      item.classList.toggle("hidden", !matches);
+    });
+  });
+  
+  // Select all / Clear
+  document.getElementById("msSelectAll").addEventListener("click", () => {
+    list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      if (!cb.parentElement.classList.contains("hidden")) cb.checked = true;
+    });
+    updateSummary();
+    refresh();
+  });
+  document.getElementById("msClearAll").addEventListener("click", () => {
+    list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+      if (!cb.parentElement.classList.contains("hidden")) cb.checked = false;
+    });
+    updateSummary();
+    refresh();
+  });
+  
+  updateSummary();
+}
 document.querySelectorAll("#lyBtns button").forEach(b => b.addEventListener("click", e => {
   document.querySelectorAll("#lyBtns button").forEach(x => x.classList.remove("active"));
   e.target.classList.add("active");
@@ -3374,6 +3689,9 @@ window.addEventListener("resize", () => {
 document.getElementById("asOfDate").value = LATEST;
 document.getElementById("asOfDate").min = FIRST;
 document.getElementById("asOfDate").max = LATEST;
+
+// Initialize multi-store dropdown after data is ready
+initMultiStoreSelect();
 
 renderActive();
 }

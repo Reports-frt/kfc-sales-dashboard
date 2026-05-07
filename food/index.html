@@ -836,6 +836,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
     <button class="tab" data-tab="categories">Categories</button>
     <button class="tab" data-tab="waste">WASTE Detail</button>
     <button class="tab" data-tab="trend">Trend</button>
+    <button class="tab" data-tab="products">Products</button>
     <button class="tab" data-tab="forecast">Forecast</button>
   </div>
 
@@ -844,6 +845,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   <div class="tab-content" id="tab-categories"></div>
   <div class="tab-content" id="tab-waste"></div>
   <div class="tab-content" id="tab-trend"></div>
+  <div class="tab-content" id="tab-products"></div>
   <div class="tab-content" id="tab-forecast"></div>
 
 </div>
@@ -934,6 +936,11 @@ const STATE = {
   period: null,           // 'YYYY-MM'
   storeFilter: 'ALL',     // 'ALL' or specific store name
   activeTab: 'overview',
+  // Products tab filters
+  productKind: 'all',     // 'all' | 'alc' | 'combos'
+  productCategory: 'all', // 'all' | specific category
+  productSort: 'qty',     // qty | sales | fc_pct | gm | rating
+  productSortDir: 'desc',
 };
 
 let DATA = null;
@@ -1101,6 +1108,7 @@ function render() {
     case 'categories': renderCategories(records); break;
     case 'waste':      renderWaste(records); break;
     case 'trend':      renderTrend(); break;
+    case 'products':   renderProducts(); break;
     case 'forecast':   renderForecast(); break;
   }
 }
@@ -1646,6 +1654,334 @@ function renderTrend() {
 
 
 // =====================================================================
+// PRODUCTS TAB
+// =====================================================================
+function classifyProductTier(p) {
+  // BCG-style tiers based on rating (volume) and gm/fc_pct (margin)
+  // Rating: % qty contribution chain-wide
+  // We use rating > 0.005 (0.5%) as "high volume"
+  // FC% < 25% as "high margin" (lower FC = better margin)
+  const isHighVolume = p.rating >= 0.005;
+  const isHighMargin = p.fc_pct < 0.25 && p.fc_pct > 0;  // exclude 0% (zero-cost items)
+  if (isHighVolume && isHighMargin)   return { tier: 'cash_cow', label: '⭐ Cash Cow', cls: 'good' };
+  if (!isHighVolume && isHighMargin)  return { tier: 'star',     label: '🌟 Star',     cls: 'good' };
+  if (isHighVolume && !isHighMargin)  return { tier: 'question', label: '❓ Question', cls: 'warn' };
+  return { tier: 'dog', label: '🐕 Dog', cls: 'bad' };
+}
+
+// Heuristic to identify ALC vs Combos vs Other
+// Combos = pre-built bundles (Buckets, Meal Boxes, Lunch Boxes, etc.)
+// ALC = à la carte (single items)
+function classifyProductKind(p) {
+  const cat = (p.category || '').toUpperCase();
+  const name = (p.product || '').toUpperCase();
+  // Category 6 (BUCKET-LUNCHBOX) is entirely combos
+  if (cat.includes('BUCKET') || cat.includes('LUNCHBOX') || cat.includes('LUNCH BOX')) {
+    return 'combos';
+  }
+  // Name-based combos
+  if (name.includes('BUCKET') || name.includes('BOX MEAL') || name.includes('LUNCH BOX')
+      || name.includes('LUNCHBOX') || name.includes('COMBO') || name.includes('MEAL DEAL')
+      || name.includes('MEGA MIX') || name.includes('GIVE BACKET') || name.includes('VARIETY')
+      || name.includes(' BOX ') || name.endsWith(' BOX') || name.startsWith('BOX ')
+      || name.includes('FOR 2') || name.includes('FOR1') || name.includes('FOR 1')
+      || name.includes('RICE BOWL') || name.includes('GO CUP')) {
+    return 'combos';
+  }
+  return 'alc';
+}
+
+function renderProducts() {
+  const root = document.getElementById('tab-products');
+  const desktop = isDesktop();
+  
+  if (!DATA.product_profit || DATA.product_profit.length === 0) {
+    root.innerHTML = `<div class="insight bad">
+      <div class="ins-label">⚠ Product data not available</div>
+      <div class="ins-text">Δεν υπάρχουν product profitability δεδομένα. Έλεγξε ότι το <code>Μεικτό_κέρδος_KFC_new.xlsx</code> είναι στο _work/ και ότι έχει τρέξει το build.</div>
+    </div>`;
+    return;
+  }
+  
+  // Annotate products with kind + tier
+  let products = DATA.product_profit.map(p => {
+    const kind = classifyProductKind(p);
+    const tier = classifyProductTier(p);
+    return { ...p, kind, ...tier };
+  });
+  
+  // Filter by kind
+  if (STATE.productKind === 'alc') products = products.filter(p => p.kind === 'alc');
+  else if (STATE.productKind === 'combos') products = products.filter(p => p.kind === 'combos');
+  
+  // Filter by category
+  if (STATE.productCategory !== 'all') {
+    products = products.filter(p => p.category === STATE.productCategory);
+  }
+  
+  // Filter out zero-quantity / zero-sales items
+  products = products.filter(p => p.qty > 0 && p.sales > 0);
+  
+  // Sort
+  const sortKey = STATE.productSort;
+  const dir = STATE.productSortDir === 'desc' ? -1 : 1;
+  products.sort((a, b) => {
+    const av = a[sortKey] || 0;
+    const bv = b[sortKey] || 0;
+    return (av - bv) * dir;
+  });
+  
+  // Compute totals
+  const totalQty = products.reduce((s, p) => s + p.qty, 0);
+  const totalSales = products.reduce((s, p) => s + p.sales, 0);
+  const totalFC = products.reduce((s, p) => s + p.fc, 0);
+  const blendedFC = totalSales ? totalFC / totalSales : 0;
+  
+  // Get unique categories for filter dropdown
+  const allCategories = [...new Set(DATA.product_profit.map(p => p.category))].sort();
+  
+  // === Filter row ===
+  let body = `<div class="filter-row" style="margin-bottom: 14px">
+    <div class="filter-group">
+      <span class="label">Type</span>
+      <div class="btn-group" id="prodKindBtns">
+        <button data-kind="all" ${STATE.productKind === 'all' ? 'class="active"' : ''}>All</button>
+        <button data-kind="alc" ${STATE.productKind === 'alc' ? 'class="active"' : ''}>ALC</button>
+        <button data-kind="combos" ${STATE.productKind === 'combos' ? 'class="active"' : ''}>Combos</button>
+      </div>
+    </div>
+    <div class="filter-group">
+      <span class="label">Category</span>
+      <select id="prodCatSelect" class="period-select">
+        <option value="all">Όλες</option>
+        ${allCategories.map(c => `<option value="${c}" ${c === STATE.productCategory ? 'selected' : ''}>${c}</option>`).join('')}
+      </select>
+    </div>
+    <div class="filter-group">
+      <span class="label">Sort by</span>
+      <div class="btn-group" id="prodSortBtns">
+        <button data-sort="qty" ${STATE.productSort === 'qty' ? 'class="active"' : ''}>Quantity</button>
+        <button data-sort="sales" ${STATE.productSort === 'sales' ? 'class="active"' : ''}>Sales</button>
+        <button data-sort="rating" ${STATE.productSort === 'rating' ? 'class="active"' : ''}>Rating</button>
+        <button data-sort="fc_pct" ${STATE.productSort === 'fc_pct' ? 'class="active"' : ''}>FC%</button>
+        <button data-sort="avg_gm" ${STATE.productSort === 'avg_gm' ? 'class="active"' : ''}>GM €</button>
+      </div>
+    </div>
+  </div>`;
+  
+  // === KPI summary ===
+  body += `<div class="kpi-row" style="margin-bottom: 14px">
+    <div class="kpi theoretical">
+      <div class="label">Products Shown</div>
+      <div class="value">${products.length}</div>
+      <div class="sub">${STATE.productKind === 'all' ? 'all kinds' : STATE.productKind.toUpperCase()}</div>
+    </div>
+    <div class="kpi actual">
+      <div class="label">Total Quantity</div>
+      <div class="value">${(totalQty/1000000).toFixed(2).replace('.', ',')}M</div>
+      <div class="sub">items sold</div>
+    </div>
+    <div class="kpi gap good">
+      <div class="label">Total Sales</div>
+      <div class="value">${fmtEurK(totalSales)}</div>
+      <div class="sub">€ revenue</div>
+    </div>
+    <div class="kpi waste">
+      <div class="label">Total Food Cost</div>
+      <div class="value">${fmtEurK(totalFC)}</div>
+      <div class="sub">€ cost</div>
+    </div>
+    <div class="kpi deviation ${blendedFC < 0.25 ? 'good' : blendedFC < 0.30 ? 'warn' : 'bad'}">
+      <div class="label">Blended FC%</div>
+      <div class="value">${(blendedFC*100).toFixed(1).replace('.', ',')}%</div>
+      <div class="sub">weighted by sales</div>
+    </div>
+  </div>`;
+  
+  // === Top insight ===
+  if (products.length > 0) {
+    const best = products.reduce((b, p) => (p.avg_gm > b.avg_gm ? p : b), products[0]);
+    const worst = products.filter(p => p.fc_pct < 1).reduce((w, p) => (p.fc_pct > w.fc_pct ? p : w), products[0]);
+    body += `<div class="insight">
+      <div class="ins-label">★ Top Insights</div>
+      <div class="ins-text">
+        Best margin: <strong>${best.product}</strong> (€${best.avg_gm.toFixed(2).replace('.', ',')} GM/unit, FC% ${(best.fc_pct*100).toFixed(1).replace('.', ',')}%)
+        · Worst FC%: <strong>${worst.product}</strong> (${(worst.fc_pct*100).toFixed(1).replace('.', ',')}%)
+      </div>
+    </div>`;
+  }
+  
+  // === Main table ===
+  body += `<div class="panel-section">
+    <div class="section-title">
+      <span>Product Profitability Ranking</span>
+      <span class="meta">${products.length} products · sorted by ${STATE.productSort.toUpperCase()}</span>
+      <button class="btn-export" onclick="exportTable('products')">↓ Excel</button>
+    </div>`;
+  
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>#</th>
+      <th>Product</th>
+      <th>Category</th>
+      <th>Tier</th>
+      <th>Quantity</th>
+      <th>Sales €</th>
+      <th>FC €</th>
+      <th>FC %</th>
+      <th>Avg Sale</th>
+      <th>Avg GM</th>
+      <th>Rating</th>
+    </tr></thead><tbody>`;
+    products.slice(0, 100).forEach((p, i) => {
+      body += `<tr>
+        <td>${i+1}</td>
+        <td><strong>${p.product}</strong></td>
+        <td><span style="font-family:var(--mono);font-size:10.5px;color:var(--text-1)">${p.category}</span></td>
+        <td><span class="var-${p.cls}" style="font-size:10px">${p.label}</span></td>
+        <td>${p.qty.toLocaleString('el-GR')}</td>
+        <td>${fmtEur(p.sales)}</td>
+        <td>${fmtEur(p.fc)}</td>
+        <td>${(p.fc_pct*100).toFixed(1).replace('.', ',')}%</td>
+        <td>€${p.avg_sale.toFixed(2).replace('.', ',')}</td>
+        <td>€${p.avg_gm.toFixed(2).replace('.', ',')}</td>
+        <td>${(p.rating*100).toFixed(2).replace('.', ',')}%</td>
+      </tr>`;
+    });
+    body += `</tbody></table></div>`;
+    if (products.length > 100) {
+      body += `<div class="no-data" style="padding:10px">Showing top 100 of ${products.length}. Use Excel export for full list.</div>`;
+    }
+  } else {
+    body += `<div class="cards">`;
+    products.slice(0, 50).forEach((p, i) => {
+      body += `<div class="card ${p.cls}">
+        <div class="card-title">
+          <span class="name" style="font-size:13px">${i+1}. ${p.product}</span>
+          <span class="rank" style="font-size:10px">${p.label}</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Category</span><span class="val">${p.category}</span></div>
+          <div class="card-row"><span class="lbl">Quantity</span><span class="val">${p.qty.toLocaleString('el-GR')}</span></div>
+          <div class="card-row"><span class="lbl">Sales</span><span class="val">${fmtEur(p.sales)}</span></div>
+          <div class="card-row"><span class="lbl">FC%</span><span class="val">${(p.fc_pct*100).toFixed(1).replace('.', ',')}%</span></div>
+          <div class="card-row"><span class="lbl">Avg GM</span><span class="val">€${p.avg_gm.toFixed(2).replace('.', ',')}</span></div>
+          <div class="card-row"><span class="lbl">Rating</span><span class="val">${(p.rating*100).toFixed(2).replace('.', ',')}%</span></div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+  body += `</div>`;
+  
+  // === BCG Quadrant chart ===
+  body += renderProductQuadrant(products, desktop);
+  
+  // === Methodology footer ===
+  body += `<div class="insight" style="margin-top:14px">
+    <div class="ins-label">Πώς διαβάζεται ο πίνακας</div>
+    <div class="ins-text">
+      <strong>Rating</strong> = % συμμετοχή του προϊόντος στις συνολικές πωλήσεις (qty share).
+      <strong>Tier</strong>: ⭐ Cash Cow = high volume + high margin · 🌟 Star = low volume + high margin (push these) · ❓ Question = high volume + low margin · 🐕 Dog = low volume + low margin (consider review).
+      Categorization ALC vs Combos είναι heuristic βάσει ονόματος — αν κάποιο προϊόν δεν είναι σωστά κατηγοριοποιημένο, ενημέρωσέ με.
+    </div>
+  </div>`;
+  
+  root.innerHTML = body;
+  
+  // Wire up filter handlers
+  document.querySelectorAll('#prodKindBtns button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      STATE.productKind = btn.dataset.kind;
+      renderProducts();
+    });
+  });
+  document.querySelectorAll('#prodSortBtns button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      STATE.productSort = btn.dataset.sort;
+      renderProducts();
+    });
+  });
+  document.getElementById('prodCatSelect').addEventListener('change', e => {
+    STATE.productCategory = e.target.value;
+    renderProducts();
+  });
+}
+
+function renderProductQuadrant(products, desktop) {
+  // BCG quadrant scatter plot
+  // X = log(qty) or rating (volume), Y = avg_gm (margin)
+  const W = desktop ? 900 : 360;
+  const H = desktop ? 480 : 320;
+  const PAD = { l: 60, r: 30, t: 30, b: 50 };
+  const innerW = W - PAD.l - PAD.r;
+  const innerH = H - PAD.t - PAD.b;
+  
+  const filtered = products.filter(p => p.rating > 0 && p.fc_pct > 0 && p.fc_pct < 1);
+  if (filtered.length === 0) return '';
+  
+  const maxRating = Math.max(...filtered.map(p => p.rating));
+  const maxGM = Math.max(...filtered.map(p => p.avg_gm));
+  const minGM = Math.min(...filtered.map(p => p.avg_gm), 0);
+  
+  // log scale for x (rating spread is huge)
+  const logScale = v => Math.log10(v * 10000 + 1);
+  const maxLogRating = logScale(maxRating);
+  
+  const xScale = v => PAD.l + (logScale(v) / maxLogRating) * innerW;
+  const yScale = v => PAD.t + innerH - ((v - minGM) / (maxGM - minGM)) * innerH;
+  
+  // Median lines
+  const medRating = filtered.map(p => p.rating).sort((a,b) => a-b)[Math.floor(filtered.length/2)];
+  const medGM = filtered.map(p => p.avg_gm).sort((a,b) => a-b)[Math.floor(filtered.length/2)];
+  
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
+  
+  // Axes
+  svg += `<line x1="${PAD.l}" y1="${PAD.t}" x2="${PAD.l}" y2="${H - PAD.b}" stroke="var(--border)" stroke-width="1"/>`;
+  svg += `<line x1="${PAD.l}" y1="${H - PAD.b}" x2="${W - PAD.r}" y2="${H - PAD.b}" stroke="var(--border)" stroke-width="1"/>`;
+  
+  // Median crosshairs
+  svg += `<line x1="${xScale(medRating)}" y1="${PAD.t}" x2="${xScale(medRating)}" y2="${H - PAD.b}" stroke="var(--border-soft)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  svg += `<line x1="${PAD.l}" y1="${yScale(medGM)}" x2="${W - PAD.r}" y2="${yScale(medGM)}" stroke="var(--border-soft)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  
+  // Quadrant labels
+  const qLabels = [
+    { x: PAD.l + innerW * 0.85, y: PAD.t + 18, text: '⭐ Cash Cow', color: 'rgba(34,197,94,0.6)' },
+    { x: PAD.l + innerW * 0.15, y: PAD.t + 18, text: '🌟 Star', color: 'rgba(34,197,94,0.6)' },
+    { x: PAD.l + innerW * 0.85, y: H - PAD.b - 8, text: '❓ Question', color: 'rgba(245,158,11,0.6)' },
+    { x: PAD.l + innerW * 0.15, y: H - PAD.b - 8, text: '🐕 Dog', color: 'rgba(239,68,68,0.6)' },
+  ];
+  qLabels.forEach(q => {
+    svg += `<text x="${q.x}" y="${q.y}" text-anchor="middle" fill="${q.color}" font-size="11" font-weight="700" font-family="var(--mono)">${q.text}</text>`;
+  });
+  
+  // Plot dots
+  filtered.forEach(p => {
+    const x = xScale(p.rating);
+    const y = yScale(p.avg_gm);
+    const colorMap = { good: 'var(--good)', warn: 'var(--warn)', bad: 'var(--bad)' };
+    const color = colorMap[p.cls] || 'var(--text-1)';
+    const r = Math.max(3, Math.min(12, Math.sqrt(p.qty / 10000)));
+    svg += `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" fill-opacity="0.55" stroke="${color}" stroke-width="1"><title>${p.product} | qty=${p.qty.toLocaleString('el-GR')} | FC%=${(p.fc_pct*100).toFixed(1)}% | GM=€${p.avg_gm.toFixed(2)}</title></circle>`;
+  });
+  
+  // Axis labels
+  svg += `<text x="${PAD.l + innerW/2}" y="${H - 12}" text-anchor="middle" fill="var(--text-2)" font-size="11" font-family="var(--mono)">VOLUME (rating, log scale) →</text>`;
+  svg += `<text x="${15}" y="${PAD.t + innerH/2}" text-anchor="middle" fill="var(--text-2)" font-size="11" font-family="var(--mono)" transform="rotate(-90 15 ${PAD.t + innerH/2})">↑ MARGIN (GM €)</text>`;
+  
+  svg += `</svg>`;
+  
+  return `<div class="panel-section">
+    <div class="section-title">
+      <span>BCG Quadrant — Volume × Margin</span>
+      <span class="meta">${filtered.length} products · μέγεθος bubble = ποσότητα</span>
+    </div>
+    <div class="chart-card">${svg}</div>
+  </div>`;
+}
+
+// =====================================================================
 // FORECAST FEATURE
 // =====================================================================
 
@@ -1995,6 +2331,24 @@ function exportTable(tabName, contextStore) {
     }).filter(r => r.actual > 100).sort((a,b) => b.wastePct - a.wastePct);
     rows.forEach((r,i) => aoa.push([
       i+1, r.store, r.actual, r.gap, r.waste, r.wastePct/100, r.deviation
+    ]));
+  }
+  else if (tabName === 'products') {
+    sheetName = 'Products';
+    filenameSuffix = `Products_${STATE.productKind}`;
+    aoa.push(['Filter', `Kind=${STATE.productKind} · Category=${STATE.productCategory}`, 'Sort', STATE.productSort]);
+    aoa.push([]);
+    aoa.push(['#','Product','Category','Tier','Quantity','Sales','FC','FC%','Avg Sale','Avg GM','Rating']);
+    let products = (DATA.product_profit || []).map(p => ({...p, kind: classifyProductKind(p), ...classifyProductTier(p)}));
+    if (STATE.productKind !== 'all') products = products.filter(p => p.kind === STATE.productKind);
+    if (STATE.productCategory !== 'all') products = products.filter(p => p.category === STATE.productCategory);
+    products = products.filter(p => p.qty > 0 && p.sales > 0);
+    const dir = STATE.productSortDir === 'desc' ? -1 : 1;
+    products.sort((a, b) => ((a[STATE.productSort] || 0) - (b[STATE.productSort] || 0)) * dir);
+    products.forEach((p, i) => aoa.push([
+      i+1, p.product, p.category, p.label,
+      p.qty, p.sales, p.fc, p.fc_pct,
+      p.avg_sale, p.avg_gm, p.rating
     ]));
   }
   else if (tabName === 'forecast') {

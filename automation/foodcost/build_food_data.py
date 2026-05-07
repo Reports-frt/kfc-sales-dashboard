@@ -277,6 +277,491 @@ def load_kostologisi(path):
     return result
 
 
+
+# =====================================================================
+# TARGIT XLSX CLEANER
+# =====================================================================
+def _read_targit_xlsx(path, sheet_name='Object1'):
+    """
+    Read xlsx exported by Targit, working around two known issues:
+      1. Non-standard `defaultColWidthPt` attribute that breaks openpyxl
+      2. Header labels split across rows (some in row 0, others in row 1)
+    """
+    import zipfile, re, tempfile, os
+    
+    # Step 1: clean the xlsx into a temp file
+    tmpdir = tempfile.mkdtemp()
+    cleaned_path = os.path.join(tmpdir, 'cleaned.xlsx')
+    try:
+        with zipfile.ZipFile(str(path), 'r') as zin:
+            with zipfile.ZipFile(cleaned_path, 'w', zipfile.ZIP_DEFLATED) as zout:
+                for item in zin.namelist():
+                    content = zin.read(item)
+                    if item.endswith('.xml'):
+                        text = content.decode('utf-8', errors='ignore')
+                        text = re.sub(r'\s+defaultColWidthPt="[^"]*"', '', text)
+                        text = re.sub(r'\s+defaultRowHeightPt="[^"]*"', '', text)
+                        content = text.encode('utf-8')
+                    zout.writestr(item, content)
+    except zipfile.BadZipFile:
+        # Already a clean file
+        cleaned_path = str(path)
+    
+    # Step 2: read raw and detect header row
+    df_raw = pd.read_excel(cleaned_path, sheet_name=sheet_name, header=None)
+    
+    # Heuristic: header row is the one where most cells are non-null and contain 
+    # text (not numbers). Check first 3 rows.
+    header_row = 0
+    for r in range(min(3, len(df_raw))):
+        row_vals = df_raw.iloc[r].dropna()
+        if len(row_vals) >= len(df_raw.columns) * 0.7:  # 70%+ filled
+            text_count = sum(1 for v in row_vals if isinstance(v, str))
+            if text_count >= len(row_vals) * 0.7:
+                header_row = r
+                break
+    
+    # Build merged header: take row 0 and row 1, prefer non-null
+    if header_row == 0 and len(df_raw) > 1:
+        # Check if row 0 has gaps that row 1 fills
+        h0 = df_raw.iloc[0].tolist()
+        h1 = df_raw.iloc[1].tolist()
+        merged = []
+        for c0, c1 in zip(h0, h1):
+            if pd.notna(c0) and str(c0).strip():
+                merged.append(str(c0).strip())
+            elif pd.notna(c1) and str(c1).strip():
+                merged.append(str(c1).strip())
+            else:
+                merged.append(f'col_{len(merged)}')
+        df = df_raw.iloc[2:].copy()
+        df.columns = merged
+        df = df.reset_index(drop=True)
+    else:
+        df = pd.read_excel(cleaned_path, sheet_name=sheet_name, header=header_row)
+    
+    return df
+
+
+def _safe_float(x):
+    """Convert to float, returning 0 for non-numeric values like 'Μαθηματικό σφάλμα'."""
+    if x is None:
+        return 0.0
+    try:
+        if pd.isna(x):
+            return 0.0
+    except (TypeError, ValueError):
+        pass
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return 0.0
+
+def _safe_int(x):
+    return int(_safe_float(x))
+
+def load_meikto_kerdos(path):
+    """
+    Read Μεικτό_κέρδος_KFC_new.xlsx
+    Object1 = per product × hour breakdown
+    Object2 = per store × sales type breakdown
+    
+    Returns dict with:
+      - products: list of product-level records (chain-wide totals)
+      - stores: list of store × sales-type records  
+      - hourly: { hour: { product: {qty, sales, fc, fc_pct, rating} } }
+    """
+    print(f"  Loading product profitability from {path.name}...")
+    
+    # Object1: per product × hour
+    df1 = _read_targit_xlsx(path, sheet_name='Object1')
+    df1 = df1.rename(columns={
+        df1.columns[0]: 'hour',
+        'ITEM Product Group Description': 'category',
+        'ITEM Description': 'product',
+        'Quantity': 'qty',
+        '% Qty Contrib.': 'qty_share',
+        'Net Sales': 'sales',
+        '% NS Contrib.': 'sales_share',
+        'Food Cost': 'fc',
+        '% FC Contrib.': 'fc_share',
+        'Average Sale': 'avg_sale',
+        'Average FC': 'avg_fc',
+        'Average Gross Margin (GM)': 'avg_gm',
+        '% FoodCost [FC/NS]': 'fc_pct',
+        '% GM [GM/NS]': 'gm_pct',
+        'Rating': 'rating',
+    })
+    
+    # Aggregate by product across all hours (since each product appears in multiple hour rows)
+    # Skip rows where category or product is "Συνολικά" (those are aggregations)
+    df_prod = df1[
+        (df1['category'].astype(str).str.strip() != 'Συνολικά') &
+        (df1['product'].astype(str).str.strip() != 'Συνολικά') &
+        (df1['hour'].astype(str).str.strip() != 'Συνολικά') &
+        (df1['qty'].notna())
+    ].copy()
+    
+    # Convert numeric cols to numeric (will turn 'Μαθηματικό σφάλμα' into NaN)
+    df_prod['qty'] = pd.to_numeric(df_prod['qty'], errors='coerce').fillna(0)
+    df_prod['sales'] = pd.to_numeric(df_prod['sales'], errors='coerce').fillna(0)
+    df_prod['fc'] = pd.to_numeric(df_prod['fc'], errors='coerce').fillna(0)
+    
+    # Group and sum
+    agg = df_prod.groupby(['category','product']).agg(
+        qty=('qty','sum'),
+        sales=('sales','sum'),
+        fc=('fc','sum'),
+    ).reset_index()
+    
+    products = []
+    for _, r in agg.iterrows():
+        qty = _safe_float(r['qty'])
+        sales = _safe_float(r['sales'])
+        fc = _safe_float(r['fc'])
+        if qty < 1:
+            continue
+        # Compute derived metrics from totals (safe — protects against zero/None)
+        fc_pct = fc/sales if sales > 0 else 0
+        avg_sale = sales/qty if qty > 0 else 0
+        avg_fc = fc/qty if qty > 0 else 0
+        avg_gm = avg_sale - avg_fc
+        # Rating = % qty contribution chain-wide
+        # Will compute after we have total
+        products.append({
+            'category': str(r['category']),
+            'product': str(r['product']),
+            'qty': _safe_int(r['qty']),
+            'sales': round(_safe_float(r['sales']), 2),
+            'fc': round(_safe_float(r['fc']), 2),
+            'fc_pct': round(_safe_float(fc_pct), 4),
+            'avg_sale': round(_safe_float(avg_sale), 2),
+            'avg_gm': round(_safe_float(avg_gm), 2),
+            'rating': 0,  # filled below
+        })
+    
+    # Compute rating (% qty contribution)
+    total_qty = sum(p['qty'] for p in products)
+    if total_qty > 0:
+        for p in products:
+            p['rating'] = round(p['qty'] / total_qty, 6)
+    
+    print(f"    → {len(products)} unique products with profitability data")
+    
+    # Hourly breakdown — only category-level totals to keep size manageable
+    hourly = {}
+    for _, r in df1.iterrows():
+        hour = str(r['hour']).strip()
+        if hour == 'Συνολικά':
+            continue
+        cat = str(r['category']).strip()
+        prod = str(r['product']).strip()
+        # Only category aggregations (not individual products to limit size)
+        if prod != 'Συνολικά':
+            continue
+        if cat == 'Συνολικά':
+            # Hour total
+            key = '_total'
+        else:
+            key = cat
+        if hour not in hourly:
+            hourly[hour] = {}
+        hourly[hour][key] = {
+            'qty': _safe_int(r.get('qty')),
+            'sales': round(_safe_float(r.get('sales')), 2),
+            'fc': round(_safe_float(r.get('fc')), 2),
+            'fc_pct': round(_safe_float(r.get('fc_pct')), 4),
+            'rating': round(_safe_float(r.get('rating')), 6),
+        }
+    print(f"    → {len(hourly)} hours of category-level data")
+    
+    # Object2: per store × sales type
+    df2 = _read_targit_xlsx(path, sheet_name='Object2')
+    df2.columns = [str(c).strip() for c in df2.columns]
+    
+    rename_map = {
+        'BRAND': 'brand',
+        'Name': 'store_name',
+        'Hour Of Day': 'hour',
+        'Sales Type Description': 'sales_type',
+        'Quantity': 'qty',
+        'Net Sales': 'sales',
+        'Food Cost': 'fc',
+        'Average Sale': 'avg_sale',
+        'Average FC': 'avg_fc',
+        'Average Gross Margin (GM)': 'avg_gm',
+        '% FoodCost [FC/NS]': 'fc_pct',
+        '% GM [GM/NS]': 'gm_pct',
+    }
+    df2 = df2.rename(columns={k: v for k, v in rename_map.items() if k in df2.columns})
+    
+    has_store = 'store_name' in df2.columns
+    has_hour = 'hour' in df2.columns
+    
+    # Map raw store names to canonical
+    STORE_MAP_OBJ2 = {
+        'KFC -  ΘΩΝ (ΑΜΠΕΛΟΚΗΠΟΙ)': 'ΘΩΝ',
+        'KFC - COSMOS': 'COSMOS',
+        'KFC - ESCAPE (ΙΛΙΟΝ)': 'ESCAPE',
+        'KFC - MALL (ΜΑΡΟΥΣΙ)': 'ΜΑΡΟΥΣΙ',
+        'KFC - METRO MALL': 'METROMALL',
+        'KFC - ONE SALONICA': 'ONE SALONICA',
+        'KFC - RIVER WEST': 'RIVER',
+        'KFC - SMART PARK': 'SMART PARK',
+        'KFC - VILLAGE PARK (ΡΕΝΤΗΣ)': 'ΡΕΝΤΗΣ',
+        'KFC - ΑΡΙΣΤΟΤΕΛΟΥΣ': 'ΑΡΙΣΤΟΤΕΛΟΥΣ',
+        'KFC - ΓΕΡΑΚΑ': 'ΓΕΡΑΚΑΣ',
+        'KFC - ΓΛΥΦΑΔΑ': 'ΓΛΥΦΑΔΑ',
+        'KFC - ΚΗΦIΣΙΑ': 'ΚΗΦΙΣΙΑ',
+        'KFC - ΛΑΡΙΣΑ': 'ΛΑΡΙΣΑ',
+        'KFC - ΜΕΤΑΜΟΡΦΩΣΗ': 'ΜΕΤΑΜΟΡΦΩΣΗ',
+        'KFC - Ν. ΣΜΥΡΝΗΣ': 'Ν. ΣΜΥΡΝΗ',
+        'KFC - ΝΕΑ ΦΙΛΑΔΕΛΦΕΙΑ': 'ΦΙΛΑΔΕΛΦΕΙΑ',
+        'KFC - ΠΑΓΚΡΑΤΙ': 'ΠΑΓΚΡΑΤΙ',
+        'KFC - ΠΑΤΡΑ': 'ΠΑΤΡΑ',
+        'KFC - ΠΕΙΡΑΙΑ': 'ΠΕΙΡΑΙΑΣ',
+        'KFC - ΣΥΝΤΑΓΜΑ': 'ΣΥΝΤΑΓΜΑ',
+        'KFC - ΧΑΛΑΝΔΡΙ': 'ΧΑΛΑΝΔΡΙ',
+    }
+    
+    # Build comprehensive structures:
+    # 1. Per-store totals (hour=Συνολικά, sales_type=Συνολικά)
+    # 2. Per-store hourly (hour!=Συνολικά, sales_type=Συνολικά)
+    # 3. Per-store sales-type (hour=Συνολικά, sales_type!=Συνολικά)
+    
+    store_totals = []          # [{store, qty, sales, fc, fc_pct}]
+    store_hourly = {}          # {store: {hour: {qty, sales, fc, fc_pct}}}
+    store_salestype = {}       # {store: {sales_type: {qty, sales, fc, fc_pct}}}
+    store_hour_salestype = {}  # {store: {hour: {sales_type: {...}}}}
+    
+    def make_record(r):
+        return {
+            'qty': _safe_int(r.get('qty')),
+            'sales': round(_safe_float(r.get('sales')), 2),
+            'fc': round(_safe_float(r.get('fc')), 2),
+            'fc_pct': round(_safe_float(r.get('fc_pct')), 4),
+            'avg_sale': round(_safe_float(r.get('avg_sale')), 2),
+            'avg_gm': round(_safe_float(r.get('avg_gm')), 2),
+        }
+    
+    for _, r in df2.iterrows():
+        store_raw = str(r.get('store_name', '')).strip() if has_store else ''
+        hour = str(r.get('hour', '')).strip() if has_hour else 'Συνολικά'
+        st = str(r.get('sales_type', '')).strip()
+        
+        if pd.isna(r.get('qty')):
+            continue
+        if store_raw in ('', 'nan', 'Συνολικά'):
+            continue  # Skip aggregate or missing store
+        
+        store = STORE_MAP_OBJ2.get(store_raw, store_raw)
+        rec = make_record(r)
+        
+        # Categorize this row
+        is_hour_total = (hour == 'Συνολικά' or hour == 'nan')
+        is_st_total = (st == 'Συνολικά' or st == 'nan')
+        
+        if is_hour_total and is_st_total:
+            # Store grand total
+            store_totals.append({'store': store, **rec})
+        elif is_hour_total and not is_st_total:
+            # Per-store sales type breakdown
+            if store not in store_salestype:
+                store_salestype[store] = {}
+            store_salestype[store][st] = rec
+        elif not is_hour_total and is_st_total:
+            # Per-store hourly
+            if store not in store_hourly:
+                store_hourly[store] = {}
+            store_hourly[store][hour] = rec
+        else:
+            # Full hour × store × sales type
+            if store not in store_hour_salestype:
+                store_hour_salestype[store] = {}
+            if hour not in store_hour_salestype[store]:
+                store_hour_salestype[store][hour] = {}
+            store_hour_salestype[store][hour][st] = rec
+    
+    print(f"    → store totals: {len(store_totals)}")
+    print(f"    → store hourly: {len(store_hourly)} stores × ~{sum(len(v) for v in store_hourly.values())//max(1,len(store_hourly))} hours each")
+    print(f"    → store sales types: {len(store_salestype)} stores")
+    
+    return {
+        'products': products,
+        'hourly_category': hourly,            # chain-wide hour × category
+        'store_totals': store_totals,         # per-store totals
+        'store_hourly': store_hourly,         # store × hour
+        'store_salestype': store_salestype,   # store × sales type
+    }
+
+
+def load_alc_combos(path, kind='alc'):
+    """
+    Read ALC or Combos hourly file.
+    Object1 has multi-index columns: (store, hour) for ALC or (store, hour×2) for Combos.
+    
+    For ALC: Each cell = quantity for store × product × hour
+    For Combos: Each pair of cells = (Net Sales €, Receipt count) for store × product × hour
+    
+    Returns:
+      ALC: {store: {product: {hour: qty}}}
+      Combos: {store: {product: {hour: {sales: €, receipts: n}}}}
+    """
+    print(f"  Loading {kind.upper()} hourly data from {path.name}...")
+    
+    # Read header rows to determine structure
+    raw = pd.read_excel(path, sheet_name='Object1', header=None, nrows=5)
+    
+    # Find the description columns: rows where row 0/1 are NaN/Unnamed and contain product info
+    # Identify row index where headers transition to data
+    # Strategy: find row where col 0 has a real product string (not NaN/Συνολικά)
+    
+    # First two rows are typically header (store name) and (hour or metric)
+    # For ALC: row 0 = stores, row 1 = hours, row 2 = column metric labels (often missing)
+    # For Combos: row 0 = stores, row 1 = hours+suffix, row 2 = metric labels (Καθαρή Αξία | Line Receipt)
+    
+    # Re-read with header=[0,1] then check for metric row
+    df = pd.read_excel(path, sheet_name='Object1', header=[0, 1])
+    
+    # Determine description columns: those with both header levels containing 'Unnamed' or NaN
+    desc_col_count = 0
+    for col in df.columns:
+        l0 = str(col[0])
+        if 'Unnamed' in l0:
+            desc_col_count += 1
+        else:
+            break
+    
+    # Determine metric row: read first data row to see if it contains metric labels
+    is_combos_with_metrics = False
+    if len(df) > 0:
+        first_row = df.iloc[0]
+        # Check if first row contains 'Καθαρή Αξία' or 'Quantity' indicators
+        sample = str(first_row.iloc[desc_col_count] if len(first_row) > desc_col_count else '')
+        if 'Αξία' in sample or 'Quantity' in sample or 'Receipt' in sample:
+            is_combos_with_metrics = True
+    
+    # Use desc cols to extract product info
+    # Identify store-hour columns
+    store_hour_cols = {}  # {store: [(col_idx, hour, metric_idx)]}
+    for i in range(desc_col_count, len(df.columns)):
+        col = df.columns[i]
+        store = str(col[0]).strip()
+        hour = str(col[1]).strip()
+        if 'Unnamed' in store or store == '':
+            continue
+        if store not in store_hour_cols:
+            store_hour_cols[store] = []
+        store_hour_cols[store].append((i, hour))
+    
+    print(f"    → {len(store_hour_cols)} stores detected (desc cols: {desc_col_count}, has metrics row: {is_combos_with_metrics})")
+    
+    # Skip the metrics row if it exists
+    data_start = 1 if is_combos_with_metrics else 0
+    
+    result = {}
+    products_seen = set()
+    
+    for ridx in range(data_start, len(df)):
+        row = df.iloc[ridx]
+        # Build product key from desc cols
+        parts = []
+        for di in range(desc_col_count):
+            v = row.iloc[di]
+            if pd.notna(v) and str(v).strip() not in ('nan', 'Συνολικά', ''):
+                parts.append(str(v).strip())
+        if not parts:
+            continue
+        product_key = ' | '.join(parts)
+        # Skip if all parts are "Συνολικά"
+        if all(p == 'Συνολικά' for p in parts):
+            continue
+        products_seen.add(product_key)
+        
+        for store, cols in store_hour_cols.items():
+            if store not in result:
+                result[store] = {}
+            if product_key not in result[store]:
+                result[store][product_key] = {}
+            
+            # For combos with paired columns, alternate Sales/Receipts
+            if is_combos_with_metrics and kind == 'combos':
+                # Pair up consecutive cols (sales €, receipts)
+                for j in range(0, len(cols) - 1, 2):
+                    col_idx_a, hour_a = cols[j]
+                    col_idx_b, hour_b = cols[j+1]
+                    sales = row.iloc[col_idx_a]
+                    receipts = row.iloc[col_idx_b]
+                    # Hour from "07:00" or "07:00.1" — strip suffix
+                    hour_clean = hour_a.split('.')[0] if '.' in hour_a else hour_a
+                    if pd.notna(sales) and float(sales) != 0:
+                        result[store][product_key][hour_clean] = {
+                            'sales': round(float(sales), 2),
+                            'receipts': int(receipts) if pd.notna(receipts) else 0,
+                        }
+            else:
+                # Simple: each hour col = qty
+                for col_idx, hour in cols:
+                    val = row.iloc[col_idx]
+                    if pd.notna(val) and float(val) != 0:
+                        result[store][product_key][hour] = float(val)
+    
+    # Filter out aggregate "Συνολικά" pseudo-store
+    result = {k: v for k, v in result.items() if k.strip() != 'Συνολικά'}
+    
+    # Map raw store names to canonical short names where possible
+    ALC_STORE_MAP = {
+        'KFC -  ΘΩΝ (ΑΜΠΕΛΟΚΗΠΟΙ)': 'ΘΩΝ',
+        'KFC - COSMOS': 'COSMOS',
+        'KFC - ESCAPE (ΙΛΙΟΝ)': 'ESCAPE',
+        'KFC - MALL (ΜΑΡΟΥΣΙ)': 'ΜΑΡΟΥΣΙ',
+        'KFC - METRO MALL': 'METROMALL',
+        'KFC - ONE SALONICA': 'ONE SALONICA',
+        'KFC - RIVER WEST': 'RIVER',
+        'KFC - SMART PARK': 'SMART PARK',
+        'KFC - VILLAGE PARK (ΡΕΝΤΗΣ)': 'ΡΕΝΤΗΣ',
+        'KFC - ΑΡΙΣΤΟΤΕΛΟΥΣ': 'ΑΡΙΣΤΟΤΕΛΟΥΣ',
+        'KFC - ΓΕΡΑΚΑ': 'ΓΕΡΑΚΑΣ',
+        'KFC - ΓΛΥΦΑΔΑ': 'ΓΛΥΦΑΔΑ',
+        'KFC - ΚΗΦIΣΙΑ': 'ΚΗΦΙΣΙΑ',
+        'KFC - ΛΑΡΙΣΑ': 'ΛΑΡΙΣΑ',
+        'KFC - ΜΕΤΑΜΟΡΦΩΣΗ': 'ΜΕΤΑΜΟΡΦΩΣΗ',
+        'KFC - Ν. ΣΜΥΡΝΗΣ': 'Ν. ΣΜΥΡΝΗ',
+        'KFC - ΝΕΑ ΦΙΛΑΔΕΛΦΕΙΑ': 'ΦΙΛΑΔΕΛΦΕΙΑ',
+        'KFC - ΠΑΓΚΡΑΤΙ': 'ΠΑΓΚΡΑΤΙ',
+        'KFC - ΠΑΤΡΑ': 'ΠΑΤΡΑ',
+        'KFC - ΠΕΙΡΑΙΑ': 'ΠΕΙΡΑΙΑΣ',
+        'KFC - ΣΥΝΤΑΓΜΑ': 'ΣΥΝΤΑΓΜΑ',
+        'KFC - ΧΑΛΑΝΔΡΙ': 'ΧΑΛΑΝΔΡΙ',
+    }
+    result_mapped = {}
+    for raw_store, products_dict in result.items():
+        canonical = ALC_STORE_MAP.get(raw_store, raw_store)
+        result_mapped[canonical] = products_dict
+    result = result_mapped
+    
+    # Strip "Συνολικά | " prefix from product keys (it pollutes mapped names)
+    for store in result:
+        cleaned = {}
+        for prod_key, hours_data in result[store].items():
+            # Remove leading "Συνολικά | " if present
+            new_key = prod_key.replace('Συνολικά | ', '').strip()
+            cleaned[new_key] = hours_data
+        result[store] = cleaned
+    
+    # Compute total records
+    total_records = sum(
+        sum(len(v) for v in store_dict.values()) 
+        for store_dict in result.values()
+    )
+    print(f"    → {len(products_seen)} unique products, ~{total_records} store-product-hour records")
+    print(f"    → {len(result)} stores after canonical mapping")
+    return {
+        'stores': result,
+        'product_count': len(products_seen),
+    }
+
+
 # =====================================================================
 # BUILD JSON
 # =====================================================================
@@ -306,6 +791,44 @@ def build_food_data_json(source_dir: Path, output_dir: Path):
     else:
         print("    → No ΚΟΣΤΟΛΟΓΗΣΗ file found, skipping")
     
+    # Step 3b: Load Μεικτό κέρδος (product profitability)
+    print("\nSTEP 3b: Load Μεικτό κέρδος (optional)")
+    meikto_data = None
+    # Match all variations of Μεικτό κέρδος filename (with space, underscore, accents)
+    meikto_files = (
+        list(source_dir.glob('*Μεικτό_κέρδος*.xlsx'))
+        + list(source_dir.glob('*Μεικτό κέρδος*.xlsx'))
+        + list(source_dir.glob('*Μεικτο_κερδος*.xlsx'))
+        + list(source_dir.glob('*Μεικτο κερδος*.xlsx'))
+    )
+    # Deduplicate (in case multiple patterns match same file)
+    meikto_files = list(set(meikto_files))
+    if meikto_files:
+        meikto_data = load_meikto_kerdos(meikto_files[0])
+    else:
+        print("    → No Μεικτό κέρδος file found, skipping (Products tab will be empty)")
+    
+    # Step 3c: Load ALC + Combos hourly
+    print("\nSTEP 3c: Load ALC + Combos hourly (optional)")
+    alc_data = None
+    combos_data = None
+    alc_files = list(source_dir.glob('*ALC*Stores*Hours*.xlsx'))
+    combos_files = list(source_dir.glob('*Combos*Stores*Hours*.xlsx'))
+    if alc_files:
+        try:
+            alc_data = load_alc_combos(alc_files[0], 'alc')
+        except Exception as e:
+            print(f"    → ALC load failed: {e}")
+    else:
+        print("    → No ALC file found, skipping")
+    if combos_files:
+        try:
+            combos_data = load_alc_combos(combos_files[0], 'combos')
+        except Exception as e:
+            print(f"    → Combos load failed: {e}")
+    else:
+        print("    → No Combos file found, skipping")
+    
     # Step 4: Aggregate
     print("\nSTEP 4: Aggregate monthly")
     monthly_records = aggregate_monthly(df, categories)
@@ -330,15 +853,20 @@ def build_food_data_json(source_dir: Path, output_dir: Path):
     output = {
         'meta': {
             'generated_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-            'source_files': [
-                'FoodCost.xlsx',
-                'CategoriesFC.xlsx',
+            'source_files': [f for f in [
+                'FoodCost.xlsx', 'CategoriesFC.xlsx',
                 next((f.name for f in kosto_files), None),
-            ],
+                next((f.name for f in meikto_files), None) if meikto_files else None,
+                next((f.name for f in alc_files), None) if alc_files else None,
+                next((f.name for f in combos_files), None) if combos_files else None,
+            ] if f],
             'kfc_stores': [STORE_NAME_MAP[s] for s in KFC_STORES],
             'periods': period_strings,
             'latest_period': f"{latest_year}-{latest_month:02d}",
             'categories': all_categories,
+            'has_products': meikto_data is not None,
+            'has_hourly_alc': alc_data is not None,
+            'has_hourly_combos': combos_data is not None,
         },
         'monthly': monthly_records,
         'top_variances_latest': top_variances,
@@ -346,6 +874,13 @@ def build_food_data_json(source_dir: Path, output_dir: Path):
             {'year': y, 'month': m, 'store_raw': s, 'cogs': v['cogs']}
             for (y, m, s), v in kostologisi.items()
         ] if kostologisi else [],
+        'product_profit': meikto_data['products'] if meikto_data else [],
+        'store_totals': meikto_data['store_totals'] if meikto_data else [],
+        'store_hourly': meikto_data['store_hourly'] if meikto_data else {},
+        'store_salestype': meikto_data['store_salestype'] if meikto_data else {},
+        'hourly_category': meikto_data['hourly_category'] if meikto_data else {},
+        'hourly_alc': alc_data['stores'] if alc_data else {},
+        'hourly_combos': combos_data['stores'] if combos_data else {},
     }
     
     # Write
