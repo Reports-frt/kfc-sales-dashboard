@@ -478,12 +478,21 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
 }
-.dt thead th:first-child,
-.dt thead th:nth-child(2),
-.dt tbody td:first-child,
-.dt tbody td:nth-child(2) { text-align: left; }
+/* Default: # and Store columns left-aligned for non-products tables */
+.dt:not(.dt-products) thead th:first-child,
+.dt:not(.dt-products) thead th:nth-child(2),
+.dt:not(.dt-products) tbody td:first-child,
+.dt:not(.dt-products) tbody td:nth-child(2) { text-align: left; }
 .dt thead th:first-child,
 .dt tbody td:first-child { width: 36px; }  /* narrow rank column */
+
+/* Products table — explicit column control via classes */
+.dt-products thead th.col-rank,
+.dt-products tbody td.col-rank { text-align: left; width: 36px; }
+.dt-products thead th.col-text,
+.dt-products tbody td.col-text { text-align: left; }
+.dt-products thead th.col-tier,
+.dt-products tbody td.col-tier { text-align: left; }
 .dt thead th.sortable { cursor: pointer; user-select: none; }
 .dt thead th.sortable:hover { color: var(--text-0); }
 .dt tbody td {
@@ -1686,11 +1695,12 @@ function classifyProductKind(p) {
   // OTHER: non-product items (φόροι, δωρεάν, dummy codes)
   // Greek: Περιβαντολογικο Τελος = environmental fee/tax
   // ΕΙΣΦ.ΠΡΟΣΤ.ΠΕΡΙΒ. = Environmental Protection Contribution (Greek law)
+  // NOTE: avoid matching "FREE" alone (catches "Sugar Free", "Caffeine Free" etc.)
+  // Use Greek "ΔΩΡΕΑΝ" only — it's specifically used for freebies in this dataset.
   if (cat.includes('ΠΕΡΙΒΑΝΤΟΛΟΓΙΚΟ') || cat.includes('ΠΕΡΙΒΑΛΛΟΝΤΟΛΟΓΙΚΟ')
       || cat.includes('DUMMY') || cat.includes('EXTRA CHARGE')
-      || name.includes('ΕΙΣΦ.') || name.includes('ΠΕΡΙΒ')
-      || name.includes('ΔΩΡΕΑΝ') || name.includes('FREE')
-      || name.includes('DIP POT') && (name.includes('ΔΩΡΕΑΝ') || name.includes('FREE'))) {
+      || name.includes('ΕΙΣΦ.') || name.startsWith('ΠΕΡΙΒ')
+      || name.includes('ΔΩΡΕΑΝ')) {
     return 'other';
   }
   
@@ -1841,11 +1851,11 @@ function renderProducts() {
     </div>`;
   
   if (desktop) {
-    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
-      <th>#</th>
-      <th>Product</th>
-      <th>Category</th>
-      <th>Tier</th>
+    body += `<div class="dt-wrap"><table class="dt dt-products"><thead><tr>
+      <th class="col-rank">#</th>
+      <th class="col-text">Product</th>
+      <th class="col-text">Category</th>
+      <th class="col-tier">Tier</th>
       <th>Quantity</th>
       <th>Sales €</th>
       <th>FC €</th>
@@ -1856,10 +1866,10 @@ function renderProducts() {
     </tr></thead><tbody>`;
     products.slice(0, 100).forEach((p, i) => {
       body += `<tr>
-        <td>${i+1}</td>
-        <td><strong>${p.product}</strong></td>
-        <td><span style="font-family:var(--mono);font-size:10.5px;color:var(--text-1)">${p.category}</span></td>
-        <td><span class="var-${p.cls}" style="font-size:10px">${p.label}</span></td>
+        <td class="col-rank">${i+1}</td>
+        <td class="col-text"><strong>${p.product}</strong></td>
+        <td class="col-text"><span style="font-family:var(--mono);font-size:10.5px;color:var(--text-1)">${p.category}</span></td>
+        <td class="col-tier"><span class="var-${p.cls}" style="font-size:10px">${p.label}</span></td>
         <td>${p.qty.toLocaleString('el-GR')}</td>
         <td>${fmtEur(p.sales)}</td>
         <td>${fmtEur(p.fc)}</td>

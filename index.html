@@ -3146,11 +3146,11 @@ const CHANNEL_COLORS = {
 };
 
 const TIME_ZONES = [
-  { range: '05:00–12:00', label: 'Morning',   from: 5,  to: 12, color: '#3b82f6' },
+  { range: '11:00–12:00', label: 'Pre-Lunch', from: 11, to: 12, color: '#3b82f6' },
   { range: '13:00–15:00', label: 'Lunch',     from: 13, to: 15, color: '#ef4444' },
   { range: '16:00–18:00', label: 'Afternoon', from: 16, to: 18, color: '#f97316' },
   { range: '19:00–21:00', label: 'Dinner',    from: 19, to: 21, color: '#a855f7' },
-  { range: '22:00–04:00', label: 'Late',      from: 22, to: 4,  color: '#06b6d4' },
+  { range: '22:00–01:00', label: 'Late',      from: 22, to: 1,  color: '#06b6d4' },
 ];
 function hourInZone(h, z) {
   if (z.from <= z.to) return h >= z.from && h <= z.to;
@@ -3173,9 +3173,18 @@ function renderHourly(R) {
   }
 
   const years = HOURLY.years.slice().sort();
-  const hours = HOURLY.hours.slice().sort((a,b) => a-b);
-  const cyYear = Math.max(...years);
-  const lyYear = years.length > 1 ? years[years.findIndex(y => y === cyYear) - 1] : null;
+  // Pick year based on the current view's period (R.from)
+  // This makes the hourly tab respect WEEK / CUSTOM / DAY / etc by at least using the right year
+  const periodYear = parseInt((R.from || R.to || LATEST).slice(0, 4));
+  const cyYear = years.includes(periodYear) ? periodYear : Math.max(...years);
+  const lyIdx = years.findIndex(y => y === cyYear) - 1;
+  const lyYear = lyIdx >= 0 ? years[lyIdx] : null;
+
+  // Dead-hours filter (02:00-10:00 = ώρες ελέγχου / περιστασιακές)
+  // Keep all hours between 11:00 and 01:00 (next day). Drop 2-10 inclusive.
+  const DEAD_HOURS = new Set([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  const allHours = HOURLY.hours.slice().sort((a,b) => a-b);
+  const hours = allHours.filter(h => !DEAD_HOURS.has(h));
 
   // ---- Pre-compute key metrics ----
   const cyByHour = hours.map(h => {
@@ -3229,6 +3238,19 @@ function renderHourly(R) {
   const topZone = tzTotals.slice().sort((a,b)=>b.sales-a.sales)[0];
 
   let html = "";
+  
+  // ============================================================
+  // INFO BANNER — explain the year-aggregate limitation
+  // ============================================================
+  html += `<div class="insight" style="margin-bottom: 14px">
+    <div class="ins-label">ℹ Hourly view — Annual Aggregate</div>
+    <div class="ins-text">
+      Δείχνει <strong>annual hourly profile</strong> για το έτος <strong>${cyYear}</strong>${lyYear ? ` (vs ${lyYear})` : ''}. 
+      Δεν φιλτράρεται σε εβδομάδα/μήνα γιατί τα hourly δεδομένα είναι year-aggregate (από Targit).
+      Εξαιρούνται οι ώρες <strong>02:00–10:00</strong> ως νεκρές (έλεγχοι/περιστασιακές κινήσεις).
+      Multi-store filter εφαρμόζεται κανονικά.
+    </div>
+  </div>`;
 
   // ============================================================
   // QUICK STATS BANNER
