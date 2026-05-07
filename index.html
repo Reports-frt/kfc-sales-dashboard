@@ -145,6 +145,36 @@ body {
 .live-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--good); margin-right: 4px; vertical-align: 0; animation: pulse 2s infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
+/* ============== HUB SWITCH (Sales / Food Cost) ============== */
+.hub-switch {
+  display: inline-flex;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 3px;
+  gap: 2px;
+}
+.hub-switch a {
+  padding: 6px 12px;
+  border-radius: 5px;
+  text-decoration: none;
+  color: var(--text-1);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.hub-switch a:hover { color: var(--text-0); background: var(--bg-3); }
+.hub-switch a.active {
+  background: var(--kfc);
+  color: white;
+}
+.header-row .hub-switch { margin-left: auto; }
+@media (max-width: 600px) {
+  .hub-switch a { padding: 5px 10px; font-size: 11px; }
+}
+
 /* ============== CONTROLS ============== */
 .controls {
   background: var(--bg-1);
@@ -828,6 +858,10 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
       <div class="brand-text">
         <h1>Sales Command Centre — Greece</h1>
         <div class="subtitle">Daily · Sales vs Budget vs LY</div>
+      </div>
+      <div class="hub-switch">
+        <a href="./" class="active">Sales</a>
+        <a href="food/">Food Cost</a>
       </div>
     </div>
     <div class="header-meta">

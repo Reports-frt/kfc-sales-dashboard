@@ -17,6 +17,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg-0: #0a0e14;
@@ -326,10 +327,13 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
 }
 .kpi.theoretical { border-left-color: #3b82f6; }
 .kpi.actual      { border-left-color: var(--accent); }
-.kpi.variance.good    { border-left-color: var(--good); }
-.kpi.variance.warn    { border-left-color: var(--warn); }
-.kpi.variance.bad     { border-left-color: var(--bad); }
+.kpi.gap.good    { border-left-color: var(--good); }
+.kpi.gap.warn    { border-left-color: var(--warn); }
+.kpi.gap.bad     { border-left-color: var(--bad); }
 .kpi.waste       { border-left-color: #a855f7; }
+.kpi.deviation.good { border-left-color: var(--good); }
+.kpi.deviation.warn { border-left-color: var(--warn); }
+.kpi.deviation.bad  { border-left-color: var(--bad); }
 .kpi.fc-pct      { border-left-color: var(--accent-2); }
 
 .kpi .label {
@@ -412,6 +416,28 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   letter-spacing: 0.5px;
   margin-left: auto;
 }
+
+/* Excel export button */
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text-1);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: 8px;
+  white-space: nowrap;
+}
+.btn-export:hover { background: var(--good); color: white; border-color: var(--good); }
+.btn-export svg { width: 12px; height: 12px; }
 
 .panel-section { margin-bottom: 28px; }
 
@@ -795,9 +821,9 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="variance">Variance Analysis</button>
+    <button class="tab" data-tab="variance">GAP Analysis</button>
     <button class="tab" data-tab="categories">Categories</button>
-    <button class="tab" data-tab="waste">ΦΥΡΕΣ Detail</button>
+    <button class="tab" data-tab="waste">WASTE Detail</button>
     <button class="tab" data-tab="trend">Trend</button>
   </div>
 
@@ -1005,28 +1031,30 @@ function getPeriodRecords(period, storeFilter='ALL') {
 
 function aggregateRecords(records) {
   const view = STATE.view;
-  let ideal = 0, actual = 0, variance = 0, waste = 0;
+  let ideal = 0, actual = 0, gap = 0, waste = 0;
   let byCategory = {};
   let byReason = {};
 
   for (const r of records) {
-    ideal    += r[view].ideal_cost;
-    actual   += r[view].total_cost;
-    variance += r[view].other_cost;
-    waste    += r.waste.cost;
+    ideal  += r[view].ideal_cost;
+    actual += r[view].total_cost;
+    gap    += r[view].other_cost;   // GAP = Total - Ideal = Other
+    waste  += r.waste.cost;          // WASTE = Reason ΦΥΡΑ
     // Categories
     for (const [cat, vals] of Object.entries(r.by_category)) {
-      if (!byCategory[cat]) byCategory[cat] = {ideal: 0, actual: 0, variance: 0};
-      byCategory[cat].ideal    += vals.ideal_cost;
-      byCategory[cat].actual   += vals.total_cost;
-      byCategory[cat].variance += vals.other_cost;
+      if (!byCategory[cat]) byCategory[cat] = {ideal: 0, actual: 0, gap: 0};
+      byCategory[cat].ideal  += vals.ideal_cost;
+      byCategory[cat].actual += vals.total_cost;
+      byCategory[cat].gap    += vals.other_cost;
     }
     // Reasons
     for (const [reason, val] of Object.entries(r.by_reason)) {
       byReason[reason] = (byReason[reason] || 0) + val;
     }
   }
-  return { ideal, actual, variance, waste, byCategory, byReason };
+  // DEVIATION = GAP - WASTE (the unexplained portion)
+  const deviation = gap - waste;
+  return { ideal, actual, gap, waste, deviation, byCategory, byReason };
 }
 
 function getStoreData(period, storeName) {
@@ -1058,35 +1086,37 @@ function render() {
 // =====================================================================
 function renderKPIs(records) {
   const agg = aggregateRecords(records);
-  const variancePct = agg.ideal !== 0 ? (agg.variance / agg.ideal) * 100 : 0;
+  const gapPct = agg.ideal !== 0 ? (agg.gap / agg.ideal) * 100 : 0;
   const wastePct = agg.actual !== 0 ? (agg.waste / agg.actual) * 100 : 0;
-  const varCls = varClass(variancePct);
+  const deviationPct = agg.ideal !== 0 ? (agg.deviation / agg.ideal) * 100 : 0;
+  const gapCls = varClass(gapPct);
+  const devCls = varClass(Math.abs(deviationPct));
 
   const html = `
     <div class="kpi theoretical">
-      <div class="label">Theoretical Cost (Ideal)</div>
+      <div class="label">Theoretical (Ideal)</div>
       <div class="value">${fmtEurK(agg.ideal)}</div>
-      <div class="sub">βάσει recipes × sales mix</div>
+      <div class="sub">recipes × sales mix</div>
     </div>
     <div class="kpi actual">
-      <div class="label">Actual Cost</div>
+      <div class="label">Actual</div>
       <div class="value">${fmtEurK(agg.actual)}</div>
       <div class="sub">από ERP closes</div>
     </div>
-    <div class="kpi variance ${varCls}">
-      <div class="label">Variance</div>
-      <div class="value">${fmtEurK(agg.variance)}</div>
-      <div class="sub">${variancePct >= 0 ? '+' : ''}${variancePct.toFixed(1).replace('.', ',')}% vs ideal</div>
+    <div class="kpi gap ${gapCls}">
+      <div class="label">GAP</div>
+      <div class="value">${fmtEurK(agg.gap)}</div>
+      <div class="sub">${gapPct >= 0 ? '+' : ''}${gapPct.toFixed(1).replace('.', ',')}% vs ideal</div>
     </div>
     <div class="kpi waste">
-      <div class="label">Waste (ΦΥΡΑ)</div>
+      <div class="label">WASTE (ΦΥΡΑ)</div>
       <div class="value">${fmtEurK(agg.waste)}</div>
-      <div class="sub">${wastePct.toFixed(1).replace('.', ',')}% of actual cost</div>
+      <div class="sub">${wastePct.toFixed(1).replace('.', ',')}% of actual · καταγεγραμμένη</div>
     </div>
-    <div class="kpi fc-pct">
-      <div class="label">View</div>
-      <div class="value" style="font-size:14px;line-height:1.4">${STATE.view === 'pure_food' ? 'Pure Food' : 'Total Cost'}</div>
-      <div class="sub">${STATE.view === 'pure_food' ? 'ΑΥΛΕΣ + ΕΜΠΟΡΕΥΜΑΤΑ' : '+ packaging, services'}</div>
+    <div class="kpi deviation ${devCls}">
+      <div class="label">DEVIATION</div>
+      <div class="value">${fmtEurK(agg.deviation)}</div>
+      <div class="sub">${deviationPct >= 0 ? '+' : ''}${deviationPct.toFixed(1).replace('.', ',')}% · ανεξήγητο</div>
     </div>
   `;
   document.getElementById('kpiRow').innerHTML = html;
@@ -1099,21 +1129,22 @@ function renderOverview(records) {
   const root = document.getElementById('tab-overview');
   const desktop = isDesktop();
 
-  // Per-store breakdown with variance ranking
+  // Per-store breakdown with GAP / WASTE / DEVIATION
   const rows = records.map(r => {
     const v = r[STATE.view];
-    const variancePct = v.ideal_cost !== 0 ? (v.other_cost / v.ideal_cost) * 100 : 0;
+    const gap = v.other_cost;
+    const waste = r.waste.cost;
+    const deviation = gap - waste;
+    const gapPct = v.ideal_cost !== 0 ? (gap / v.ideal_cost) * 100 : 0;
     return {
       store: r.store,
       ideal: v.ideal_cost,
       actual: v.total_cost,
-      variance: v.other_cost,
-      variancePct,
-      waste: r.waste.cost,
+      gap, gapPct, waste, deviation,
     };
-  }).filter(r => r.ideal > 100); // exclude empty
+  }).filter(r => r.ideal > 100);
 
-  rows.sort((a, b) => a.variancePct - b.variancePct);
+  rows.sort((a, b) => a.gapPct - b.gapPct);
 
   // Insights
   let insightsHtml = '';
@@ -1123,11 +1154,11 @@ function renderOverview(records) {
     insightsHtml = `
       <div class="insight">
         <div class="ins-label">★ Top Performer</div>
-        <div class="ins-text"><strong>${best.store}</strong> έχει variance <strong>${fmtPct(best.variancePct)}</strong> — ${best.variancePct < 1 ? 'εξαιρετικός έλεγχος food cost' : 'καλά ευθυγραμμισμένο με theoretical'}.</div>
+        <div class="ins-text"><strong>${best.store}</strong> έχει GAP <strong>${fmtPct(best.gapPct)}</strong> — ${best.gapPct < 1 ? 'εξαιρετικός έλεγχος food cost' : 'καλά ευθυγραμμισμένο με theoretical'}.</div>
       </div>
-      <div class="insight ${worst.variancePct > 7 ? 'bad' : 'warn'}">
-        <div class="ins-label">⚠ Highest Variance</div>
-        <div class="ins-text"><strong>${worst.store}</strong> έχει <strong>${fmtPct(worst.variancePct)}</strong> variance (€${Math.round(worst.variance).toLocaleString('el-GR')} πάνω από theoretical) — αξίζει drilldown στο Variance Analysis tab.</div>
+      <div class="insight ${worst.gapPct > 7 ? 'bad' : 'warn'}">
+        <div class="ins-label">⚠ Highest GAP</div>
+        <div class="ins-text"><strong>${worst.store}</strong> έχει <strong>${fmtPct(worst.gapPct)}</strong> GAP — €${Math.round(worst.deviation).toLocaleString('el-GR')} ανεξήγητο (deviation πέρα από καταγεγραμμένη waste).</div>
       </div>
     `;
   }
@@ -1136,8 +1167,9 @@ function renderOverview(records) {
     ${insightsHtml}
     <div class="panel-section">
       <div class="section-title">
-        <span>Variance Ranking — All Stores</span>
+        <span>GAP Ranking — All Stores</span>
         <span class="meta">${rows.length} stores · ${periodLabel(parseInt(STATE.period.slice(0,4)), parseInt(STATE.period.slice(5,7)))}</span>
+        <button class="btn-export" onclick="exportTable('overview')">↓ Excel</button>
       </div>
   `;
 
@@ -1147,9 +1179,10 @@ function renderOverview(records) {
       <th>Store</th>
       <th>Theoretical</th>
       <th>Actual</th>
-      <th>Variance €</th>
-      <th>Variance %</th>
-      <th>Waste (ΦΥΡΑ)</th>
+      <th>GAP €</th>
+      <th>GAP %</th>
+      <th>WASTE</th>
+      <th>DEVIATION</th>
     </tr></thead><tbody>`;
 
     rows.forEach((r, i) => {
@@ -1158,26 +1191,28 @@ function renderOverview(records) {
         <td><strong>${r.store}</strong></td>
         <td>${fmtEur(r.ideal)}</td>
         <td>${fmtEur(r.actual)}</td>
-        <td>${r.variance > 0 ? '+' : ''}${fmtEur(r.variance)}</td>
-        <td>${varTag(r.variance, r.ideal)}</td>
+        <td>${r.gap > 0 ? '+' : ''}${fmtEur(r.gap)}</td>
+        <td>${varTag(r.gap, r.ideal)}</td>
         <td>${fmtEur(r.waste)}</td>
+        <td>${r.deviation > 0 ? '+' : ''}${fmtEur(r.deviation)}</td>
       </tr>`;
     });
     body += `</tbody></table></div>`;
   } else {
     body += `<div class="cards">`;
     rows.forEach((r, i) => {
-      const cls = varClass(r.variancePct);
+      const cls = varClass(r.gapPct);
       body += `<div class="card ${cls}">
         <div class="card-title">
           <span class="name">${i+1}. ${r.store}</span>
-          <span class="rank">${varTag(r.variance, r.ideal)}</span>
+          <span class="rank">${varTag(r.gap, r.ideal)}</span>
         </div>
         <div class="card-rows">
           <div class="card-row"><span class="lbl">Theoretical</span><span class="val">${fmtEur(r.ideal)}</span></div>
           <div class="card-row"><span class="lbl">Actual</span><span class="val">${fmtEur(r.actual)}</span></div>
-          <div class="card-row"><span class="lbl">Variance €</span><span class="val">${r.variance > 0 ? '+' : ''}${fmtEur(r.variance)}</span></div>
-          <div class="card-row"><span class="lbl">Waste</span><span class="val">${fmtEur(r.waste)}</span></div>
+          <div class="card-row"><span class="lbl">GAP €</span><span class="val">${r.gap > 0 ? '+' : ''}${fmtEur(r.gap)}</span></div>
+          <div class="card-row"><span class="lbl">WASTE</span><span class="val">${fmtEur(r.waste)}</span></div>
+          <div class="card-row"><span class="lbl">DEVIATION</span><span class="val">${r.deviation > 0 ? '+' : ''}${fmtEur(r.deviation)}</span></div>
         </div>
       </div>`;
     });
@@ -1195,59 +1230,46 @@ function renderVariance(records) {
   const root = document.getElementById('tab-variance');
   const desktop = isDesktop();
 
-  // For each store, get the top 20 variance ingredients (from food_data.json's top_variances_latest)
-  // BUT — top_variances_latest is only for the latest period. Show note if user picks an earlier period.
   const isLatest = STATE.period === DATA.meta.latest_period;
-
   let body = '';
 
   if (!isLatest) {
     body += `<div class="insight warn">
       <div class="ins-label">ℹ Note</div>
-      <div class="ins-text">Το ingredient-level variance breakdown είναι διαθέσιμο μόνο για τον <strong>τελευταίο μήνα (${periodLabel(parseInt(DATA.meta.latest_period.slice(0,4)), parseInt(DATA.meta.latest_period.slice(5,7)))})</strong>. Άλλαξε στον τελευταίο μήνα για να δεις drilldown.</div>
+      <div class="ins-text">Το ingredient-level GAP breakdown είναι διαθέσιμο μόνο για τον <strong>τελευταίο μήνα (${periodLabel(parseInt(DATA.meta.latest_period.slice(0,4)), parseInt(DATA.meta.latest_period.slice(5,7)))})</strong>. Άλλαξε στον τελευταίο μήνα για να δεις drilldown.</div>
     </div>`;
   }
 
-  // Stores to render
   let stores = STATE.storeFilter === 'ALL'
     ? Object.keys(DATA.top_variances_latest).sort()
     : [STATE.storeFilter];
 
-  if (!isLatest) {
-    stores = []; // hide drilldown for non-latest
-  }
+  if (!isLatest) stores = [];
 
   if (stores.length === 0 && isLatest) {
-    body += `<div class="no-data">Δεν υπάρχουν δεδομένα variance για το επιλεγμένο φίλτρο.</div>`;
+    body += `<div class="no-data">Δεν υπάρχουν δεδομένα GAP για το επιλεγμένο φίλτρο.</div>`;
   }
 
   for (const store of stores) {
     const items = DATA.top_variances_latest[store] || [];
     if (items.length === 0) continue;
-
-    // Total variance for this store
-    const totalVariance = items.reduce((s, x) => s + x.other_cost, 0);
+    const totalGap = items.reduce((s, x) => s + x.other_cost, 0);
 
     body += `<div class="panel-section">
       <div class="section-title">
         <span>${store}</span>
-        <span class="meta">Top ${items.length} ingredients · Total variance: ${fmtEur(totalVariance)}</span>
+        <span class="meta">Top ${items.length} ingredients · Total GAP: ${fmtEur(totalGap)}</span>
+        <button class="btn-export" onclick="exportTable('variance', '${store}')">↓ Excel</button>
       </div>`;
 
     if (desktop) {
       body += `<div class="dt-wrap"><table class="dt"><thead><tr>
-        <th>#</th>
-        <th>Ingredient</th>
-        <th>Category</th>
-        <th>Theoretical</th>
-        <th>Actual</th>
-        <th>Variance €</th>
-        <th>% of total</th>
+        <th>#</th><th>Ingredient</th><th>Category</th>
+        <th>Theoretical</th><th>Actual</th>
+        <th>GAP €</th><th>% of total</th>
       </tr></thead><tbody>`;
-
-      const maxAbs = Math.max(...items.map(it => Math.abs(it.other_cost)));
       items.forEach((it, i) => {
-        const sharePct = totalVariance !== 0 ? (it.other_cost / totalVariance * 100) : 0;
+        const sharePct = totalGap !== 0 ? (it.other_cost / totalGap * 100) : 0;
         body += `<tr>
           <td>${i+1}</td>
           <td>${it.desc}</td>
@@ -1270,7 +1292,7 @@ function renderVariance(records) {
             <div class="card-row"><span class="lbl">Category</span><span class="val">${it.category}</span></div>
             <div class="card-row"><span class="lbl">Theoretical</span><span class="val">${fmtEur(it.ideal_cost)}</span></div>
             <div class="card-row"><span class="lbl">Actual</span><span class="val">${fmtEur(it.total_cost)}</span></div>
-            <div class="card-row"><span class="lbl">Variance</span><span class="val">${it.other_cost > 0 ? '+' : ''}${fmtEur(it.other_cost)}</span></div>
+            <div class="card-row"><span class="lbl">GAP</span><span class="val">${it.other_cost > 0 ? '+' : ''}${fmtEur(it.other_cost)}</span></div>
           </div>
         </div>`;
       });
@@ -1278,7 +1300,6 @@ function renderVariance(records) {
     }
     body += `</div>`;
   }
-
   root.innerHTML = body;
 }
 
@@ -1290,14 +1311,13 @@ function renderCategories(records) {
   const desktop = isDesktop();
   const agg = aggregateRecords(records);
 
-  // Sort categories by actual cost desc
   const cats = Object.entries(agg.byCategory)
     .map(([cat, vals]) => ({
       cat,
       ideal: vals.ideal,
       actual: vals.actual,
-      variance: vals.variance,
-      variancePct: vals.ideal !== 0 ? (vals.variance / vals.ideal * 100) : 0,
+      gap: vals.gap,
+      gapPct: vals.ideal !== 0 ? (vals.gap / vals.ideal * 100) : 0,
     }))
     .filter(c => c.ideal > 100)
     .sort((a, b) => b.actual - a.actual);
@@ -1309,19 +1329,16 @@ function renderCategories(records) {
       <div class="section-title">
         <span>Cost by Category</span>
         <span class="meta">${cats.length} categories · ${periodLabel(parseInt(STATE.period.slice(0,4)), parseInt(STATE.period.slice(5,7)))}${STATE.storeFilter !== 'ALL' ? ' · ' + STATE.storeFilter : ''}</span>
+        <button class="btn-export" onclick="exportTable('categories')">↓ Excel</button>
       </div>
   `;
 
   if (desktop) {
     body += `<div class="dt-wrap"><table class="dt"><thead><tr>
-      <th>#</th>
-      <th>Category</th>
-      <th>Theoretical</th>
-      <th>Actual</th>
-      <th>Variance €</th>
-      <th>Variance %</th>
-      <th>Mix %</th>
-      <th></th>
+      <th>#</th><th>Category</th>
+      <th>Theoretical</th><th>Actual</th>
+      <th>GAP €</th><th>GAP %</th>
+      <th>Mix %</th><th></th>
     </tr></thead><tbody>`;
 
     cats.forEach((c, i) => {
@@ -1331,8 +1348,8 @@ function renderCategories(records) {
         <td><strong>${c.cat}</strong></td>
         <td>${fmtEur(c.ideal)}</td>
         <td>${fmtEur(c.actual)}</td>
-        <td>${c.variance > 0 ? '+' : ''}${fmtEur(c.variance)}</td>
-        <td>${varTag(c.variance, c.ideal)}</td>
+        <td>${c.gap > 0 ? '+' : ''}${fmtEur(c.gap)}</td>
+        <td>${varTag(c.gap, c.ideal)}</td>
         <td>${mixPct.toFixed(1).replace('.', ',')}%</td>
         <td style="min-width:120px"><div class="mini-bar"><div style="width:${mixPct.toFixed(0)}%"></div></div></td>
       </tr>`;
@@ -1342,7 +1359,7 @@ function renderCategories(records) {
     body += `<div class="cards">`;
     cats.forEach((c, i) => {
       const mixPct = totalActual ? (c.actual / totalActual * 100) : 0;
-      const cls = varClass(Math.abs(c.variancePct));
+      const cls = varClass(Math.abs(c.gapPct));
       body += `<div class="card ${cls}">
         <div class="card-title">
           <span class="name">${c.cat}</span>
@@ -1351,7 +1368,7 @@ function renderCategories(records) {
         <div class="card-rows">
           <div class="card-row"><span class="lbl">Theoretical</span><span class="val">${fmtEur(c.ideal)}</span></div>
           <div class="card-row"><span class="lbl">Actual</span><span class="val">${fmtEur(c.actual)}</span></div>
-          <div class="card-row"><span class="lbl">Variance</span><span class="val">${varTag(c.variance, c.ideal)}</span></div>
+          <div class="card-row"><span class="lbl">GAP</span><span class="val">${varTag(c.gap, c.ideal)}</span></div>
         </div>
       </div>`;
     });
@@ -1369,33 +1386,40 @@ function renderWaste(records) {
   const root = document.getElementById('tab-waste');
   const desktop = isDesktop();
 
-  // Per-store waste analysis
   const rows = records.map(r => {
     const v = r[STATE.view];
+    const gap = v.other_cost;
+    const waste = r.waste.cost;
+    const deviation = gap - waste;
     return {
       store: r.store,
       actual: v.total_cost,
-      waste: r.waste.cost,
-      wastePct: v.total_cost !== 0 ? (r.waste.cost / v.total_cost * 100) : 0,
+      ideal: v.ideal_cost,
+      gap, waste, deviation,
+      wastePct: v.total_cost !== 0 ? (waste / v.total_cost * 100) : 0,
+      gapPct: v.ideal_cost !== 0 ? (gap / v.ideal_cost * 100) : 0,
     };
   }).filter(r => r.actual > 100);
 
   rows.sort((a, b) => b.wastePct - a.wastePct);
 
   const totalWaste = rows.reduce((s, r) => s + r.waste, 0);
+  const totalGap = rows.reduce((s, r) => s + r.gap, 0);
+  const totalDev = rows.reduce((s, r) => s + r.deviation, 0);
   const totalActual = rows.reduce((s, r) => s + r.actual, 0);
   const overallPct = totalActual !== 0 ? (totalWaste / totalActual * 100) : 0;
 
   let body = `
     <div class="insight ${overallPct > 3 ? 'warn' : ''}">
-      <div class="ins-label">Total Waste Summary</div>
-      <div class="ins-text">Συνολική φύρα: <strong>${fmtEur(totalWaste)}</strong> (${overallPct.toFixed(1).replace('.', ',')}% του actual cost) σε ${rows.length} stores για ${periodLabel(parseInt(STATE.period.slice(0,4)), parseInt(STATE.period.slice(5,7)))}.</div>
+      <div class="ins-label">Breakdown — GAP = WASTE + DEVIATION</div>
+      <div class="ins-text">Συνολικό GAP: <strong>${fmtEur(totalGap)}</strong>. Από αυτό, <strong>${fmtEur(totalWaste)}</strong> είναι καταγεγραμμένη φύρα (WASTE) και <strong>${fmtEur(totalDev)}</strong> είναι ανεξήγητη απόκλιση (DEVIATION).</div>
     </div>
 
     <div class="panel-section">
       <div class="section-title">
-        <span>Waste Ranking — Stores</span>
-        <span class="meta">${rows.length} stores · sorted by waste %</span>
+        <span>WASTE Ranking — Stores</span>
+        <span class="meta">${rows.length} stores · sorted by WASTE %</span>
+        <button class="btn-export" onclick="exportTable('waste')">↓ Excel</button>
       </div>
   `;
 
@@ -1404,8 +1428,10 @@ function renderWaste(records) {
       <th>#</th>
       <th>Store</th>
       <th>Actual Cost</th>
-      <th>Waste €</th>
-      <th>Waste %</th>
+      <th>GAP €</th>
+      <th>WASTE €</th>
+      <th>WASTE %</th>
+      <th>DEVIATION €</th>
       <th></th>
     </tr></thead><tbody>`;
 
@@ -1417,8 +1443,10 @@ function renderWaste(records) {
         <td>${i+1}</td>
         <td><strong>${r.store}</strong></td>
         <td>${fmtEur(r.actual)}</td>
+        <td>${r.gap > 0 ? '+' : ''}${fmtEur(r.gap)}</td>
         <td>${fmtEur(r.waste)}</td>
         <td><span class="${cls}">${r.wastePct.toFixed(1).replace('.', ',')}%</span></td>
+        <td>${r.deviation > 0 ? '+' : ''}${fmtEur(r.deviation)}</td>
         <td style="min-width:120px"><div class="mini-bar"><div style="width:${barW}%"></div></div></td>
       </tr>`;
     });
@@ -1433,8 +1461,10 @@ function renderWaste(records) {
           <span class="rank">${r.wastePct.toFixed(1).replace('.', ',')}%</span>
         </div>
         <div class="card-rows">
-          <div class="card-row"><span class="lbl">Actual Cost</span><span class="val">${fmtEur(r.actual)}</span></div>
-          <div class="card-row"><span class="lbl">Waste</span><span class="val">${fmtEur(r.waste)}</span></div>
+          <div class="card-row"><span class="lbl">Actual</span><span class="val">${fmtEur(r.actual)}</span></div>
+          <div class="card-row"><span class="lbl">GAP</span><span class="val">${r.gap > 0 ? '+' : ''}${fmtEur(r.gap)}</span></div>
+          <div class="card-row"><span class="lbl">WASTE</span><span class="val">${fmtEur(r.waste)}</span></div>
+          <div class="card-row"><span class="lbl">DEVIATION</span><span class="val">${r.deviation > 0 ? '+' : ''}${fmtEur(r.deviation)}</span></div>
         </div>
       </div>`;
     });
@@ -1566,13 +1596,14 @@ function renderTrend() {
   let body = `
     <div class="insight">
       <div class="ins-label">${STATE.storeFilter === 'ALL' ? 'Chain-Wide Trend' : STATE.storeFilter + ' Trend'}</div>
-      <div class="ins-text">${totalPeriods} μήνες ιστορικού (${series[0].year}-${String(series[0].month).padStart(2,'0')} → ${series[totalPeriods-1].year}-${String(series[totalPeriods-1].month).padStart(2,'0')}). Μέση variance: <strong>${avgVar.toFixed(1).replace('.', ',')}%</strong>.</div>
+      <div class="ins-text">${totalPeriods} μήνες ιστορικού (${series[0].year}-${String(series[0].month).padStart(2,'0')} → ${series[totalPeriods-1].year}-${String(series[totalPeriods-1].month).padStart(2,'0')}). Μέσο GAP: <strong>${avgVar.toFixed(1).replace('.', ',')}%</strong>.</div>
     </div>
 
     <div class="panel-section">
       <div class="section-title">
         <span>Theoretical vs Actual — Time Series</span>
         <span class="meta">${STATE.view === 'pure_food' ? 'Pure Food' : 'Total Cost'} · ${STATE.storeFilter === 'ALL' ? 'all stores' : STATE.storeFilter}</span>
+        <button class="btn-export" onclick="exportTable('trend')">↓ Excel</button>
       </div>
       <div class="chart-card">${svg}</div>
     </div>
@@ -1587,6 +1618,132 @@ function renderTrend() {
   `;
 
   root.innerHTML = body;
+}
+
+// =====================================================================
+// EXCEL EXPORT
+// =====================================================================
+function exportTable(tabName, contextStore) {
+  if (typeof XLSX === 'undefined') {
+    alert('Excel library δεν φόρτωσε. Δοκίμασε refresh.');
+    return;
+  }
+  const records = getPeriodRecords(STATE.period, STATE.storeFilter);
+  const periodStr = periodLabel(parseInt(STATE.period.slice(0,4)), parseInt(STATE.period.slice(5,7)));
+  const viewLabel = STATE.view === 'pure_food' ? 'Pure Food' : 'Total Cost';
+  
+  let aoa = [];
+  let sheetName = '';
+  let filenameSuffix = '';
+  
+  if (tabName === 'overview') {
+    sheetName = 'GAP Ranking';
+    filenameSuffix = 'GAP_Ranking';
+    aoa.push(['Period', STATE.period, 'View', viewLabel, 'Store filter', STATE.storeFilter]);
+    aoa.push([]);
+    aoa.push(['#','Store','Theoretical','Actual','GAP €','GAP %','WASTE €','DEVIATION €']);
+    const rows = records.map(r => {
+      const v = r[STATE.view];
+      const gap = v.other_cost;
+      const waste = r.waste.cost;
+      return {
+        store: r.store, ideal: v.ideal_cost, actual: v.total_cost,
+        gap, waste, deviation: gap - waste,
+        gapPct: v.ideal_cost ? gap/v.ideal_cost*100 : 0,
+      };
+    }).filter(r => r.ideal > 100).sort((a,b) => a.gapPct - b.gapPct);
+    rows.forEach((r,i) => aoa.push([
+      i+1, r.store, r.ideal, r.actual, r.gap, r.gapPct/100, r.waste, r.deviation
+    ]));
+  }
+  else if (tabName === 'variance') {
+    sheetName = 'GAP Analysis';
+    filenameSuffix = 'GAP_Analysis_' + (contextStore || 'all');
+    aoa.push(['Period', STATE.period, 'Store', contextStore || 'all']);
+    aoa.push([]);
+    aoa.push(['#','Ingredient','Category','Theoretical','Actual','GAP €','% of total']);
+    const stores = contextStore ? [contextStore] : Object.keys(DATA.top_variances_latest).sort();
+    for (const store of stores) {
+      const items = DATA.top_variances_latest[store] || [];
+      if (items.length === 0) continue;
+      if (stores.length > 1) {
+        aoa.push([]); aoa.push([`=== ${store} ===`]);
+      }
+      const totalGap = items.reduce((s,x) => s+x.other_cost, 0);
+      items.forEach((it,i) => aoa.push([
+        i+1, it.desc, it.category,
+        it.ideal_cost, it.total_cost, it.other_cost,
+        totalGap ? it.other_cost/totalGap : 0
+      ]));
+    }
+  }
+  else if (tabName === 'categories') {
+    sheetName = 'Categories';
+    filenameSuffix = 'Categories';
+    aoa.push(['Period', STATE.period, 'View', viewLabel, 'Store filter', STATE.storeFilter]);
+    aoa.push([]);
+    aoa.push(['#','Category','Theoretical','Actual','GAP €','GAP %','Mix %']);
+    const agg = aggregateRecords(records);
+    const cats = Object.entries(agg.byCategory)
+      .map(([cat, vals]) => ({
+        cat, ideal: vals.ideal, actual: vals.actual, gap: vals.gap,
+        gapPct: vals.ideal ? vals.gap/vals.ideal*100 : 0,
+      }))
+      .filter(c => c.ideal > 100).sort((a,b) => b.actual - a.actual);
+    const totalActual = cats.reduce((s,c) => s + c.actual, 0);
+    cats.forEach((c,i) => aoa.push([
+      i+1, c.cat, c.ideal, c.actual, c.gap, c.gapPct/100,
+      totalActual ? c.actual/totalActual : 0
+    ]));
+  }
+  else if (tabName === 'waste') {
+    sheetName = 'WASTE Detail';
+    filenameSuffix = 'WASTE_Detail';
+    aoa.push(['Period', STATE.period, 'View', viewLabel, 'Store filter', STATE.storeFilter]);
+    aoa.push([]);
+    aoa.push(['#','Store','Actual Cost','GAP €','WASTE €','WASTE %','DEVIATION €']);
+    const rows = records.map(r => {
+      const v = r[STATE.view];
+      const gap = v.other_cost;
+      const waste = r.waste.cost;
+      return {
+        store: r.store, actual: v.total_cost, gap, waste,
+        deviation: gap - waste,
+        wastePct: v.total_cost ? waste/v.total_cost*100 : 0,
+      };
+    }).filter(r => r.actual > 100).sort((a,b) => b.wastePct - a.wastePct);
+    rows.forEach((r,i) => aoa.push([
+      i+1, r.store, r.actual, r.gap, r.waste, r.wastePct/100, r.deviation
+    ]));
+  }
+  else if (tabName === 'trend') {
+    sheetName = 'Trend';
+    filenameSuffix = 'Trend';
+    aoa.push(['View', viewLabel, 'Store filter', STATE.storeFilter]);
+    aoa.push([]);
+    aoa.push(['Period','Year','Month','Theoretical','Actual','GAP €','GAP %']);
+    const periodKeys = DATA.meta.periods;
+    for (const p of periodKeys) {
+      const [y, m] = p.split('-').map(Number);
+      let recs = DATA.monthly.filter(r => r.year === y && r.month === m);
+      if (STATE.storeFilter !== 'ALL') recs = recs.filter(r => r.store === STATE.storeFilter);
+      let ideal = 0, actual = 0;
+      for (const r of recs) {
+        ideal += r[STATE.view].ideal_cost;
+        actual += r[STATE.view].total_cost;
+      }
+      const gap = actual - ideal;
+      const gapPct = ideal ? gap/ideal : 0;
+      aoa.push([p, y, m, ideal, actual, gap, gapPct]);
+    }
+  }
+  
+  // Build workbook
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  const filename = `KFC_FoodCost_${filenameSuffix}_${STATE.period}.xlsx`;
+  XLSX.writeFile(wb, filename);
 }
 
 // Re-render on resize
