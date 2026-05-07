@@ -192,6 +192,21 @@ body {
   gap: 7px;
   min-width: 0;
 }
+.period-select {
+  padding: 6px 10px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  color: var(--text-0);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  min-width: 130px;
+}
+.period-select:focus { border-color: var(--kfc); }
+
 .custom-range {
   display: inline-flex;
   align-items: center;
@@ -262,6 +277,7 @@ body {
   flex-direction: column;
   overflow: hidden;
 }
+.ms-dropdown[hidden] { display: none !important; }
 .ms-search-row {
   padding: 8px;
   border-bottom: 1px solid var(--border-soft);
@@ -1063,6 +1079,10 @@ input[type="date"]:focus, select:focus { outline: none; border-color: var(--acce
         <button data-type="Drive Through">Drive Thru</button>
       </div>
     </div>
+    <div class="control-group" id="weekPickerWrap" style="display:none">
+      <span class="control-label">ISO Week</span>
+      <select id="weekSelect" class="period-select"></select>
+    </div>
     <div class="control-group" id="customRangeWrap" style="display:none">
       <span class="control-label">Custom Range</span>
       <div class="custom-range">
@@ -1511,6 +1531,57 @@ function pctTag(v) { return `<span class="pct ${pctClass(v)}">${fmtPct(v)}</span
 // =====================================================================
 // PERIOD RESOLUTION
 // =====================================================================
+// ISO week helpers
+function getISOWeek(dateStr) {
+  // Returns [iso_year, iso_week] for the given YYYY-MM-DD string
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m-1, d));
+  // Thursday in current week determines ISO year
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return [date.getUTCFullYear(), weekNo];
+}
+
+function isoWeekToDates(isoYear, isoWeek) {
+  // Returns ['YYYY-MM-DD' Monday, 'YYYY-MM-DD' Sunday] for given ISO year+week
+  // ISO: Week 1 contains Jan 4th
+  const jan4 = new Date(Date.UTC(isoYear, 0, 4));
+  const jan4Dow = (jan4.getUTCDay() + 6) % 7;  // 0=Mon
+  const week1Mon = new Date(Date.UTC(isoYear, 0, 4 - jan4Dow));
+  const target = new Date(week1Mon);
+  target.setUTCDate(target.getUTCDate() + (isoWeek - 1) * 7);
+  const monStr = target.toISOString().slice(0,10);
+  const sun = new Date(target);
+  sun.setUTCDate(sun.getUTCDate() + 6);
+  return [monStr, sun.toISOString().slice(0,10)];
+}
+
+function getAllISOWeeksInRange(firstDate, lastDate) {
+  // Returns array of {isoYear, isoWeek, label, from, to}
+  const result = [];
+  let cursor = firstDate;
+  const seen = new Set();
+  while (cursor <= lastDate) {
+    const [iy, iw] = getISOWeek(cursor);
+    const key = iy + "-W" + String(iw).padStart(2, "0");
+    if (!seen.has(key)) {
+      seen.add(key);
+      const [from, to] = isoWeekToDates(iy, iw);
+      result.push({ isoYear: iy, isoWeek: iw, label: key, from, to });
+    }
+    cursor = dateStrAdd(cursor, 7);
+  }
+  // Add last week if missed
+  const [ly, lw] = getISOWeek(lastDate);
+  const lkey = ly + "-W" + String(lw).padStart(2, "0");
+  if (!seen.has(lkey)) {
+    const [from, to] = isoWeekToDates(ly, lw);
+    result.push({ isoYear: ly, isoWeek: lw, label: lkey, from, to });
+  }
+  return result.reverse();  // newest first
+}
+
 function resolvePeriod(view, asOf) {
   const [y, m, d] = asOf.split("-").map(Number);
   let from, to;
@@ -1524,15 +1595,21 @@ function resolvePeriod(view, asOf) {
   else if (view === "LAST30") { from = dateStrAdd(asOf, -29); to = asOf; }
   else if (view === "DAY") { from = asOf; to = asOf; }
   else if (view === "WEEK") {
-    // Current week containing asOf — Mon to Sun (but cap at asOf)
-    const dow = (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;  // 0=Mon
-    from = dateStrAdd(asOf, -dow); to = asOf;
+    // Specific ISO week (selected via STATE.selectedWeek), or current week containing asOf
+    if (STATE.selectedWeek) {
+      const [iy, iw] = STATE.selectedWeek.split("-W").map(Number);
+      [from, to] = isoWeekToDates(iy, iw);
+      // Cap "to" at LATEST so we don't show future
+      if (to > LATEST) to = LATEST;
+    } else {
+      const dow = (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;
+      from = dateStrAdd(asOf, -dow); to = asOf;
+    }
   }
   else if (view === "LASTWEEK") {
-    // Previous full week (Mon-Sun)
     const dow = (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;
-    to = dateStrAdd(asOf, -dow - 1);  // last Sunday before this Mon
-    from = dateStrAdd(to, -6);         // 7 days back
+    to = dateStrAdd(asOf, -dow - 1);
+    from = dateStrAdd(to, -6);
   }
   else if (view === "CUSTOM") {
     from = STATE.customFrom || asOf;
@@ -1668,6 +1745,7 @@ const STATE = {
   asOf: LATEST,
   customFrom: null,   // for view='CUSTOM'
   customTo: null,
+  selectedWeek: null, // for view='WEEK' — ISO week string like "2026-W18"
   ly_mode: "364",
   activeTab: "overview",
   selectedStore: 0,
@@ -3512,23 +3590,49 @@ document.querySelectorAll("#viewBtns button").forEach(b => b.addEventListener("c
   document.querySelectorAll("#viewBtns button").forEach(x => x.classList.remove("active"));
   e.target.classList.add("active");
   STATE.view = e.target.dataset.view;
-  // Show/hide custom range pickers
+  // Show/hide custom range pickers + week picker
   const customWrap = document.getElementById("customRangeWrap");
+  const weekWrap = document.getElementById("weekPickerWrap");
   const asOfWrap = document.getElementById("dateAsOfWrap");
+  customWrap.style.display = "none";
+  weekWrap.style.display = "none";
+  asOfWrap.style.display = "";
+  
   if (STATE.view === "CUSTOM") {
     customWrap.style.display = "";
     asOfWrap.style.display = "none";
-    // Initialize with sensible defaults
     if (!STATE.customFrom) STATE.customFrom = LATEST.slice(0,7) + "-01";
     if (!STATE.customTo)   STATE.customTo = LATEST;
     document.getElementById("customFromDate").value = STATE.customFrom;
     document.getElementById("customToDate").value = STATE.customTo;
-  } else {
-    customWrap.style.display = "none";
-    asOfWrap.style.display = "";
+  } else if (STATE.view === "WEEK") {
+    weekWrap.style.display = "";
+    asOfWrap.style.display = "none";
+    populateWeekSelector();
   }
   refresh();
 }));
+
+// Populate ISO week selector
+function populateWeekSelector() {
+  const sel = document.getElementById("weekSelect");
+  if (sel.options.length === 0) {
+    const weeks = getAllISOWeeksInRange(FIRST, LATEST);
+    sel.innerHTML = weeks.map(w => 
+      `<option value="${w.label}">${w.label} (${w.from} → ${w.to})</option>`
+    ).join("");
+    // Default to current week
+    if (!STATE.selectedWeek && weeks.length > 0) {
+      STATE.selectedWeek = weeks[0].label;
+    }
+  }
+  sel.value = STATE.selectedWeek || sel.options[0].value;
+}
+
+document.getElementById("weekSelect").addEventListener("change", e => {
+  STATE.selectedWeek = e.target.value;
+  refresh();
+});
 
 // Custom range date pickers
 document.getElementById("customFromDate").addEventListener("change", e => {

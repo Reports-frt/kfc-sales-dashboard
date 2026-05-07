@@ -479,7 +479,11 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   white-space: nowrap;
 }
 .dt thead th:first-child,
-.dt tbody td:first-child { text-align: left; }
+.dt thead th:nth-child(2),
+.dt tbody td:first-child,
+.dt tbody td:nth-child(2) { text-align: left; }
+.dt thead th:first-child,
+.dt tbody td:first-child { width: 36px; }  /* narrow rank column */
 .dt thead th.sortable { cursor: pointer; user-select: none; }
 .dt thead th.sortable:hover { color: var(--text-0); }
 .dt tbody td {
@@ -1657,29 +1661,43 @@ function renderTrend() {
 // PRODUCTS TAB
 // =====================================================================
 function classifyProductTier(p) {
-  // BCG-style tiers based on rating (volume) and gm/fc_pct (margin)
-  // Rating: % qty contribution chain-wide
-  // We use rating > 0.005 (0.5%) as "high volume"
-  // FC% < 25% as "high margin" (lower FC = better margin)
+  // 4 tiers based on volume (rating) × margin (FC%):
+  //   Star            = high volume + high margin  (the workhorses, defend & promote)
+  //   Profitable      = low volume + high margin   (gems, push/cross-sell)
+  //   Volume Driver   = high volume + low margin   (traffic but margin work needed)
+  //   Underperformer  = low volume + low margin    (reconsider/remove)
+  // Thresholds: rating ≥ 0.5% = high volume; FC% < 25% = high margin (exclude 0% non-products)
   const isHighVolume = p.rating >= 0.005;
-  const isHighMargin = p.fc_pct < 0.25 && p.fc_pct > 0;  // exclude 0% (zero-cost items)
-  if (isHighVolume && isHighMargin)   return { tier: 'cash_cow', label: '⭐ Cash Cow', cls: 'good' };
-  if (!isHighVolume && isHighMargin)  return { tier: 'star',     label: '🌟 Star',     cls: 'good' };
-  if (isHighVolume && !isHighMargin)  return { tier: 'question', label: '❓ Question', cls: 'warn' };
-  return { tier: 'dog', label: '🐕 Dog', cls: 'bad' };
+  const isHighMargin = p.fc_pct < 0.25 && p.fc_pct > 0;
+  if (isHighVolume && isHighMargin)   return { tier: 'star',           label: '⭐ Star',           cls: 'good' };
+  if (!isHighVolume && isHighMargin)  return { tier: 'profitable',     label: '💎 Profitable',     cls: 'good' };
+  if (isHighVolume && !isHighMargin)  return { tier: 'volume_driver',  label: '📦 Volume Driver',  cls: 'warn' };
+  return { tier: 'underperformer', label: '🐢 Underperformer', cls: 'bad' };
 }
 
-// Heuristic to identify ALC vs Combos vs Other
+// Classify each product as: 'alc' | 'combos' | 'other' (taxes/freebies/dummy)
 // Combos = pre-built bundles (Buckets, Meal Boxes, Lunch Boxes, etc.)
-// ALC = à la carte (single items)
+// Other = environmental tax, free dips, dummy codes (not real sellable items)
+// ALC = à la carte (single sellable items)
 function classifyProductKind(p) {
   const cat = (p.category || '').toUpperCase();
   const name = (p.product || '').toUpperCase();
-  // Category 6 (BUCKET-LUNCHBOX) is entirely combos
+  
+  // OTHER: non-product items (φόροι, δωρεάν, dummy codes)
+  // Greek: Περιβαντολογικο Τελος = environmental fee/tax
+  // ΕΙΣΦ.ΠΡΟΣΤ.ΠΕΡΙΒ. = Environmental Protection Contribution (Greek law)
+  if (cat.includes('ΠΕΡΙΒΑΝΤΟΛΟΓΙΚΟ') || cat.includes('ΠΕΡΙΒΑΛΛΟΝΤΟΛΟΓΙΚΟ')
+      || cat.includes('DUMMY') || cat.includes('EXTRA CHARGE')
+      || name.includes('ΕΙΣΦ.') || name.includes('ΠΕΡΙΒ')
+      || name.includes('ΔΩΡΕΑΝ') || name.includes('FREE')
+      || name.includes('DIP POT') && (name.includes('ΔΩΡΕΑΝ') || name.includes('FREE'))) {
+    return 'other';
+  }
+  
+  // COMBOS: prebuilt bundles
   if (cat.includes('BUCKET') || cat.includes('LUNCHBOX') || cat.includes('LUNCH BOX')) {
     return 'combos';
   }
-  // Name-based combos
   if (name.includes('BUCKET') || name.includes('BOX MEAL') || name.includes('LUNCH BOX')
       || name.includes('LUNCHBOX') || name.includes('COMBO') || name.includes('MEAL DEAL')
       || name.includes('MEGA MIX') || name.includes('GIVE BACKET') || name.includes('VARIETY')
@@ -1711,8 +1729,10 @@ function renderProducts() {
   });
   
   // Filter by kind
-  if (STATE.productKind === 'alc') products = products.filter(p => p.kind === 'alc');
+  if (STATE.productKind === 'alc')         products = products.filter(p => p.kind === 'alc');
   else if (STATE.productKind === 'combos') products = products.filter(p => p.kind === 'combos');
+  else if (STATE.productKind === 'other')  products = products.filter(p => p.kind === 'other');
+  else if (STATE.productKind === 'all')    products = products.filter(p => p.kind !== 'other');  // hide non-products from default view
   
   // Filter by category
   if (STATE.productCategory !== 'all') {
@@ -1748,6 +1768,7 @@ function renderProducts() {
         <button data-kind="all" ${STATE.productKind === 'all' ? 'class="active"' : ''}>All</button>
         <button data-kind="alc" ${STATE.productKind === 'alc' ? 'class="active"' : ''}>ALC</button>
         <button data-kind="combos" ${STATE.productKind === 'combos' ? 'class="active"' : ''}>Combos</button>
+        <button data-kind="other" ${STATE.productKind === 'other' ? 'class="active"' : ''}>Φόροι/Δωρεάν</button>
       </div>
     </div>
     <div class="filter-group">
@@ -1774,7 +1795,7 @@ function renderProducts() {
     <div class="kpi theoretical">
       <div class="label">Products Shown</div>
       <div class="value">${products.length}</div>
-      <div class="sub">${STATE.productKind === 'all' ? 'all kinds' : STATE.productKind.toUpperCase()}</div>
+      <div class="sub">${({all:'πραγματικά προϊόντα', alc:'ALC only', combos:'COMBOS only', other:'ΦΟΡΟΙ/ΔΩΡΕΑΝ'}[STATE.productKind] || STATE.productKind)}</div>
     </div>
     <div class="kpi actual">
       <div class="label">Total Quantity</div>
@@ -1881,9 +1902,14 @@ function renderProducts() {
   body += `<div class="insight" style="margin-top:14px">
     <div class="ins-label">Πώς διαβάζεται ο πίνακας</div>
     <div class="ins-text">
-      <strong>Rating</strong> = % συμμετοχή του προϊόντος στις συνολικές πωλήσεις (qty share).
-      <strong>Tier</strong>: ⭐ Cash Cow = high volume + high margin · 🌟 Star = low volume + high margin (push these) · ❓ Question = high volume + low margin · 🐕 Dog = low volume + low margin (consider review).
-      Categorization ALC vs Combos είναι heuristic βάσει ονόματος — αν κάποιο προϊόν δεν είναι σωστά κατηγοριοποιημένο, ενημέρωσέ με.
+      <strong>Rating</strong> = ποσοστό συμμετοχής του προϊόντος στις συνολικές πωλήσεις σε quantity (qty share). Πιο υψηλό rating = πιο δημοφιλές.<br>
+      <strong>Tiers (Volume × Margin):</strong>
+      ⭐ <strong>Star</strong> = υψηλός όγκος + καλό margin (workhorses — defend & promote) ·
+      💎 <strong>Profitable</strong> = χαμηλός όγκος + καλό margin (gems — push & cross-sell) ·
+      📦 <strong>Volume Driver</strong> = υψηλός όγκος + χαμηλό margin (φέρνουν traffic — margin work) ·
+      🐢 <strong>Underperformer</strong> = χαμηλός όγκος + χαμηλό margin (review/remove).<br>
+      Όρια: rating ≥ 0,5% = high volume · FC% < 25% = high margin.<br>
+      Το <strong>"All"</strong> δείχνει μόνο τα <em>πραγματικά προϊόντα</em>. Τα φόροι/δωρεάν είδη (περιβαλλοντικό τέλος, dummy codes) είναι σε ξεχωριστή καρτέλα <strong>"Φόροι/Δωρεάν"</strong>.
     </div>
   </div>`;
   
