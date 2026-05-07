@@ -377,8 +377,30 @@ def parse_hourly_data(xlsx_path):
     for _, r in agg2.iterrows():
         records_dow_hour.append([int(r['Year']), int(r['DOW']), int(r['HourInt']), round(float(r['Sales']), 2)])
 
+    # Aggregate 3: DATE × Store × Hour (full granularity for date-range filtering)
+    # No channel breakdown — keeps size manageable
+    leaf['DateStr'] = leaf.apply(
+        lambda r: f"{int(r['Year']):04d}-{int(r['Month']):02d}-{int(r['Day']):02d}", axis=1
+    )
+    agg3 = leaf.groupby(['DateStr', 'Store', 'HourInt'], as_index=False)['Sales'].sum()
+    
+    # Build a date-index so we don't repeat ISO strings (saves bytes)
+    unique_dates = sorted(agg3['DateStr'].unique().tolist())
+    date_index = {d: i for i, d in enumerate(unique_dates)}
+    
+    records_hsd = []  # [date_idx, store_idx, hour, sales]
+    for _, r in agg3.iterrows():
+        records_hsd.append([
+            date_index[r['DateStr']],
+            stores_targit_in_file.index(r['Store']),
+            int(r['HourInt']),
+            round(float(r['Sales']), 2),
+        ])
+
     log.info(f"  records_hsc (hour×store×channel×year): {len(records_hsc):,}")
     log.info(f"  records_dow_hour (DOW×hour×year):     {len(records_dow_hour):,}")
+    log.info(f"  records_hsd (DATE×store×hour):        {len(records_hsd):,}")
+    log.info(f"  Date range: {unique_dates[0]} → {unique_dates[-1]} ({len(unique_dates)} days)")
     log.info(f"  Years: {sorted(leaf['Year'].unique().tolist())}")
     log.info(f"  Hours: {sorted(leaf['HourInt'].unique().tolist())}")
 
@@ -388,6 +410,8 @@ def parse_hourly_data(xlsx_path):
         'stores_targit': stores_targit_in_file,
         'records_hsc': records_hsc,
         'records_dow_hour': records_dow_hour,
+        'dates': unique_dates,
+        'records_hsd': records_hsd,
     }
 
 
@@ -725,13 +749,23 @@ def build_data_json(data, budget, hourly_data=None):
             si_main = hourly_store_idx[r[3]]
             if si_main >= 0:
                 records_hsc_remapped.append([r[0], r[1], r[2], si_main, r[4]])
+        # Also remap records_hsd (date × store × hour)
+        records_hsd_remapped = []
+        if 'records_hsd' in hourly_data:
+            for r in hourly_data['records_hsd']:
+                # r = [date_idx, store_idx, hour, sales]
+                si_main = hourly_store_idx[r[1]]
+                if si_main >= 0:
+                    records_hsd_remapped.append([r[0], si_main, r[2], r[3]])
         output['hourly'] = {
             'years':            hourly_data['years'],
             'hours':            hourly_data['hours'],
             'records_hsc':      records_hsc_remapped,
             'records_dow_hour': hourly_data['records_dow_hour'],
+            'dates':            hourly_data.get('dates', []),
+            'records_hsd':      records_hsd_remapped,
         }
-        log.info(f"  Embedded hourly: {len(records_hsc_remapped)} hsc records (after remap)")
+        log.info(f"  Embedded hourly: {len(records_hsc_remapped)} hsc + {len(records_hsd_remapped)} hsd records")
 
     log.info(f"  Latest date: {output['meta']['latest_date']}")
     log.info(f"  Stores: {len(store_order)}")
@@ -802,8 +836,9 @@ def preserve_previous_hourly(json_data, json_path):
     json_data['hourly'] = prev['hourly']
     n_hsc = len(prev['hourly'].get('records_hsc', []))
     n_dh = len(prev['hourly'].get('records_dow_hour', []))
+    n_hsd = len(prev['hourly'].get('records_hsd', []))
     yrs = prev['hourly'].get('years', [])
-    log.info(f"  Preserved previous hourly block: {n_hsc} hsc + {n_dh} dow-hour records, years {yrs}")
+    log.info(f"  Preserved previous hourly block: {n_hsc} hsc + {n_dh} dow-hour + {n_hsd} hsd records, years {yrs}")
 
 
 def git_push_data_json(json_data):

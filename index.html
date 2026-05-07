@@ -1488,6 +1488,91 @@ if (HOURLY) {
   });
 }
 
+// Returns true if records_hsd is present (per-date hourly data available)
+const HAS_DATE_HOURLY = HOURLY && Array.isArray(HOURLY.records_hsd) && HOURLY.records_hsd.length > 0;
+
+/**
+ * Aggregate hourly sales from records_hsd, filtered by a date range and store filter.
+ * Returns: { byStoreHour: {si: {hour: sales}}, byHour: {hour: sales}, total: number, byDowHour: {dow: {hour: sales}} }
+ * Falls back to year-aggregate (records_hsc / hourlyByYearStoreHour) if records_hsd is missing.
+ */
+function aggregateHourlyForRange(fromDate, toDate, storeFilter) {
+  const byStoreHour = {};
+  const byHour = {};
+  const byDowHour = {};
+  let total = 0;
+  
+  if (!HOURLY) return { byStoreHour, byHour, byDowHour, total, source: 'none' };
+  
+  // Initialize empty
+  for (let si = 0; si < STORES.length; si++) {
+    byStoreHour[si] = {};
+    HOURLY.hours.forEach(h => { byStoreHour[si][h] = 0; });
+  }
+  HOURLY.hours.forEach(h => { byHour[h] = 0; });
+  for (let dow = 0; dow < 7; dow++) {
+    byDowHour[dow] = {};
+    HOURLY.hours.forEach(h => { byDowHour[dow][h] = 0; });
+  }
+  
+  if (HAS_DATE_HOURLY && fromDate && toDate) {
+    // Use records_hsd: [date_idx, store_idx, hour, sales]
+    const dates = HOURLY.dates;
+    // Pre-compute which date indexes fall in range
+    const dateInRange = new Map();
+    for (let i = 0; i < dates.length; i++) {
+      if (dates[i] >= fromDate && dates[i] <= toDate) {
+        dateInRange.set(i, dates[i]);
+      }
+    }
+    
+    HOURLY.records_hsd.forEach(r => {
+      const [dateIdx, si, hour, sales] = r;
+      const dateStr = dateInRange.get(dateIdx);
+      if (!dateStr) return;
+      if (storeFilter && !storeFilter.has(si)) return;
+      if (!byStoreHour[si] || byStoreHour[si][hour] === undefined) return;
+      
+      byStoreHour[si][hour] += sales;
+      byHour[hour] += sales;
+      total += sales;
+      
+      // Compute DOW for this date: 0 = Mon
+      const [y, m, d] = dateStr.split('-').map(Number);
+      const dow = (new Date(Date.UTC(y, m-1, d)).getUTCDay() + 6) % 7;
+      byDowHour[dow][hour] += sales;
+    });
+    
+    return { byStoreHour, byHour, byDowHour, total, source: 'date_range' };
+  }
+  
+  // Fallback: use year aggregate
+  const periodYear = parseInt((fromDate || toDate || LATEST).slice(0, 4));
+  const cyYear = HOURLY.years.includes(periodYear) ? periodYear : Math.max(...HOURLY.years);
+  
+  for (let si = 0; si < STORES.length; si++) {
+    if (storeFilter && !storeFilter.has(si)) continue;
+    if (!hourlyByYearStoreHour[cyYear] || !hourlyByYearStoreHour[cyYear][si]) continue;
+    HOURLY.hours.forEach(h => {
+      const cell = hourlyByYearStoreHour[cyYear][si][h];
+      if (cell) {
+        byStoreHour[si][h] += cell.sales;
+        byHour[h] += cell.sales;
+        total += cell.sales;
+      }
+    });
+  }
+  for (let dow = 0; dow < 7; dow++) {
+    HOURLY.hours.forEach(h => {
+      if (hourlyByYearDowHour[cyYear] && hourlyByYearDowHour[cyYear][dow]) {
+        byDowHour[dow][h] = hourlyByYearDowHour[cyYear][dow][h] || 0;
+      }
+    });
+  }
+  
+  return { byStoreHour, byHour, byDowHour, total, source: 'year_aggregate', usedYear: cyYear };
+}
+
 
 // =====================================================================
 // DATE HELPERS — UTC SAFE
@@ -3208,38 +3293,61 @@ function renderHourly(R) {
   }
 
   const years = HOURLY.years.slice().sort();
-  // Pick year based on the current view's period (R.from)
-  // This makes the hourly tab respect WEEK / CUSTOM / DAY / etc by at least using the right year
-  const periodYear = parseInt((R.from || R.to || LATEST).slice(0, 4));
-  const cyYear = years.includes(periodYear) ? periodYear : Math.max(...years);
-  const lyIdx = years.findIndex(y => y === cyYear) - 1;
-  const lyYear = lyIdx >= 0 ? years[lyIdx] : null;
-
   // Dead-hours filter (02:00-10:00 = ώρες ελέγχου / περιστασιακές)
-  // Keep all hours between 11:00 and 01:00 (next day). Drop 2-10 inclusive.
   const DEAD_HOURS = new Set([2, 3, 4, 5, 6, 7, 8, 9, 10]);
   const allHours = HOURLY.hours.slice().sort((a,b) => a-b);
   const hours = allHours.filter(h => !DEAD_HOURS.has(h));
 
-  // ---- Pre-compute key metrics ----
-  const cyByHour = hours.map(h => {
-    let s = 0;
-    for (let si = 0; si < STORES.length; si++) {
-      if (R.storeFilter && !R.storeFilter.has(si)) continue;
-      const cell = hourlyByYearStoreHour[cyYear] && hourlyByYearStoreHour[cyYear][si] && hourlyByYearStoreHour[cyYear][si][h];
-      if (cell) s += cell.sales;
+  // === DATA SOURCE SELECTION ===
+  // If records_hsd is available, use it for true date-range filtering.
+  // Otherwise, fall back to year-aggregate.
+  const useDateRange = HAS_DATE_HOURLY && R.from && R.to;
+  
+  let cyData, lyData, cyYear, lyYear;
+  
+  if (useDateRange) {
+    // CY: use the actual selected range
+    cyData = aggregateHourlyForRange(R.from, R.to, R.storeFilter);
+    // LY: use the same range shifted by 364 days (or calendar year — match user's ly_mode)
+    const lyFrom = lyDate(R.from, STATE.ly_mode);
+    const lyTo = lyDate(R.to, STATE.ly_mode);
+    lyData = aggregateHourlyForRange(lyFrom, lyTo, R.storeFilter);
+    // Set "year" labels for display purposes
+    cyYear = parseInt(R.from.slice(0, 4));
+    lyYear = parseInt(lyFrom.slice(0, 4));
+  } else {
+    // Fallback: year-aggregate
+    const periodYear = parseInt((R.from || R.to || LATEST).slice(0, 4));
+    cyYear = years.includes(periodYear) ? periodYear : Math.max(...years);
+    const lyIdx = years.findIndex(y => y === cyYear) - 1;
+    lyYear = lyIdx >= 0 ? years[lyIdx] : null;
+    cyData = aggregateHourlyForRange(null, null, R.storeFilter);  // forces year_aggregate
+    if (lyYear) {
+      // To force the year-aggregate path with a different year, pass a date in that year
+      lyData = aggregateHourlyForRange(lyYear + '-01-01', lyYear + '-01-01', R.storeFilter);
+    } else {
+      lyData = null;
     }
-    return s;
-  });
-  const lyByHour = lyYear ? hours.map(h => {
-    let s = 0;
-    for (let si = 0; si < STORES.length; si++) {
-      if (R.storeFilter && !R.storeFilter.has(si)) continue;
-      const cell = hourlyByYearStoreHour[lyYear] && hourlyByYearStoreHour[lyYear][si] && hourlyByYearStoreHour[lyYear][si][h];
-      if (cell) s += cell.sales;
+  }
+  
+  const cyByHour = hours.map(h => cyData.byHour[h] || 0);
+  const lyByHour = lyData ? hours.map(h => lyData.byHour[h] || 0) : null;
+  
+  // Helper used by legacy code below. Returns {sales} or null for a given (year, store, hour).
+  // When using date-range data, treat ANY year request as the filtered cyData.
+  // Otherwise fall back to the global year-aggregate.
+  function getHourCell(year, si, h) {
+    if (useDateRange && year === cyYear) {
+      const sales = cyData.byStoreHour[si] ? (cyData.byStoreHour[si][h] || 0) : 0;
+      return { sales };
     }
-    return s;
-  }) : null;
+    if (useDateRange && lyData && year === lyYear) {
+      const sales = lyData.byStoreHour[si] ? (lyData.byStoreHour[si][h] || 0) : 0;
+      return { sales };
+    }
+    const cell = getHourCell(year, si, h);
+    return cell || null;
+  }
 
   const totalCY = cyByHour.reduce((a,b) => a+b, 0);
   const totalLY = lyByHour ? lyByHour.reduce((a,b) => a+b, 0) : 0;
@@ -3275,39 +3383,24 @@ function renderHourly(R) {
   let html = "";
   
   // ============================================================
-  // INFO BANNER — explain the year-aggregate limitation
+  // INFO BANNER — explains data source for current view
   // ============================================================
-  // Detect if user is in a sub-year view that the hourly can't follow
-  const subYearViews = ['WEEK', 'LASTWEEK', 'LAST7', 'LAST30', 'DAY', 'CUSTOM', 'MTD', 'QTD'];
-  const isSubYear = subYearViews.includes(STATE.view);
-  const viewLabel = ({
-    MTD: 'MTD', QTD: 'QTD', YTD: 'YTD',
-    WEEK: STATE.selectedWeek || 'τρέχουσα εβδομάδα',
-    LASTWEEK: 'περασμένη εβδομάδα',
-    LAST7: 'τελευταίες 7 ημέρες',
-    LAST30: 'τελευταίες 30 ημέρες',
-    DAY: 'ημέρα', CUSTOM: 'custom range'
-  })[STATE.view] || STATE.view;
-  
-  if (isSubYear) {
-    html += `<div class="hourly-warn-banner">
-      <div class="hwb-icon">⚠</div>
-      <div class="hwb-content">
-        <div class="hwb-title">Το Hourly tab ΔΕΝ επηρεάζεται από την επιλογή "${viewLabel}"</div>
-        <div class="hwb-text">
-          Δείχνει <strong>annual aggregate για το ${cyYear}</strong>${lyYear ? ` (vs ${lyYear})` : ''}.
-          Τα hourly δεδομένα έρχονται year-aggregated από το Targit, χωρίς date breakdown.
-          Multi-store filter εφαρμόζεται κανονικά.
-          Εξαιρούνται οι ώρες <strong>02:00–10:00</strong> ως νεκρές.
-        </div>
+  if (useDateRange) {
+    // Per-date data IS available — show success banner
+    html += `<div class="insight" style="margin-bottom: 14px">
+      <div class="ins-label">✓ Hourly Profile — Date Range Filtered</div>
+      <div class="ins-text">
+        Φιλτράρεται για <strong>${R.from} → ${R.to}</strong>${lyData ? ` (vs ${lyData ? (lyDate(R.from, STATE.ly_mode) + ' → ' + lyDate(R.to, STATE.ly_mode)) : ''})` : ''}.
+        Multi-store filter εφαρμόζεται. Εξαιρούνται οι ώρες <strong>02:00–10:00</strong> ως νεκρές (έλεγχοι/περιστασιακές κινήσεις).
       </div>
     </div>`;
   } else {
+    // Fallback: data not available, showing year aggregate
     html += `<div class="insight" style="margin-bottom: 14px">
-      <div class="ins-label">ℹ Hourly Profile</div>
+      <div class="ins-label">ℹ Hourly Profile (Annual Aggregate)</div>
       <div class="ins-text">
-        Annual aggregate για το <strong>${cyYear}</strong>${lyYear ? ` vs ${lyYear}` : ''}.
-        Multi-store filter εφαρμόζεται. Εξαιρούνται οι ώρες <strong>02:00–10:00</strong> (νεκρές ώρες).
+        Δείχνει <strong>${cyYear}</strong> annual aggregate. Δεν υπάρχουν per-date hourly δεδομένα ακόμα — θα γίνουν διαθέσιμα μετά το επόμενο update του sales pipeline.
+        Εξαιρούνται οι ώρες <strong>02:00–10:00</strong> ως νεκρές.
       </div>
     </div>`;
   }
@@ -3454,7 +3547,7 @@ function renderHourly(R) {
     if (R.storeFilter && !R.storeFilter.has(si)) continue;
     let total = 0;
     for (const h of hours) {
-      const cell = hourlyByYearStoreHour[cyYear] && hourlyByYearStoreHour[cyYear][si] && hourlyByYearStoreHour[cyYear][si][h];
+      const cell = getHourCell(cyYear, si, h);
       if (cell) total += cell.sales;
     }
     if (total > 0) stores.push({si, total});
@@ -3464,7 +3557,7 @@ function renderHourly(R) {
   let maxCell = 0;
   for (const s of stores) {
     for (const h of hours) {
-      const c = hourlyByYearStoreHour[cyYear][s.si][h];
+      const c = getHourCell(cyYear, s.si, h);
       if (c && c.sales > maxCell) maxCell = c.sales;
     }
   }
@@ -3477,7 +3570,7 @@ function renderHourly(R) {
   for (const s of stores) {
     heatHTML += `<div class="heat-label">${STORE_META[STORES[s.si]].short}</div>`;
     for (const h of hours) {
-      const cell = hourlyByYearStoreHour[cyYear][s.si][h];
+      const cell = getHourCell(cyYear, s.si, h);
       const v = cell ? cell.sales : 0;
       const intensity = maxCell > 0 ? Math.min(0.92, v / maxCell) : 0;
       let bg = 'var(--bg-2)';
@@ -3593,7 +3686,7 @@ function renderHourly(R) {
     for (const s of stores) {
       let peakH = null, peakV = 0, quietH = null, quietV = Infinity, totalDay = 0;
       for (const h of hours) {
-        const c = hourlyByYearStoreHour[cyYear][s.si][h];
+        const c = getHourCell(cyYear, s.si, h);
         const v = c ? c.sales : 0;
         totalDay += v;
         if (v > peakV) { peakV = v; peakH = h; }
@@ -3621,7 +3714,7 @@ function renderHourly(R) {
     for (const s of stores) {
       let peakH = null, peakV = 0, totalDay = 0;
       for (const h of hours) {
-        const c = hourlyByYearStoreHour[cyYear][s.si][h];
+        const c = getHourCell(cyYear, s.si, h);
         const v = c ? c.sales : 0;
         totalDay += v;
         if (v > peakV) { peakV = v; peakH = h; }
