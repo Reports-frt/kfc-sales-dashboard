@@ -765,6 +765,207 @@ def load_alc_combos(path, kind='alc'):
 # =====================================================================
 # BUILD JSON
 # =====================================================================
+# =====================================================================
+# REAL-TIME METRICS (computed from daily Μεικτό κέρδος)
+# =====================================================================
+def compute_realtime_metrics(meikto_data, monthly_records, kfc_stores):
+    """
+    Build a 'real-time' snapshot from the latest Μεικτό κέρδος data.
+    
+    Returns dict with:
+      - chain: { sales, fc, fc_pct, qty, n_stores }
+      - per_store: list of { store, sales, fc, fc_pct, qty, vs_chain_pp }
+      - hourly: list of { hour, sales, fc, fc_pct }  (skip dead hours 02-10)
+      - top_fc: list of { product, category, sales, fc, fc_pct, contribution_pp }
+      - vs_history: { last_month_avg_fc_pct, delta_pp }
+    """
+    if not meikto_data:
+        return None
+    
+    rt = {}
+    
+    # ========== Chain-wide totals ==========
+    products = meikto_data.get('products', [])
+    chain_sales = sum(p.get('sales', 0) for p in products)
+    chain_fc = sum(p.get('fc', 0) for p in products)
+    chain_qty = sum(p.get('qty', 0) for p in products)
+    chain_fc_pct = chain_fc / chain_sales if chain_sales else 0
+    
+    rt['chain'] = {
+        'sales': round(chain_sales, 2),
+        'fc': round(chain_fc, 2),
+        'fc_pct': round(chain_fc_pct, 4),
+        'qty': int(chain_qty),
+        'n_products': len(products),
+    }
+    
+    # ========== Per-store FC% ranking ==========
+    store_totals = meikto_data.get('store_totals', [])
+    store_hourly = meikto_data.get('store_hourly', {})
+    
+    # Build per-store totals by aggregating store_hourly (since store_totals may be empty)
+    per_store_dict = {}
+    for store_name, hours_data in store_hourly.items():
+        s_sales = sum(h.get('sales', 0) for h in hours_data.values())
+        s_fc = sum(h.get('fc', 0) for h in hours_data.values())
+        s_qty = sum(h.get('qty', 0) for h in hours_data.values())
+        per_store_dict[store_name] = {
+            'sales': s_sales, 'fc': s_fc, 'qty': s_qty,
+            'fc_pct': s_fc / s_sales if s_sales else 0,
+        }
+    
+    # Convert to list, add chain comparison
+    per_store_list = []
+    for store, vals in per_store_dict.items():
+        per_store_list.append({
+            'store': store,
+            'sales': round(vals['sales'], 2),
+            'fc': round(vals['fc'], 2),
+            'fc_pct': round(vals['fc_pct'], 4),
+            'qty': int(vals['qty']),
+            'vs_chain_pp': round((vals['fc_pct'] - chain_fc_pct) * 100, 2),
+        })
+    
+    # Sort by FC% descending (worst first)
+    per_store_list.sort(key=lambda r: r['fc_pct'], reverse=True)
+    rt['per_store'] = per_store_list
+    
+    # ========== Hourly FC% profile (chain-wide) ==========
+    hourly_cat = meikto_data.get('hourly_category', {})
+    DEAD_HOURS = set([2, 3, 4, 5, 6, 7, 8, 9, 10])
+    
+    hourly_list = []
+    for hour, cats in hourly_cat.items():
+        # Hour can be '08:00' string or int 8
+        try:
+            if isinstance(hour, str) and ':' in hour:
+                h_int = int(hour.split(':')[0])
+            else:
+                h_int = int(hour)
+        except (ValueError, TypeError):
+            continue
+        if h_int in DEAD_HOURS:
+            continue
+        h_sales = sum(c.get('sales', 0) for c in cats.values())
+        h_fc = sum(c.get('fc', 0) for c in cats.values())
+        h_qty = sum(c.get('qty', 0) for c in cats.values())
+        if h_sales <= 0:
+            continue
+        hourly_list.append({
+            'hour': h_int,
+            'sales': round(h_sales, 2),
+            'fc': round(h_fc, 2),
+            'fc_pct': round(h_fc / h_sales, 4),
+            'qty': int(h_qty),
+        })
+    hourly_list.sort(key=lambda r: r['hour'])
+    rt['hourly'] = hourly_list
+    
+    # ========== Top FC contributors (by absolute FC €) ==========
+    real_products = [p for p in products if p.get('fc', 0) > 0 and p.get('sales', 0) > 0]
+    real_products.sort(key=lambda p: p.get('fc', 0), reverse=True)
+    
+    top_fc = []
+    for p in real_products[:20]:
+        contrib_pp = (p.get('fc', 0) / chain_fc * 100) if chain_fc else 0
+        top_fc.append({
+            'product': p.get('product', ''),
+            'category': p.get('category', ''),
+            'sales': p.get('sales', 0),
+            'fc': p.get('fc', 0),
+            'fc_pct': p.get('fc_pct', 0),
+            'qty': p.get('qty', 0),
+            'contribution_pp': round(contrib_pp, 2),
+        })
+    rt['top_fc'] = top_fc
+    
+    # ========== Comparison vs last 3 months avg ==========
+    if monthly_records:
+        # Get the last 3 months from monthly data
+        recent = sorted(monthly_records, key=lambda r: (r['year'], r['month']), reverse=True)
+        recent_periods = set()
+        for r in recent:
+            key = (r['year'], r['month'])
+            if len(recent_periods) >= 3:
+                break
+            recent_periods.add(key)
+        
+        recent_data = [r for r in monthly_records if (r['year'], r['month']) in recent_periods]
+        if recent_data:
+            avg_ideal = sum(r['pure_food']['ideal_cost'] for r in recent_data)
+            avg_actual = sum(r['pure_food']['other_cost'] + r['pure_food']['ideal_cost'] for r in recent_data)
+            # Estimate sales from ideal cost (assuming ideal is ~theoretical FC%)
+            # Better: just compare ideal_cost to actual_cost ratio
+            ideal_pct = avg_ideal / avg_actual if avg_actual else 0
+            
+            # Try a different angle: compare current FC% to last month historical
+            rt['vs_history'] = {
+                'note': 'Current period vs cumulative ISO 2025-2026 baseline',
+                'baseline_label': f"Last 3 months avg (from FoodCost.xlsx)",
+                'periods_compared': sorted([f"{y}-{m:02d}" for (y, m) in recent_periods], reverse=True),
+            }
+    
+    return rt
+
+
+def update_daily_archive(realtime, archive_dir: Path, today_str=None):
+    """
+    Save today's snapshot to daily_archive/YYYY-MM-DD.json.
+    Then build a history series of {date, sales, fc, fc_pct, qty} from all archives.
+    """
+    import datetime as _dt
+    if today_str is None:
+        today_str = _dt.date.today().isoformat()
+    
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Snapshot today's data
+    if realtime and 'chain' in realtime:
+        snapshot_path = archive_dir / f"{today_str}.json"
+        snapshot = {
+            'date': today_str,
+            'chain': realtime['chain'],
+            'per_store_summary': [
+                {'store': s['store'], 'sales': s['sales'], 'fc': s['fc'], 'fc_pct': s['fc_pct']}
+                for s in realtime.get('per_store', [])
+            ],
+        }
+        with open(snapshot_path, 'w', encoding='utf-8') as f:
+            json.dump(snapshot, f, ensure_ascii=False, separators=(',', ':'))
+        print(f"  → Saved daily snapshot: {snapshot_path.name}")
+    
+    # Load all archive snapshots and build history
+    history = []
+    if archive_dir.exists():
+        for fp in sorted(archive_dir.glob('*.json')):
+            try:
+                with open(fp, 'r', encoding='utf-8') as f:
+                    snap = json.load(f)
+                history.append({
+                    'date': snap['date'],
+                    'sales': snap['chain']['sales'],
+                    'fc': snap['chain']['fc'],
+                    'fc_pct': snap['chain']['fc_pct'],
+                    'qty': snap['chain']['qty'],
+                })
+            except Exception as e:
+                print(f"  ⚠ Skipped corrupted archive {fp.name}: {e}")
+                continue
+    
+    # Compute day-over-day deltas
+    for i, h in enumerate(history):
+        if i == 0:
+            h['delta_sales'] = 0
+            h['delta_fc_pp'] = 0
+        else:
+            prev = history[i-1]
+            h['delta_sales'] = round(h['sales'] - prev['sales'], 2)
+            h['delta_fc_pp'] = round((h['fc_pct'] - prev['fc_pct']) * 100, 2)
+    
+    print(f"  → Daily history: {len(history)} snapshots ({history[0]['date'] if history else 'none'} → {history[-1]['date'] if history else 'none'})")
+    return history
+
+
 def build_food_data_json(source_dir: Path, output_dir: Path):
     """Main pipeline: read sources, aggregate, write food_data.json."""
     print("=" * 60)
@@ -850,6 +1051,19 @@ def build_food_data_json(source_dir: Path, output_dir: Path):
     # Build categories list with totals
     all_categories = sorted(set(categories.values()))
     
+    # ========== REALTIME + DAILY ARCHIVE ==========
+    print("\nSTEP 7: Compute real-time metrics + daily archive")
+    realtime = compute_realtime_metrics(meikto_data, monthly_records, KFC_STORES) if meikto_data else None
+    if realtime:
+        print(f"  → Real-time chain: €{realtime['chain']['sales']:,.0f} sales, FC% {realtime['chain']['fc_pct']*100:.2f}%")
+        print(f"  → Per-store: {len(realtime['per_store'])} stores")
+        print(f"  → Hourly: {len(realtime['hourly'])} hours")
+        print(f"  → Top FC contributors: {len(realtime['top_fc'])} products")
+    
+    # Daily archive (saves today's snapshot, returns full history)
+    archive_dir = output_dir / 'daily_archive'
+    daily_history = update_daily_archive(realtime, archive_dir)
+    
     output = {
         'meta': {
             'generated_at': datetime.now(timezone.utc).isoformat(timespec='seconds'),
@@ -881,6 +1095,8 @@ def build_food_data_json(source_dir: Path, output_dir: Path):
         'hourly_category': meikto_data['hourly_category'] if meikto_data else {},
         'hourly_alc': alc_data['stores'] if alc_data else {},
         'hourly_combos': combos_data['stores'] if combos_data else {},
+        'realtime': realtime if realtime else None,
+        'daily_history': daily_history if daily_history else [],
     }
     
     # Write

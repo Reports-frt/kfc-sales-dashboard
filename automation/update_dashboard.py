@@ -26,6 +26,39 @@ from pathlib import Path
 # CONFIGURATION
 # ============================================================
 
+# =====================================================================
+# NOTIFICATION
+# =====================================================================
+def send_failure_notification(reason, details=""):
+    """Send failure notification email via Outlook to NOTIFY_TO."""
+    NOTIFY_TO = "report@frt-ike.gr"
+    try:
+        import win32com.client
+        outlook_app = win32com.client.Dispatch("Outlook.Application")
+        mail = outlook_app.CreateItem(0)
+        mail.To = NOTIFY_TO
+        from datetime import datetime as _dt_now
+        mail.Subject = f"[STRICT MODE FAIL] KFC Sales Pipeline — {reason} {_dt_now().now().strftime('%Y-%m-%d %H:%M')}"
+        mail.Body = (
+            f"KFC Sales Pipeline notification\n"
+            f"{'=' * 50}\n\n"
+            f"Time:    {_dt_now().now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Reason:  {reason}\n\n"
+            f"Details:\n{details}\n\n"
+            f"Action items:\n"
+            f"  1. Check Outlook Inbox for sales report email\n"
+            f"  2. Run manually when email arrives:\n"
+            f"     cd C:\\Users\\IT\\Documents\\GitHub\\kfc-sales-dashboard\\automation\n"
+            f"     .\\run_update.bat\n\n"
+            f"-- KFC Sales Pipeline (auto-notification)\n"
+        )
+        mail.Send()
+        return True
+    except Exception as e:
+        print(f"Failed to send notification: {e}")
+        return False
+
+
 CONFIG = {
     # Outlook search criteria — DAILY channel data
     "email_sender":     "Reports@foodplus.gr",
@@ -137,6 +170,12 @@ def get_latest_attachment():
     if not found_email:
         log.error(f"No matching email found in last {CONFIG['max_age_days']} days.")
         log.error(f"  Looking for: from='{sender_filter}' subject contains '{subject_filter}'")
+        send_failure_notification(
+            "Missing sales email",
+            f"No email matching from='{sender_filter}' subject contains '{subject_filter}' "
+            f"in the last {CONFIG['max_age_days']} days.\n"
+            f"Dashboard data will remain stale until email arrives."
+        )
         sys.exit(1)
 
     # Save the primary attachment from the channel-data email

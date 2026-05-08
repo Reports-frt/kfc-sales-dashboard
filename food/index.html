@@ -845,6 +845,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="realtime">🟢 Real-Time</button>
     <button class="tab" data-tab="variance">GAP Analysis</button>
     <button class="tab" data-tab="categories">Categories</button>
     <button class="tab" data-tab="waste">WASTE Detail</button>
@@ -854,6 +855,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   </div>
 
   <div class="tab-content active" id="tab-overview"></div>
+  <div class="tab-content" id="tab-realtime"></div>
   <div class="tab-content" id="tab-variance"></div>
   <div class="tab-content" id="tab-categories"></div>
   <div class="tab-content" id="tab-waste"></div>
@@ -1117,6 +1119,7 @@ function render() {
   // Render active tab
   switch (STATE.activeTab) {
     case 'overview':   renderOverview(records); break;
+    case 'realtime':   renderRealtime(); break;
     case 'variance':   renderVariance(records); break;
     case 'categories': renderCategories(records); break;
     case 'waste':      renderWaste(records); break;
@@ -1719,6 +1722,288 @@ function classifyProductKind(p) {
   return 'alc';
 }
 
+
+// =====================================================================
+// REAL-TIME TAB
+// =====================================================================
+function renderRealtime() {
+  const root = document.getElementById('tab-realtime');
+  const desktop = isDesktop();
+  
+  const rt = DATA.realtime;
+  const history = DATA.daily_history || [];
+  
+  if (!rt) {
+    root.innerHTML = `<div class="insight bad">
+      <div class="ins-label">⚠ Real-Time data not available</div>
+      <div class="ins-text">Δεν υπάρχουν realtime δεδομένα. Τρέξε το <code>build_food_data.py</code> με νεότερη έκδοση.</div>
+    </div>`;
+    return;
+  }
+  
+  let body = '';
+  
+  // ==================== HEADER BANNER ====================
+  body += `<div class="insight" style="margin-bottom: 14px">
+    <div class="ins-label">🟢 Real-Time Food Cost — ISO Weeks 2025–2026 cumulative</div>
+    <div class="ins-text">
+      Live data από το καθημερινό Μεικτό κέρδος (ενημερώνεται κάθε μέρα ~11:15).
+      Τα στοιχεία αυτά αντικαθιστούν τη μηνιαία ενημέρωση που ερχόταν στις 15 του μήνα — τώρα έχεις <strong>καθημερινή</strong> εικόνα.
+      ${history.length > 1 ? `Daily history: ${history.length} snapshots (${history[0].date} → ${history[history.length-1].date}).` : 'Daily history ξεκινά από σήμερα.'}
+    </div>
+  </div>`;
+  
+  // ==================== KPIs ====================
+  const c = rt.chain;
+  body += `<div class="kpi-row" style="margin-bottom: 14px">
+    <div class="kpi theoretical">
+      <div class="label">Total Sales</div>
+      <div class="value">${fmtEurK(c.sales)}</div>
+      <div class="sub">${c.qty.toLocaleString('el-GR')} units</div>
+    </div>
+    <div class="kpi actual">
+      <div class="label">Total Food Cost</div>
+      <div class="value">${fmtEurK(c.fc)}</div>
+      <div class="sub">€ chain-wide</div>
+    </div>
+    <div class="kpi gap ${c.fc_pct < 0.26 ? 'good' : c.fc_pct < 0.28 ? 'warn' : 'bad'}">
+      <div class="label">Blended FC%</div>
+      <div class="value">${(c.fc_pct*100).toFixed(2).replace('.', ',')}%</div>
+      <div class="sub">${c.fc_pct < 0.26 ? '★ excellent' : c.fc_pct < 0.28 ? 'ok' : '⚠ above target'}</div>
+    </div>
+    <div class="kpi waste">
+      <div class="label">Products Tracked</div>
+      <div class="value">${c.n_products}</div>
+      <div class="sub">across ${rt.per_store.length} stores</div>
+    </div>
+  </div>`;
+  
+  // ==================== PER-STORE RANKING ====================
+  const worstStore = rt.per_store[0];
+  const bestStore = rt.per_store[rt.per_store.length-1];
+  
+  body += `<div class="insight ${worstStore.vs_chain_pp > 1 ? 'bad' : 'warn'}">
+    <div class="ins-label">★ Per-Store Insights</div>
+    <div class="ins-text">
+      Worst FC%: <strong>${worstStore.store}</strong> (${(worstStore.fc_pct*100).toFixed(2).replace('.', ',')}%, ${worstStore.vs_chain_pp >= 0 ? '+' : ''}${worstStore.vs_chain_pp.toFixed(2).replace('.', ',')}pp vs chain).
+      Best FC%: <strong>${bestStore.store}</strong> (${(bestStore.fc_pct*100).toFixed(2).replace('.', ',')}%, ${bestStore.vs_chain_pp.toFixed(2).replace('.', ',')}pp).
+      Spread: <strong>${(worstStore.fc_pct - bestStore.fc_pct).toFixed(4) * 100 / 1}pp</strong> between best and worst — αν τους έφερνες όλους στο best, θα κέρδιζες κάμμα ~€${((c.fc_pct - bestStore.fc_pct) * c.sales / 100 * 100).toLocaleString('el-GR', {maximumFractionDigits: 0})}.
+    </div>
+  </div>`;
+  
+  body += `<div class="panel-section">
+    <div class="section-title">
+      <span>Per-Store FC% Ranking</span>
+      <span class="meta">${rt.per_store.length} stores · ranked worst → best</span>
+      <button class="btn-export" onclick="exportTable('realtime_stores')">↓ Excel</button>
+    </div>`;
+  
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>#</th>
+      <th>Store</th>
+      <th>Sales €</th>
+      <th>FC €</th>
+      <th>FC %</th>
+      <th>vs Chain</th>
+      <th>Quantity</th>
+    </tr></thead><tbody>`;
+    rt.per_store.forEach((s, i) => {
+      const vsClass = s.vs_chain_pp > 1 ? 'var-bad' : s.vs_chain_pp > 0 ? 'var-warn' : 'var-good';
+      const rank = i + 1;
+      body += `<tr>
+        <td>${rank}</td>
+        <td><strong>${s.store}</strong></td>
+        <td>${fmtEur(s.sales)}</td>
+        <td>${fmtEur(s.fc)}</td>
+        <td>${(s.fc_pct*100).toFixed(2).replace('.', ',')}%</td>
+        <td><span class="${vsClass}" style="font-size:11px">${s.vs_chain_pp >= 0 ? '+' : ''}${s.vs_chain_pp.toFixed(2).replace('.', ',')}pp</span></td>
+        <td>${s.qty.toLocaleString('el-GR')}</td>
+      </tr>`;
+    });
+    body += `</tbody></table></div>`;
+  } else {
+    body += `<div class="cards">`;
+    rt.per_store.forEach((s, i) => {
+      const cls = s.vs_chain_pp > 1 ? 'bad' : s.vs_chain_pp > 0 ? 'warn' : 'good';
+      body += `<div class="card ${cls}">
+        <div class="card-title">
+          <span class="name">${i+1}. ${s.store}</span>
+          <span class="rank">${(s.fc_pct*100).toFixed(2).replace('.', ',')}%</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Sales</span><span class="val">${fmtEur(s.sales)}</span></div>
+          <div class="card-row"><span class="lbl">FC</span><span class="val">${fmtEur(s.fc)}</span></div>
+          <div class="card-row"><span class="lbl">vs Chain</span><span class="val">${s.vs_chain_pp >= 0 ? '+' : ''}${s.vs_chain_pp.toFixed(2).replace('.', ',')}pp</span></div>
+          <div class="card-row"><span class="lbl">Qty</span><span class="val">${s.qty.toLocaleString('el-GR')}</span></div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+  body += `</div>`;
+  
+  // ==================== HOURLY FC% PROFILE ====================
+  if (rt.hourly && rt.hourly.length > 0) {
+    body += `<div class="panel-section">
+      <div class="section-title">
+        <span>Hourly FC% Profile (Chain-Wide)</span>
+        <span class="meta">${rt.hourly.length} hours active · 02:00–10:00 excluded</span>
+      </div>`;
+    
+    // Build chart inline
+    const W = desktop ? 900 : 380;
+    const H = desktop ? 320 : 240;
+    const PAD = { l: 50, r: 30, t: 30, b: 50 };
+    const innerW = W - PAD.l - PAD.r;
+    const innerH = H - PAD.t - PAD.b;
+    
+    const fcVals = rt.hourly.map(h => h.fc_pct * 100);
+    const salesVals = rt.hourly.map(h => h.sales);
+    const minFC = Math.min(...fcVals);
+    const maxFC = Math.max(...fcVals);
+    const maxSales = Math.max(...salesVals);
+    
+    const xScale = i => PAD.l + (i / Math.max(1, rt.hourly.length - 1)) * innerW;
+    const yFC = v => PAD.t + innerH - ((v - minFC) / Math.max(0.1, maxFC - minFC)) * innerH * 0.85;
+    const yBar = v => PAD.t + innerH - (v / maxSales) * innerH * 0.6;
+    
+    let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
+    
+    // Grid lines
+    svg += `<line x1="${PAD.l}" y1="${PAD.t}" x2="${PAD.l}" y2="${H-PAD.b}" stroke="var(--border)" stroke-width="1"/>`;
+    svg += `<line x1="${PAD.l}" y1="${H-PAD.b}" x2="${W-PAD.r}" y2="${H-PAD.b}" stroke="var(--border)" stroke-width="1"/>`;
+    
+    // Sales bars (light grey background)
+    rt.hourly.forEach((h, i) => {
+      const x = xScale(i);
+      const y = yBar(h.sales);
+      const barW = innerW / rt.hourly.length * 0.7;
+      svg += `<rect x="${x - barW/2}" y="${y}" width="${barW}" height="${(H-PAD.b) - y}" fill="rgba(148,163,184,0.18)" stroke="rgba(148,163,184,0.4)" stroke-width="0.5"><title>${String(h.hour).padStart(2,'0')}:00 — Sales €${h.sales.toLocaleString('el-GR', {maximumFractionDigits:0})}</title></rect>`;
+    });
+    
+    // FC% line
+    const ptsFC = rt.hourly.map((h, i) => `${xScale(i)},${yFC(h.fc_pct * 100)}`).join(' ');
+    svg += `<polyline points="${ptsFC}" fill="none" stroke="#ef4444" stroke-width="2.5"/>`;
+    
+    // FC% dots with values
+    rt.hourly.forEach((h, i) => {
+      const x = xScale(i);
+      const y = yFC(h.fc_pct * 100);
+      svg += `<circle cx="${x}" cy="${y}" r="4" fill="#ef4444"><title>${String(h.hour).padStart(2,'0')}:00 — FC% ${(h.fc_pct*100).toFixed(2)}%</title></circle>`;
+      svg += `<text x="${x}" y="${y - 8}" text-anchor="middle" fill="#ef4444" font-size="10" font-family="var(--mono)" font-weight="700">${(h.fc_pct*100).toFixed(1)}</text>`;
+    });
+    
+    // X labels
+    rt.hourly.forEach((h, i) => {
+      const x = xScale(i);
+      svg += `<text x="${x}" y="${H - PAD.b + 16}" text-anchor="middle" fill="var(--text-2)" font-size="10" font-family="var(--mono)">${String(h.hour).padStart(2,'0')}</text>`;
+    });
+    
+    // Legend
+    svg += `<g transform="translate(${PAD.l + 10}, ${PAD.t})">
+      <rect x="0" y="0" width="14" height="3" fill="#ef4444"/>
+      <text x="20" y="4" fill="var(--text-1)" font-size="11">FC%</text>
+      <rect x="80" y="-3" width="14" height="9" fill="rgba(148,163,184,0.3)"/>
+      <text x="100" y="4" fill="var(--text-1)" font-size="11">Sales (size)</text>
+    </g>`;
+    
+    svg += `</svg>`;
+    body += `<div class="chart-card">${svg}</div></div>`;
+  }
+  
+  // ==================== TOP FC CONTRIBUTORS ====================
+  if (rt.top_fc && rt.top_fc.length > 0) {
+    body += `<div class="panel-section">
+      <div class="section-title">
+        <span>Top FC Contributors</span>
+        <span class="meta">${rt.top_fc.length} products · sorted by absolute FC €</span>
+        <button class="btn-export" onclick="exportTable('realtime_topfc')">↓ Excel</button>
+      </div>`;
+    
+    if (desktop) {
+      body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+        <th>#</th>
+        <th>Product</th>
+        <th>Category</th>
+        <th>Quantity</th>
+        <th>Sales €</th>
+        <th>FC €</th>
+        <th>FC %</th>
+        <th>Contribution</th>
+      </tr></thead><tbody>`;
+      rt.top_fc.forEach((p, i) => {
+        body += `<tr>
+          <td>${i+1}</td>
+          <td><strong>${p.product}</strong></td>
+          <td><span style="font-family:var(--mono);font-size:10.5px;color:var(--text-1)">${p.category}</span></td>
+          <td>${p.qty.toLocaleString('el-GR')}</td>
+          <td>${fmtEur(p.sales)}</td>
+          <td>${fmtEur(p.fc)}</td>
+          <td>${(p.fc_pct*100).toFixed(1).replace('.', ',')}%</td>
+          <td>${p.contribution_pp.toFixed(1).replace('.', ',')}%</td>
+        </tr>`;
+      });
+      body += `</tbody></table></div>`;
+    } else {
+      body += `<div class="cards">`;
+      rt.top_fc.slice(0, 10).forEach((p, i) => {
+        body += `<div class="card">
+          <div class="card-title">
+            <span class="name">${i+1}. ${p.product}</span>
+            <span class="rank">${p.contribution_pp.toFixed(1)}%</span>
+          </div>
+          <div class="card-rows">
+            <div class="card-row"><span class="lbl">FC €</span><span class="val">${fmtEur(p.fc)}</span></div>
+            <div class="card-row"><span class="lbl">FC %</span><span class="val">${(p.fc_pct*100).toFixed(1).replace('.', ',')}%</span></div>
+            <div class="card-row"><span class="lbl">Sales</span><span class="val">${fmtEur(p.sales)}</span></div>
+          </div>
+        </div>`;
+      });
+      body += `</div>`;
+    }
+    body += `</div>`;
+  }
+  
+  // ==================== DAILY HISTORY (TREND) ====================
+  if (history.length >= 2) {
+    body += `<div class="panel-section">
+      <div class="section-title">
+        <span>Daily Trend</span>
+        <span class="meta">${history.length} snapshots · day-over-day change</span>
+      </div>`;
+    
+    body += `<div class="dt-wrap"><table class="dt"><thead><tr>
+      <th>Date</th>
+      <th>Sales</th>
+      <th>FC%</th>
+      <th>Δ Sales</th>
+      <th>Δ FC% (pp)</th>
+    </tr></thead><tbody>`;
+    
+    history.slice().reverse().forEach((h, i) => {
+      const deltaCls = h.delta_fc_pp > 0.5 ? 'var-bad' : h.delta_fc_pp < -0.5 ? 'var-good' : '';
+      body += `<tr>
+        <td><strong>${h.date}</strong></td>
+        <td>${fmtEurK(h.sales)}</td>
+        <td>${(h.fc_pct*100).toFixed(2).replace('.', ',')}%</td>
+        <td>${i === history.length-1 ? '—' : (h.delta_sales >= 0 ? '+' : '') + fmtEurK(h.delta_sales)}</td>
+        <td>${i === history.length-1 ? '—' : `<span class="${deltaCls}">${h.delta_fc_pp >= 0 ? '+' : ''}${h.delta_fc_pp.toFixed(2).replace('.', ',')}</span>`}</td>
+      </tr>`;
+    });
+    body += `</tbody></table></div></div>`;
+  } else if (history.length === 1) {
+    body += `<div class="insight" style="margin-top: 14px">
+      <div class="ins-label">📅 Daily Trend (starting today)</div>
+      <div class="ins-text">
+        Πρώτο daily snapshot αποθηκεύτηκε σήμερα (${history[0].date}). Από αύριο θα έχεις day-over-day comparison.
+      </div>
+    </div>`;
+  }
+  
+  root.innerHTML = body;
+}
+
 function renderProducts() {
   const root = document.getElementById('tab-products');
   const desktop = isDesktop();
@@ -1749,8 +2034,13 @@ function renderProducts() {
     products = products.filter(p => p.category === STATE.productCategory);
   }
   
-  // Filter out zero-quantity / zero-sales items
-  products = products.filter(p => p.qty > 0 && p.sales > 0);
+  // Filter out zero-quantity items
+  // But: keep zero-sales items in 'Other' view (freebies have qty>0 but sales=0)
+  if (STATE.productKind === 'other') {
+    products = products.filter(p => p.qty > 0);  // include €0 items
+  } else {
+    products = products.filter(p => p.qty > 0 && p.sales > 0);
+  }
   
   // Sort
   const sortKey = STATE.productSort;
@@ -1770,8 +2060,18 @@ function renderProducts() {
   // Get unique categories for filter dropdown
   const allCategories = [...new Set(DATA.product_profit.map(p => p.category))].sort();
   
+  // === Period info banner (Products data is cumulative from Targit) ===
+  let body = `<div class="insight" style="margin-bottom: 14px">
+    <div class="ins-label">📅 Period: ISO Weeks 2025–2026 cumulative (από αρχή 2025 έως εχθές)</div>
+    <div class="ins-text">
+      Τα products data έρχονται aggregate για όλη τη χρονική περίοδο. 
+      Δεν φιλτράρονται από τα MTD/Week/Custom selectors των άλλων tabs.
+      <strong>Σύνολα:</strong> Αν τα νούμερα δεν δείχνουν reasonable, μπορεί να αλλαχθεί η περίοδος εξαγωγής στο Targit.
+    </div>
+  </div>`;
+
   // === Filter row ===
-  let body = `<div class="filter-row" style="margin-bottom: 14px">
+  body += `<div class="filter-row" style="margin-bottom: 14px">
     <div class="filter-group">
       <span class="label">Type</span>
       <div class="btn-group" id="prodKindBtns">
@@ -2368,6 +2668,22 @@ function exportTable(tabName, contextStore) {
     rows.forEach((r,i) => aoa.push([
       i+1, r.store, r.actual, r.gap, r.waste, r.wastePct/100, r.deviation
     ]));
+  }
+  else if (tabName === 'realtime_stores') {
+    sheetName = 'Realtime Stores';
+    filenameSuffix = 'RT_Stores';
+    aoa.push(['#','Store','Sales','FC','FC%','vs Chain pp','Quantity']);
+    (DATA.realtime?.per_store || []).forEach((s, i) => {
+      aoa.push([i+1, s.store, s.sales, s.fc, s.fc_pct, s.vs_chain_pp, s.qty]);
+    });
+  }
+  else if (tabName === 'realtime_topfc') {
+    sheetName = 'Top FC';
+    filenameSuffix = 'RT_TopFC';
+    aoa.push(['#','Product','Category','Qty','Sales','FC','FC%','Contribution %']);
+    (DATA.realtime?.top_fc || []).forEach((p, i) => {
+      aoa.push([i+1, p.product, p.category, p.qty, p.sales, p.fc, p.fc_pct, p.contribution_pp]);
+    });
   }
   else if (tabName === 'products') {
     sheetName = 'Products';
