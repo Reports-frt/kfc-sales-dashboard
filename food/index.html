@@ -486,6 +486,16 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
 .dt thead th:first-child,
 .dt tbody td:first-child { width: 36px; }  /* narrow rank column */
 
+/* WASTE Quantity table — left-align Code, Description, Unit */
+.dt-wasteqty thead th.col-rank,
+.dt-wasteqty tbody td.col-rank { text-align: left; }
+.dt-wasteqty thead th.col-code,
+.dt-wasteqty tbody td.col-code { text-align: left; }
+.dt-wasteqty thead th.col-text,
+.dt-wasteqty tbody td.col-text { text-align: left; }
+.dt-wasteqty thead th.col-unit,
+.dt-wasteqty tbody td.col-unit { text-align: left; }
+
 /* Products table — explicit column control via classes */
 .dt-products thead th.col-rank,
 .dt-products tbody td.col-rank { text-align: left; width: 36px; }
@@ -501,6 +511,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   font-variant-numeric: tabular-nums;
   border-bottom: 1px solid var(--border-soft);
   white-space: nowrap;
+  text-align: right;  /* match header default */
 }
 .dt tbody tr:hover td { background: var(--bg-2); }
 .dt tbody tr.row-grand td {
@@ -801,11 +812,11 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   <!-- Header info -->
   <div class="header-info">
     <div class="info-item">
-      <span class="label">Latest Period</span>
+      <span class="label" id="hi1Label">Latest Period</span>
       <span class="value" id="latestPeriod">—</span>
     </div>
     <div class="info-item">
-      <span class="label">Periods Covered</span>
+      <span class="label" id="hi2Label">Periods Covered</span>
       <span class="value" id="periodsCount">—</span>
     </div>
     <div class="info-item">
@@ -813,7 +824,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
       <span class="value" id="storesCount">—</span>
     </div>
     <div class="info-item">
-      <span class="label">Categories</span>
+      <span class="label" id="hi4Label">Categories</span>
       <span class="value" id="catsCount">—</span>
     </div>
   </div>
@@ -845,10 +856,11 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" data-tab="overview">Overview</button>
-    <button class="tab" data-tab="realtime">🟢 Real-Time</button>
+    <button class="tab" data-tab="realtime">FC Tracker</button>
     <button class="tab" data-tab="variance">GAP Analysis</button>
     <button class="tab" data-tab="categories">Categories</button>
     <button class="tab" data-tab="waste">WASTE Detail</button>
+    <button class="tab" data-tab="wasteqty">WASTE Quantity</button>
     <button class="tab" data-tab="trend">Trend</button>
     <button class="tab" data-tab="products">Products</button>
     <button class="tab" data-tab="forecast">Forecast</button>
@@ -859,6 +871,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
   <div class="tab-content" id="tab-variance"></div>
   <div class="tab-content" id="tab-categories"></div>
   <div class="tab-content" id="tab-waste"></div>
+  <div class="tab-content" id="tab-wasteqty"></div>
   <div class="tab-content" id="tab-trend"></div>
   <div class="tab-content" id="tab-products"></div>
   <div class="tab-content" id="tab-forecast"></div>
@@ -1049,15 +1062,50 @@ function initFilters() {
   });
 }
 
+function updateHeaderForTab(tab) {
+  // Adapt the top header info to match active tab's data context
+  const hi1 = document.getElementById('hi1Label');
+  const hi2 = document.getElementById('hi2Label');
+  const hi4 = document.getElementById('hi4Label');
+  const valLatest = document.getElementById('latestPeriod');
+  const valPeriods = document.getElementById('periodsCount');
+  const valCats = document.getElementById('catsCount');
+  if (!hi1) return;  // header not loaded yet
+  
+  // Tabs sourced from Μεικτό κέρδος (cumulative ISO 2025-2026)
+  const dailyTabs = ['realtime', 'products'];
+  
+  if (dailyTabs.includes(tab)) {
+    hi1.textContent = 'FC Tracker Period';
+    valLatest.textContent = 'ISO 2025-2026';
+    hi2.textContent = 'Last Update';
+    const today = new Date();
+    valPeriods.textContent = today.toISOString().slice(0,10);
+    hi4.textContent = 'Products';
+    valCats.textContent = (DATA.realtime?.chain?.n_products) || '—';
+  } else {
+    hi1.textContent = 'Latest Period';
+    valLatest.textContent = periodLabel(
+      parseInt(DATA.meta.latest_period.slice(0,4)),
+      parseInt(DATA.meta.latest_period.slice(5,7))
+    );
+    hi2.textContent = 'Periods Covered';
+    valPeriods.textContent = DATA.meta.periods.length;
+    hi4.textContent = 'Categories';
+    valCats.textContent = DATA.meta.categories.length;
+  }
+}
+
 function initTabs() {
   document.querySelectorAll('.tabs .tab').forEach(btn => {
     btn.addEventListener('click', () => {
       STATE.activeTab = btn.dataset.tab;
+      updateHeaderForTab(STATE.activeTab);
       document.querySelectorAll('.tabs .tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       document.getElementById('tab-' + STATE.activeTab).classList.add('active');
-      render();  // re-render to fill new tab
+      render();
     });
   });
 }
@@ -1123,6 +1171,7 @@ function render() {
     case 'variance':   renderVariance(records); break;
     case 'categories': renderCategories(records); break;
     case 'waste':      renderWaste(records); break;
+    case 'wasteqty':   renderWasteQty(); break;
     case 'trend':      renderTrend(); break;
     case 'products':   renderProducts(); break;
     case 'forecast':   renderForecast(); break;
@@ -1744,12 +1793,13 @@ function renderRealtime() {
   let body = '';
   
   // ==================== HEADER BANNER ====================
-  body += `<div class="insight" style="margin-bottom: 14px">
-    <div class="ins-label">🟢 Real-Time Food Cost — ISO Weeks 2025–2026 cumulative</div>
+  body += `<div class="insight warn" style="margin-bottom: 14px">
+    <div class="ins-label">📅 Period: ISO Weeks 2025–2026 cumulative (από 30/12/2024 έως εχθές)</div>
     <div class="ins-text">
-      Live data από το καθημερινό Μεικτό κέρδος (ενημερώνεται κάθε μέρα ~11:15).
-      Τα στοιχεία αυτά αντικαθιστούν τη μηνιαία ενημέρωση που ερχόταν στις 15 του μήνα — τώρα έχεις <strong>καθημερινή</strong> εικόνα.
-      ${history.length > 1 ? `Daily history: ${history.length} snapshots (${history[0].date} → ${history[history.length-1].date}).` : 'Daily history ξεκινά από σήμερα.'}
+      <strong>Προσοχή:</strong> Τα νούμερα εδώ <strong>δεν</strong> είναι MTD ούτε σήμερα — είναι σύνολα ολόκληρης της περιόδου που εξάγει σήμερα το Targit (~16 μήνες).
+      Δεν συγκρίνονται με τα sales του Sales Dashboard (που τρέχει σε MTD/Week/Custom).
+      Η περίοδος αλλάζει αν ρυθμίσεις διαφορετικό range στο Targit (πχ "Last week", "Yesterday").
+      ${history.length > 1 ? `<br>Daily history: ${history.length} snapshots — βλέπεις πώς αλλάζουν τα cumulative νούμερα μέρα-μέρα.` : '<br>Daily history ξεκινά από σήμερα — από αύριο θα βλέπεις day-over-day αλλαγή.'}
     </div>
   </div>`;
   
@@ -1757,12 +1807,12 @@ function renderRealtime() {
   const c = rt.chain;
   body += `<div class="kpi-row" style="margin-bottom: 14px">
     <div class="kpi theoretical">
-      <div class="label">Total Sales</div>
+      <div class="label">Cumulative Sales</div>
       <div class="value">${fmtEurK(c.sales)}</div>
-      <div class="sub">${c.qty.toLocaleString('el-GR')} units</div>
+      <div class="sub">${c.qty.toLocaleString('el-GR')} units · ISO 2025-2026</div>
     </div>
     <div class="kpi actual">
-      <div class="label">Total Food Cost</div>
+      <div class="label">Cumulative Food Cost</div>
       <div class="value">${fmtEurK(c.fc)}</div>
       <div class="sub">€ chain-wide</div>
     </div>
@@ -2002,6 +2052,191 @@ function renderRealtime() {
   }
   
   root.innerHTML = body;
+}
+
+
+// =====================================================================
+// WASTE QUANTITY TAB (από 'Quantity Per Item' sheet του FoodCost.xlsx)
+// =====================================================================
+function renderWasteQty() {
+  const root = document.getElementById('tab-wasteqty');
+  const desktop = isDesktop();
+  
+  const qpi = DATA.qty_per_item;
+  
+  if (!qpi || !qpi.items || qpi.items.length === 0) {
+    root.innerHTML = `<div class="insight">
+      <div class="ins-label">⚠ WASTE Quantity data not available</div>
+      <div class="ins-text">Δεν υπάρχουν δεδομένα από το 'Quantity Per Item' sheet του FoodCost.xlsx. Τρέξε build_food_data.py με τη νεότερη έκδοση.</div>
+    </div>`;
+    return;
+  }
+  
+  const items = qpi.items;
+  const period = qpi.period || 'unknown';
+  
+  // ==================== HEADER BANNER ====================
+  let body = `<div class="insight" style="margin-bottom: 14px">
+    <div class="ins-label">📦 WASTE Quantity — Per Ingredient Code</div>
+    <div class="ins-text">
+      Δεδομένα από το <strong>'Quantity Per Item'</strong> sheet του FoodCost.xlsx (1 sheet ανά μήνα από SAP).
+      Period: <strong>${period}</strong> · ${items.length} ingredient codes.
+      <br>
+      <strong>Ideal Qty:</strong> προβλεπόμενη κατανάλωση (αρνητικό = εξήλθε από inventory).
+      <strong>Other Qty:</strong> οτιδήποτε δεν είναι ideal (φύρα, αλλαγές, επιστροφές).
+      <strong>Total Qty:</strong> Ideal + Other = πραγματική μεταβολή inventory.
+    </div>
+  </div>`;
+  
+  // ==================== KPIs ====================
+  const totalItems = items.length;
+  const itemsWithWaste = items.filter(i => Math.abs(i.other_qty) > 0.01).length;
+  const totalIdealAbs = items.reduce((s, i) => s + Math.abs(i.ideal_qty), 0);
+  const totalOtherAbs = items.reduce((s, i) => s + Math.abs(i.other_qty), 0);
+  const overallWastePct = totalIdealAbs > 0 ? (totalOtherAbs / totalIdealAbs * 100) : 0;
+  
+  body += `<div class="kpi-row" style="margin-bottom: 14px">
+    <div class="kpi theoretical">
+      <div class="label">Ingredients Tracked</div>
+      <div class="value">${totalItems}</div>
+      <div class="sub">unique codes (${period})</div>
+    </div>
+    <div class="kpi actual">
+      <div class="label">With Waste/Other</div>
+      <div class="value">${itemsWithWaste}</div>
+      <div class="sub">${(itemsWithWaste/totalItems*100).toFixed(0)}% have non-ideal qty</div>
+    </div>
+    <div class="kpi gap ${overallWastePct < 5 ? 'good' : overallWastePct < 10 ? 'warn' : 'bad'}">
+      <div class="label">Overall Waste %</div>
+      <div class="value">${overallWastePct.toFixed(1).replace('.', ',')}%</div>
+      <div class="sub">|other| / |ideal|</div>
+    </div>
+    <div class="kpi waste">
+      <div class="label">Period</div>
+      <div class="value" style="font-size: 22px">${period}</div>
+      <div class="sub">single month snapshot</div>
+    </div>
+  </div>`;
+  
+  // ==================== FILTER + SORT ====================
+  body += `<div class="filter-row" style="margin-bottom: 14px">
+    <div class="filter-group">
+      <span class="filter-label">SORT BY</span>
+      <button class="filter-btn ${STATE.wqSort === 'waste_pct' ? 'active' : ''}" data-wq-sort="waste_pct">Waste %</button>
+      <button class="filter-btn ${STATE.wqSort === 'other_qty' ? 'active' : ''}" data-wq-sort="other_qty">|Other Qty|</button>
+      <button class="filter-btn ${STATE.wqSort === 'total_qty' ? 'active' : ''}" data-wq-sort="total_qty">|Total Qty|</button>
+      <button class="filter-btn ${STATE.wqSort === 'code' ? 'active' : ''}" data-wq-sort="code">Code</button>
+    </div>
+    <div class="filter-group" style="margin-left: auto">
+      <span class="filter-label">SEARCH</span>
+      <input type="text" id="wqSearch" placeholder="Αναζήτηση κωδικού ή περιγραφής..." value="${STATE.wqSearch || ''}" 
+             style="background: var(--bg-2); border: 1px solid var(--border); color: var(--text-1); padding: 6px 10px; border-radius: 5px; width: 280px; font-size: 12px;" />
+    </div>
+  </div>`;
+  
+  // ==================== FILTER + SORT APPLICATION ====================
+  let filtered = items.slice();
+  const search = (STATE.wqSearch || '').toLowerCase().trim();
+  if (search) {
+    filtered = filtered.filter(i => 
+      i.code.toLowerCase().includes(search) || 
+      i.description.toLowerCase().includes(search)
+    );
+  }
+  const sortKey = STATE.wqSort || 'waste_pct';
+  filtered.sort((a, b) => {
+    if (sortKey === 'code') return a.code.localeCompare(b.code);
+    if (sortKey === 'waste_pct') return Math.abs(b.waste_pct) - Math.abs(a.waste_pct);
+    return Math.abs(b[sortKey]) - Math.abs(a[sortKey]);
+  });
+  
+  // ==================== TABLE ====================
+  body += `<div class="panel-section">
+    <div class="section-title">
+      <span>Ingredient List</span>
+      <span class="meta">${filtered.length} of ${totalItems} · sorted by ${sortKey}</span>
+      <button class="btn-export" onclick="exportTable('wasteqty')">↓ Excel</button>
+    </div>`;
+  
+  if (desktop) {
+    body += `<div class="dt-wrap"><table class="dt dt-wasteqty"><thead><tr>
+      <th class="col-rank">#</th>
+      <th class="col-code">Code</th>
+      <th class="col-text">Description</th>
+      <th class="col-unit">Unit</th>
+      <th>Ideal Qty</th>
+      <th>Other Qty</th>
+      <th>Total Qty</th>
+      <th>Waste %</th>
+    </tr></thead><tbody>`;
+    filtered.slice(0, 200).forEach((item, i) => {
+      const wpAbs = Math.abs(item.waste_pct * 100);
+      const wpCls = wpAbs < 5 ? 'var-good' : wpAbs < 10 ? 'var-warn' : 'var-bad';
+      body += `<tr>
+        <td class="col-rank">${i+1}</td>
+        <td class="col-code"><span style="font-family: var(--mono); color: var(--text-1)">${item.code}</span></td>
+        <td class="col-text"><strong>${item.description}</strong></td>
+        <td class="col-unit">${item.unit}</td>
+        <td>${item.ideal_qty.toLocaleString('el-GR', {maximumFractionDigits: 2})}</td>
+        <td>${item.other_qty.toLocaleString('el-GR', {maximumFractionDigits: 2})}</td>
+        <td>${item.total_qty.toLocaleString('el-GR', {maximumFractionDigits: 2})}</td>
+        <td><span class="${wpCls}">${(item.waste_pct * 100).toFixed(2).replace('.', ',')}%</span></td>
+      </tr>`;
+    });
+    body += `</tbody></table></div>`;
+    if (filtered.length > 200) {
+      body += `<div class="meta" style="text-align: center; padding: 10px">Showing 200 of ${filtered.length}. Search to narrow.</div>`;
+    }
+  } else {
+    body += `<div class="cards">`;
+    filtered.slice(0, 50).forEach((item, i) => {
+      const wpAbs = Math.abs(item.waste_pct * 100);
+      const cls = wpAbs < 5 ? 'good' : wpAbs < 10 ? 'warn' : 'bad';
+      body += `<div class="card ${cls}">
+        <div class="card-title">
+          <span class="name">${i+1}. ${item.description}</span>
+          <span class="rank">${(item.waste_pct * 100).toFixed(1)}%</span>
+        </div>
+        <div class="card-rows">
+          <div class="card-row"><span class="lbl">Code</span><span class="val">${item.code}</span></div>
+          <div class="card-row"><span class="lbl">Ideal</span><span class="val">${item.ideal_qty.toFixed(2)}</span></div>
+          <div class="card-row"><span class="lbl">Other</span><span class="val">${item.other_qty.toFixed(2)}</span></div>
+          <div class="card-row"><span class="lbl">Total</span><span class="val">${item.total_qty.toFixed(2)} ${item.unit}</span></div>
+        </div>
+      </div>`;
+    });
+    body += `</div>`;
+  }
+  body += `</div>`;
+  
+  root.innerHTML = body;
+  
+  // ==================== EVENT HANDLERS ====================
+  root.querySelectorAll('[data-wq-sort]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      STATE.wqSort = btn.dataset.wqSort;
+      renderWasteQty();
+    });
+  });
+  
+  const searchInput = document.getElementById('wqSearch');
+  if (searchInput) {
+    let searchTimer;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        STATE.wqSearch = e.target.value;
+        const cursorPos = e.target.selectionStart;
+        renderWasteQty();
+        // Restore focus + cursor
+        const newInput = document.getElementById('wqSearch');
+        if (newInput) {
+          newInput.focus();
+          newInput.setSelectionRange(cursorPos, cursorPos);
+        }
+      }, 200);
+    });
+  }
 }
 
 function renderProducts() {
@@ -2668,6 +2903,23 @@ function exportTable(tabName, contextStore) {
     rows.forEach((r,i) => aoa.push([
       i+1, r.store, r.actual, r.gap, r.waste, r.wastePct/100, r.deviation
     ]));
+  }
+  else if (tabName === 'wasteqty') {
+    sheetName = 'WASTE Quantity';
+    filenameSuffix = 'WASTE_Qty';
+    aoa.push(['#', 'Code', 'Description', 'Unit', 'Ideal Qty', 'Other Qty', 'Total Qty', 'Waste %']);
+    const items = (DATA.qty_per_item?.items || []).slice();
+    const sk = STATE.wqSort || 'waste_pct';
+    const sd = (STATE.wqSearch || '').toLowerCase().trim();
+    const filt = sd ? items.filter(i => i.code.toLowerCase().includes(sd) || i.description.toLowerCase().includes(sd)) : items;
+    filt.sort((a, b) => {
+      if (sk === 'code') return a.code.localeCompare(b.code);
+      if (sk === 'waste_pct') return Math.abs(b.waste_pct) - Math.abs(a.waste_pct);
+      return Math.abs(b[sk]) - Math.abs(a[sk]);
+    });
+    filt.forEach((item, i) => {
+      aoa.push([i+1, item.code, item.description, item.unit, item.ideal_qty, item.other_qty, item.total_qty, item.waste_pct]);
+    });
   }
   else if (tabName === 'realtime_stores') {
     sheetName = 'Realtime Stores';

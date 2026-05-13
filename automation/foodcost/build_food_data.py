@@ -765,6 +765,88 @@ def load_alc_combos(path, kind='alc'):
 # =====================================================================
 # BUILD JSON
 # =====================================================================
+
+# =====================================================================
+# QUANTITY PER ITEM (sheet from FoodCost.xlsx)
+# =====================================================================
+def load_quantity_per_item(path):
+    """
+    Read the 'Quantity Per Item' sheet from FoodCost.xlsx.
+    
+    Format:
+      Row 1: Έτος | 2025
+      Row 2: Μήνας | 12
+      Row 6: Code | Description | Unit | Ideal Qty | Other Qty | Total Qty | (cost?) | waste% | ...
+      Rows 7+: ingredients (677 rows)
+    
+    Returns dict: { 'period': 'YYYY-MM', 'items': [...] }
+    """
+    try:
+        # Get the period from rows 1-2
+        meta = pd.read_excel(path, sheet_name='Quantity Per Item', header=None, nrows=3)
+        year = None
+        month = None
+        for _, r in meta.iterrows():
+            lbl = str(r.iloc[0] or '').strip()
+            val = r.iloc[1] if len(r) > 1 else None
+            if lbl == 'Έτος' and pd.notna(val):
+                try:
+                    year = int(val)
+                except (ValueError, TypeError):
+                    pass
+            elif lbl == 'Μήνας' and pd.notna(val):
+                try:
+                    month = int(val)
+                except (ValueError, TypeError):
+                    pass
+        
+        period = f"{year:04d}-{month:02d}" if year and month else None
+        
+        # Read data starting at row 6 (header) — meaning data starts row 7
+        df = pd.read_excel(path, sheet_name='Quantity Per Item', header=6)
+        # Drop rows where Code is missing
+        df = df[df['Code'].notna()].copy()
+        df = df[df['Code'].astype(str).str.strip() != ''].copy()
+        df = df[~df['Code'].astype(str).str.contains('Total', case=False, na=False)].copy()
+        
+        # Numeric conversion (safe)
+        for c in ['Sum of Ideal(Quantity)', 'Sum of Other(Quantity)', 'Sum of Total(Quantity)']:
+            if c in df.columns:
+                df[c] = pd.to_numeric(df[c], errors='coerce').fillna(0)
+        
+        items = []
+        for _, r in df.iterrows():
+            code = str(r['Code']).strip()
+            if not code or code.lower() == 'nan':
+                continue
+            ideal = float(r.get('Sum of Ideal(Quantity)', 0) or 0)
+            other = float(r.get('Sum of Other(Quantity)', 0) or 0)
+            total = float(r.get('Sum of Total(Quantity)', 0) or 0)
+            # Compute waste% = abs(other / ideal) when ideal != 0
+            # Negative ideal means consumed (good), positive other means waste/return
+            waste_pct = 0
+            if abs(ideal) > 0.01:
+                waste_pct = abs(other / ideal)
+            items.append({
+                'code': code,
+                'description': str(r.get('Description', '')).strip(),
+                'unit': str(r.get('Base Unit of Measure', '')).strip(),
+                'ideal_qty': round(ideal, 3),
+                'other_qty': round(other, 3),
+                'total_qty': round(total, 3),
+                'waste_pct': round(waste_pct, 4),
+            })
+        
+        # Sort by absolute total qty (largest first)
+        items.sort(key=lambda x: abs(x['total_qty']), reverse=True)
+        
+        print(f"  Loaded {len(items)} ingredients from 'Quantity Per Item' sheet (period {period})")
+        return {'period': period, 'items': items}
+    except Exception as e:
+        print(f"  Could not load 'Quantity Per Item' sheet: {e}")
+        return None
+
+
 # =====================================================================
 # REAL-TIME METRICS (computed from daily Μεικτό κέρδος)
 # =====================================================================
@@ -1052,6 +1134,11 @@ def build_food_data_json(source_dir: Path, output_dir: Path):
     all_categories = sorted(set(categories.values()))
     
     # ========== REALTIME + DAILY ARCHIVE ==========
+    # Load Quantity Per Item (waste in quantities) from FoodCost.xlsx
+    print("\nSTEP 6.5: Load 'Quantity Per Item' sheet (waste quantities)")
+    foodcost_path = source_dir / 'FoodCost.xlsx'
+    qty_per_item = load_quantity_per_item(foodcost_path) if foodcost_path.exists() else None
+    
     print("\nSTEP 7: Compute real-time metrics + daily archive")
     realtime = compute_realtime_metrics(meikto_data, monthly_records, KFC_STORES) if meikto_data else None
     if realtime:
@@ -1096,6 +1183,7 @@ def build_food_data_json(source_dir: Path, output_dir: Path):
         'hourly_alc': alc_data['stores'] if alc_data else {},
         'hourly_combos': combos_data['stores'] if combos_data else {},
         'realtime': realtime if realtime else None,
+        'qty_per_item': qty_per_item,
         'daily_history': daily_history if daily_history else [],
     }
     
