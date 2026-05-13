@@ -829,8 +829,8 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
     </div>
   </div>
 
-  <!-- Filter row -->
-  <div class="filter-row">
+  <!-- Filter row (only for monthly tabs) -->
+  <div class="filter-row" id="globalFilterRow">
     <div class="filter-group">
       <span class="label">Period</span>
       <select id="periodSelect" class="period-select"></select>
@@ -850,7 +850,7 @@ select.period-select:focus, select.store-select:focus { border-color: var(--kfc)
     </div>
   </div>
 
-  <!-- KPI banner -->
+  <!-- KPI banner (only for monthly tabs) -->
   <div class="kpi-row" id="kpiRow"></div>
 
   <!-- Tabs -->
@@ -1070,12 +1070,20 @@ function updateHeaderForTab(tab) {
   const valLatest = document.getElementById('latestPeriod');
   const valPeriods = document.getElementById('periodsCount');
   const valCats = document.getElementById('catsCount');
-  if (!hi1) return;  // header not loaded yet
+  if (!hi1) return;
   
   // Tabs sourced from Μεικτό κέρδος (cumulative ISO 2025-2026)
   const dailyTabs = ['realtime', 'products'];
+  const isDaily = dailyTabs.includes(tab);
   
-  if (dailyTabs.includes(tab)) {
+  // Hide/show the global filter row (Period dropdown + Cost View + Store Filter)
+  // and the global KPI row when on daily tabs
+  const globalFilter = document.getElementById('globalFilterRow');
+  const globalKpi = document.getElementById('kpiRow');
+  if (globalFilter) globalFilter.style.display = isDaily ? 'none' : '';
+  if (globalKpi) globalKpi.style.display = isDaily ? 'none' : '';
+  
+  if (isDaily) {
     hi1.textContent = 'FC Tracker Period';
     valLatest.textContent = 'ISO 2025-2026';
     hi2.textContent = 'Last Update';
@@ -1837,7 +1845,7 @@ function renderRealtime() {
     <div class="ins-text">
       Worst FC%: <strong>${worstStore.store}</strong> (${(worstStore.fc_pct*100).toFixed(2).replace('.', ',')}%, ${worstStore.vs_chain_pp >= 0 ? '+' : ''}${worstStore.vs_chain_pp.toFixed(2).replace('.', ',')}pp vs chain).
       Best FC%: <strong>${bestStore.store}</strong> (${(bestStore.fc_pct*100).toFixed(2).replace('.', ',')}%, ${bestStore.vs_chain_pp.toFixed(2).replace('.', ',')}pp).
-      Spread: <strong>${(worstStore.fc_pct - bestStore.fc_pct).toFixed(4) * 100 / 1}pp</strong> between best and worst — αν τους έφερνες όλους στο best, θα κέρδιζες κάμμα ~€${((c.fc_pct - bestStore.fc_pct) * c.sales / 100 * 100).toLocaleString('el-GR', {maximumFractionDigits: 0})}.
+      Spread: <strong>${((worstStore.fc_pct - bestStore.fc_pct) * 100).toFixed(2).replace('.', ',')}pp</strong> between best and worst — αν τους έφερνες όλους στο best, θα κέρδιζες κάμμα ~€${((c.fc_pct - bestStore.fc_pct) * c.sales).toLocaleString('el-GR', {maximumFractionDigits: 0})}.
     </div>
   </div>`;
   
@@ -2121,16 +2129,18 @@ function renderWasteQty() {
   // ==================== FILTER + SORT ====================
   body += `<div class="filter-row" style="margin-bottom: 14px">
     <div class="filter-group">
-      <span class="filter-label">SORT BY</span>
-      <button class="filter-btn ${STATE.wqSort === 'waste_pct' ? 'active' : ''}" data-wq-sort="waste_pct">Waste %</button>
-      <button class="filter-btn ${STATE.wqSort === 'other_qty' ? 'active' : ''}" data-wq-sort="other_qty">|Other Qty|</button>
-      <button class="filter-btn ${STATE.wqSort === 'total_qty' ? 'active' : ''}" data-wq-sort="total_qty">|Total Qty|</button>
-      <button class="filter-btn ${STATE.wqSort === 'code' ? 'active' : ''}" data-wq-sort="code">Code</button>
+      <span class="label">Sort by</span>
+      <div class="btn-group" id="wqSortBtns">
+        <button data-wq-sort="waste_pct" ${STATE.wqSort === 'waste_pct' ? 'class="active"' : ''}>Waste %</button>
+        <button data-wq-sort="other_qty" ${STATE.wqSort === 'other_qty' ? 'class="active"' : ''}>|Other Qty|</button>
+        <button data-wq-sort="total_qty" ${STATE.wqSort === 'total_qty' ? 'class="active"' : ''}>|Total Qty|</button>
+        <button data-wq-sort="code" ${STATE.wqSort === 'code' ? 'class="active"' : ''}>Code</button>
+      </div>
     </div>
-    <div class="filter-group" style="margin-left: auto">
-      <span class="filter-label">SEARCH</span>
+    <div class="filter-group" style="margin-left: auto; min-width: 280px;">
+      <span class="label">Search</span>
       <input type="text" id="wqSearch" placeholder="Αναζήτηση κωδικού ή περιγραφής..." value="${STATE.wqSearch || ''}" 
-             style="background: var(--bg-2); border: 1px solid var(--border); color: var(--text-1); padding: 6px 10px; border-radius: 5px; width: 280px; font-size: 12px;" />
+             style="background: var(--bg-2); border: 1px solid var(--border); color: var(--text-1); padding: 6px 10px; border-radius: 5px; font-size: 12px; height: 30px;" />
     </div>
   </div>`;
   
