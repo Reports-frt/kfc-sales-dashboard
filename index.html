@@ -1873,6 +1873,7 @@ const STATE = {
   storeType: "all",       // all | "In Line" | "Mall Food Court" | etc
   storeSelection: null,   // null = all stores, or Set of store indices
   channelView: "type",    // "type" (View A) or "salestype" (View B)
+  byChannelView: "type",      // For By Channel tab: "type" (View A) | "salestype" (View B)
   // Per-tab sort state: each entry is { col: 'sales'|'tcs'|'avg'|'vsly'|'vsbud', dir: 'desc'|'asc' }
   sort: {
     bystore:   { col: 'sales', dir: 'desc' },
@@ -2458,15 +2459,20 @@ function renderChannels(R) {
   const root = document.getElementById('tab-channels');
   const desktop = isDesktop();
 
-  // Build per-channel × per-store metrics
-  // For each channel, for each store: cy, ly, ranks
-  const channelData = CHANNELS.map((chName, ci) => {
+  // Determine which grouping to use based on STATE.byChannelView
+  // Modes: "type" (View A 3-way) | "salestype" (View B 4-way)
+  const mode = STATE.byChannelView || "type";
+  const groupLabels = mode === "salestype" ? SALESTYPES : TYPES;
+  const groupKey = mode === "salestype" ? "byST" : "byType";
+
+  // Build per-group × per-store metrics
+  const channelData = groupLabels.map((chName, ci) => {
     const stores = [];
     let chCY = 0, chLY = 0, chCYTcs = 0, chLYTcs = 0;
     for (let si = 0; si < STORES.length; si++) {
       if (R.storeFilter && !R.storeFilter.has(si)) continue;
-      const cyV = R.cy.byCH[si][ci];
-      const lyV = R.ly.byCH[si][ci];
+      const cyV = R.cy[groupKey][si][ci];
+      const lyV = R.ly[groupKey][si][ci];
       if (cyV.sales === 0 && lyV.sales === 0) continue;
       stores.push({
         si,
@@ -2487,7 +2493,15 @@ function renderChannels(R) {
   // Sort channels by CY total desc (always)
   channelData.sort((a, b) => b.chCY - a.chCY);
 
+  // === View toggle (3-way: Type / Sales Type / Individual) ===
   let html = `<div class="filter-row" style="margin-bottom: 14px">
+    <div class="filter-group">
+      <span class="label">Grouping</span>
+      <div class="chip-row" id="byChannelViewChips">
+        <span class="chip ${mode === 'type' ? 'active' : ''}" data-bcv="type">View A · Type (3)</span>
+        <span class="chip ${mode === 'salestype' ? 'active' : ''}" data-bcv="salestype">View B · Sales Type (4)</span>
+      </div>
+    </div>
     <div class="filter-group">
       <span class="label">Active filters</span>
       <div class="chip-row">
@@ -2595,6 +2609,13 @@ function renderChannels(R) {
 
   root.innerHTML = html;
   attachSortHandlers(root, () => renderChannels(R));
+  // Wire up the View toggle chips (Type / Sales Type / Channels)
+  root.querySelectorAll('#byChannelViewChips .chip[data-bcv]').forEach(chip => {
+    chip.addEventListener('click', () => {
+      STATE.byChannelView = chip.dataset.bcv;
+      renderChannels(R);
+    });
+  });
 }
 
 
@@ -3255,6 +3276,7 @@ function renderStoreDeep(R) {
 // HOURLY TAB — visually upgraded
 // =====================================================================
 const CHANNEL_COLORS = {
+  // Individual channels
   'KIOSK':     '#ef4444',
   'STORE':     '#f97316',
   'MOBILE':    '#a855f7',
@@ -3263,6 +3285,12 @@ const CHANNEL_COLORS = {
   'E-FOOD GO': '#3b82f6',
   'WOLT':      '#06b6d4',
   'BOX':       '#eab308',
+  // View B — Sales Type (4-way)
+  'DINEIN':     '#ef4444',
+  'TAKEAWAY':   '#f97316',
+  'DRIVE THRU': '#22c55e',
+  'END-TO-END': '#3b82f6',
+  // View A — Type (3-way): STORE already exists, DRIVE THRU already exists, END-TO-END already exists
 };
 
 const TIME_ZONES = [
